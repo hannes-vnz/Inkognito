@@ -43,9 +43,9 @@ export class Harbor {
     private readonly host: HarborHost,
   ) {}
 
-  build(width: number, height: number, surface: number): void {
-    // Quer liegen rechts oben Münzen und Konto, unten rechts das Deck: Stand und Qualle rücken nach links.
-    const wide = width > height;
+  build(width: number, surface: number): void {
+    // Breiter Hafen (quer oder hochkant als Promenade): Hütte hat Platz, Stand und Qualle rücken nach innen.
+    const wide = width >= 600;
     // Hafenstadt hinter dem Steg (Pixel ×6 im Bild, auf dem Schirm ×2)
     this.scene.add.image(0, surface + 4, 'bg_harbor_0').setOrigin(0, 1).setScale(1 / 3).setDepth(-18);
     this.gagIndex = this.host.save.stats.casts;
@@ -64,7 +64,8 @@ export class Harbor {
       for (const x of [6, 46, 84]) g.fillRect(x, surface, 6, 40);
     }
     // Fischstand rechts: Markise und Theke
-    const sx = wide ? width - 150 : width - 46;
+    // Quer bleibt rechts oben Platz für Münzen und Konto; die schmale Promenade schiebt den Stand am Leuchtturm vorbei
+    const sx = !wide ? width - 46 : width < 800 ? width - 90 : width - 150;
     g.fillStyle(0x8a5a2b, 1);
     g.fillRect(sx - 34, surface - 26, 68, 22);
     for (let i = 0; i < 6; i++) {

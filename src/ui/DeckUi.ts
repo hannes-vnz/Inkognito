@@ -17,6 +17,8 @@ export class DeckUi {
   private readonly depthLabel: HTMLDivElement;
   private readonly timeLabel: HTMLDivElement;
   private readonly fightBox: HTMLDivElement;
+  private readonly panLeft: HTMLDivElement;
+  private readonly panRight: HTMLDivElement;
   private readonly fightReel: HTMLDivElement;
   private readonly fightTension: HTMLDivElement;
   private readonly deck: HTMLDivElement;
@@ -124,6 +126,11 @@ export class DeckUi {
     this.fightReel = bar(t('fight.reel'), 'reel');
     this.fightTension = bar(t('fight.tension'), 'tension');
     root.append(this.fightBox);
+    this.panLeft = el('div', 'pan-hint left hidden');
+    this.panRight = el('div', 'pan-hint right hidden');
+    this.panLeft.textContent = '‹';
+    this.panRight.textContent = '›';
+    root.append(this.panLeft, this.panRight);
 
     this.hint = el('div', 'card hint hidden');
     root.append(coinCard, this.depthCard, sound, this.deck, this.hint);
@@ -243,6 +250,12 @@ export class DeckUi {
       );
       anim.onfinish = () => c.remove();
     }
+  }
+
+  /** Pfeile am Rand: dort gibt es noch mehr Hafen zu sehen. */
+  setPan(left: boolean, right: boolean): void {
+    this.panLeft.classList.toggle('hidden', !left);
+    this.panRight.classList.toggle('hidden', !right);
   }
 
   /** Kampf-Leisten (Einholen, Spannung); null blendet sie aus. */

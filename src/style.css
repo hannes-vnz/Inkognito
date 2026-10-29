@@ -1716,3 +1716,41 @@ body {
   background: #ff6b6b;
   animation: ready-glow 0.25s ease-in-out infinite alternate;
 }
+
+.pan-hint {
+  position: absolute;
+  top: 34%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  animation: pan-nudge 1.2s ease-in-out infinite alternate;
+}
+
+.pan-hint.left {
+  left: calc(var(--safe-left) + 6px);
+}
+
+.pan-hint.right {
+  right: calc(var(--safe-right) + 6px);
+  animation-direction: alternate-reverse;
+}
+
+.pan-hint.hidden {
+  opacity: 0;
+}
+
+@keyframes pan-nudge {
+  from {
+    transform: translateX(-4px);
+  }
+  to {
+    transform: translateX(4px);
+  }
+}

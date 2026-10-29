@@ -76,6 +76,11 @@ export class FishingScene extends Phaser.Scene {
   private whale!: Phaser.GameObjects.Graphics;
   private rays!: Phaser.GameObjects.Graphics;
   private worldTime = 0;
+  /** Hochkant ist der Hafen breiter als der Bildschirm (Promenade zum Wischen); Runden laufen im Bildschirmausschnitt um das Boot. */
+  private worldW = 0;
+  private offsetX = 0;
+  private drag: { x: number; scroll: number } | null = null;
+  private dragged = false;
   /** Parallax-Ebenen der Tiefe (Diving Pack): ferner Hintergrund und Felsbögen. */
   private deepFar!: Phaser.GameObjects.TileSprite;
   private deepRocks!: Phaser.GameObjects.TileSprite;
@@ -100,6 +105,10 @@ export class FishingScene extends Phaser.Scene {
     this.save = loadSave(now);
     this.spot = spotById(this.save.map.spot);
     this.depth = depthMapFor(this.save.sea.current);
+    this.worldW = this.spot.harbor && this.scale.width < 600 ? 720 : this.scale.width;
+    this.offsetX = (this.worldW - this.scale.width) / 2;
+    this.drag = null;
+    this.dragged = false;
     this.limitSaid = false;
 
     this.uiRoot = document.getElementById('ui') as HTMLElement;
@@ -125,7 +134,7 @@ export class FishingScene extends Phaser.Scene {
         writeSave(s);
         this.refresh(true);
       },
-      canTalk: () => this.mode === 'deck' && !this.overlayOpen(),
+      canTalk: () => this.mode === 'deck' && !this.overlayOpen() && !this.dragged,
       say: (text) => this.ui.say(text, 3.5),
     });
     this.buildWorld();
@@ -173,7 +182,7 @@ export class FishingScene extends Phaser.Scene {
 
   /** Himmel, Inseln, Wasser mit echten Zonenfarben, Lichtstrahlen, Boot mit Bert, Haken und Leine. */
   private buildWorld(): void {
-    const width = this.scale.width;
+    const width = this.worldW;
     const surface = this.depth.surfaceY;
     this.worldHeight = metersToY(this.spot.maxMeters, this.depth) + 900;
 
@@ -239,8 +248,8 @@ export class FishingScene extends Phaser.Scene {
     this.wave = this.add.graphics().setDepth(5);
     // Tiefe: Hintergrund mit Lichtstrahlen und Felsbögen, blenden mit der Tiefe ein (Kamera-fest, eigene Parallaxe)
     const sh = this.scale.height;
-    this.deepFar = this.add.tileSprite(0, 0, width / 2, sh / 2, 'bg_deep_far').setOrigin(0).setScale(2).setScrollFactor(0).setDepth(-9.8).setAlpha(0);
-    this.deepRocks = this.add.tileSprite(0, 0, width, sh, 'bg_deep_rocks').setOrigin(0).setScrollFactor(0).setDepth(-9.7).setAlpha(0);
+    this.deepFar = this.add.tileSprite(0, 0, this.scale.width / 2, sh / 2, 'bg_deep_far').setOrigin(0).setScale(2).setScrollFactor(0).setDepth(-9.8).setAlpha(0);
+    this.deepRocks = this.add.tileSprite(0, 0, this.scale.width, sh, 'bg_deep_rocks').setOrigin(0).setScrollFactor(0).setDepth(-9.7).setAlpha(0);
     this.buildSeabed(width);
     // Ferner Wal-Schatten zieht langsam durch die oberen Zonen (Parallaxe)
     this.whale = this.add.graphics().setDepth(-9.6).setScrollFactor(1, 0.55).setAlpha(0.16);
@@ -255,7 +264,7 @@ export class FishingScene extends Phaser.Scene {
     this.boat = this.add.image(width / 2, surface + 18, 'boat_1').setOrigin(0.5, 1).setScale(3).setDepth(4);
     this.bert = this.add.sprite(width / 2 - 54, surface - 36, player.sprite, 0).setOrigin(0.5, 1).setScale(2).setDepth(3);
     this.bert.play(animKey(player.id, 'idle'));
-    if (this.spot.harbor) this.harbor.build(width, this.scale.height, surface);
+    if (this.spot.harbor) this.harbor.build(width, surface);
     else islands.setVisible(false);
     this.tweens.add({ targets: [this.boat, this.bert], y: '-=4', duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
@@ -270,6 +279,7 @@ export class FishingScene extends Phaser.Scene {
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, width, this.worldHeight);
+    cam.scrollX = this.offsetX;
     cam.setBackgroundColor('#2fb6b8');
     this.camY = this.deckCamY();
     cam.scrollY = this.camY;
@@ -293,7 +303,17 @@ export class FishingScene extends Phaser.Scene {
     };
     input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => {
       if (this.mode === 'round') this.steerX = p.x;
+      // An Deck: seitlich wischen, um den ganzen Hafen zu sehen
+      this.dragged = false;
+      this.drag = this.mode === 'deck' && this.worldW > this.scale.width ? { x: p.x, scroll: this.cameras.main.scrollX } : null;
     });
+    input.on(Phaser.Input.Events.POINTER_MOVE, (p: Phaser.Input.Pointer) => {
+      if (!this.drag || !p.isDown || this.mode !== 'deck') return;
+      const dx = p.x - this.drag.x;
+      if (Math.abs(dx) > 8) this.dragged = true;
+      if (this.dragged) this.cameras.main.scrollX = Phaser.Math.Clamp(this.drag.scroll - dx, 0, this.worldW - this.scale.width);
+    });
+    input.on(Phaser.Input.Events.POINTER_UP, () => (this.drag = null));
     input.on(Phaser.Input.Events.POINTER_MOVE, steer);
     // Maus ohne gedrückte Taste lenkt auch (Desktop)
     input.on(Phaser.Input.Events.POINTER_MOVE, (p: Phaser.Input.Pointer) => {
@@ -304,6 +324,7 @@ export class FishingScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       input.off(Phaser.Input.Events.POINTER_DOWN);
       input.off(Phaser.Input.Events.POINTER_MOVE);
+      input.off(Phaser.Input.Events.POINTER_UP);
       kb?.off('keydown-SPACE');
     });
   }
@@ -354,12 +375,13 @@ export class FishingScene extends Phaser.Scene {
       this.refresh();
     }
     play('cast');
-    this.round.hookX = this.rodTip().x;
+    this.round.hookX = this.rodTip().x - this.offsetX;
+    this.tweens.add({ targets: this.cameras.main, scrollX: this.offsetX, duration: 250, ease: 'Sine.Out' });
     this.steerX = null;
     this.zoneShown = -1;
     this.mode = 'round';
     this.ui.setMode('round');
-    this.burst(this.round.hookX, this.depth.surfaceY, 18, juice.splash);
+    this.burst(this.round.hookX + this.offsetX, this.depth.surfaceY, 18, juice.splash);
     this.bert.play(animKey(player.id, 'cast'));
     this.bert.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => this.bert.play(animKey(player.id, 'idle')));
     this.hook.setVisible(true);
@@ -370,7 +392,7 @@ export class FishingScene extends Phaser.Scene {
 
   private spawnFishSprite(f: RoundFish): void {
     const def = speciesById.get(f.speciesId)!;
-    const s = this.add.sprite(f.x, f.y, def.sprite, 0).setScale(params.spriteScale).setDepth(8);
+    const s = this.add.sprite(f.x + this.offsetX, f.y, def.sprite, 0).setScale(params.spriteScale).setDepth(8);
     s.play(animKey(def.sprite, 'swim'));
     this.fishSprites.set(f.uid, s);
   }
@@ -388,7 +410,7 @@ export class FishingScene extends Phaser.Scene {
           if (e.uid === this.legendUid) this.startFight();
           this.celebrateRare(e.uid);
           this.hitstop = juice.hitstopSeconds;
-          this.burst(r.hookX, r.hookY, 14, juice.spark);
+          this.burst(r.hookX + this.offsetX, r.hookY, 14, juice.spark);
           {
             const s = this.fishSprites.get(e.uid);
             s?.setTintFill(0xffffff);
@@ -408,9 +430,9 @@ export class FishingScene extends Phaser.Scene {
           if (s) this.tweens.add({ targets: s, scale: params.spriteScale * 1.4, duration: 90, yoyo: true });
           this.celebrateRare(e.uid);
           play('catch', 1 + r.caught.length * 0.08);
-          this.burst(r.hookX, r.hookY, 8, juice.spark);
+          this.burst(r.hookX + this.offsetX, r.hookY, 8, juice.spark);
           this.ui.floater(`${r.caught.length}`, r.hookX + 26, screen(r.hookY) - 10, '#ffffff');
-          this.bubbles.burst(r.hookX, r.hookY, 5);
+          this.bubbles.burst(r.hookX + this.offsetX, r.hookY, 5);
           navigator.vibrate?.(12);
           break;
         }
@@ -419,7 +441,7 @@ export class FishingScene extends Phaser.Scene {
           play('full');
           break;
         case 'landed':
-          this.burst(r.hookX, this.depth.surfaceY, 22, juice.splash);
+          this.burst(r.hookX + this.offsetX, this.depth.surfaceY, 22, juice.splash);
           play('splash');
           this.finale(e.species, e.deepestMeters);
           break;
@@ -640,7 +662,7 @@ export class FishingScene extends Phaser.Scene {
       this.fight = null;
       this.ui.setFight(null, null);
       this.ui.shout(t('fight.won'), '#7bd88f');
-      this.burst(r.hookX, r.hookY, 30, juice.spark);
+      this.burst(r.hookX + this.offsetX, r.hookY, 30, juice.spark);
       play('fanfare');
     } else if (f.result === 'snapped') {
       this.fight = null;
@@ -772,7 +794,7 @@ export class FishingScene extends Phaser.Scene {
     const time = this.worldTime;
     this.sky.tilePositionX += dt * 6;
     const surface = this.depth.surfaceY;
-    const width = this.scale.width;
+    const width = this.worldW;
     this.wave.clear();
     this.wave.fillStyle(0xe8fffb, 0.9);
     for (let x = 0; x < width; x += 8) this.wave.fillRect(x, surface - 3 + Math.round(Math.sin(x * 0.05 + time * 2) * 2), 8, 3);
@@ -838,7 +860,7 @@ export class FishingScene extends Phaser.Scene {
     const r = this.round;
     const alpha = this.stepper.alpha;
     if (r && this.mode === 'round') {
-      const hx = Phaser.Math.Linear(r.prevHookX, r.hookX, alpha);
+      const hx = Phaser.Math.Linear(r.prevHookX, r.hookX, alpha) + this.offsetX;
       const hy = Phaser.Math.Linear(r.prevHookY, r.hookY, alpha);
       this.hook.setPosition(hx, hy);
       const target = hy - cam.height * (r.phase === 'descent' ? HOOK_SCREEN_DESCENT : HOOK_SCREEN_ASCENT);
@@ -856,6 +878,8 @@ export class FishingScene extends Phaser.Scene {
       this.bubbles.update(dt, 0, 0, 0, 0, 0);
     }
     cam.scrollY = Phaser.Math.Clamp(this.camY, 0, this.worldHeight - cam.height);
+    const pan = this.mode === 'deck' && !this.overlayOpen() && this.worldW > this.scale.width;
+    this.ui.setPan(pan && cam.scrollX > 4, pan && cam.scrollX < this.worldW - this.scale.width - 4);
 
     // Fische zeichnen (interpoliert), Leuchtfische mit Schein
     this.glow.clear();
@@ -872,7 +896,7 @@ export class FishingScene extends Phaser.Scene {
           this.cameras.main.shake(500, 0.006);
           play('bite', 0.5);
         }
-        s.setPosition(Phaser.Math.Linear(f.px, f.x, alpha), Phaser.Math.Linear(f.py, f.y, alpha));
+        s.setPosition(Phaser.Math.Linear(f.px, f.x, alpha) + this.offsetX, Phaser.Math.Linear(f.py, f.y, alpha));
         s.setFlipX(f.caught ? false : f.vx < 0);
         if (f.caught) s.setAngle(Math.sin(r.time * 8 + f.uid) * 25);
         const def = speciesById.get(f.speciesId)!;

@@ -96,7 +96,7 @@ Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 
 **Tag und Nacht** wechseln mit den Würfen (4 Tag, 2 Nacht; Uhr läuft nur beim Angeln, Vorbild Dredge). Nachts ist alles dunkler, leuchtende Arten beißen dreimal so oft an.
 
-**Legenden:** Jedes Meer hat ein sagenhaftes Monster mit einem echten Tier dahinter. Es taucht nur am richtigen Platz, zur richtigen Tageszeit und in passender Tiefe auf; mit zu schwachem Haken reißt die Leine. **Opa Knut** erzählt davon und verrät nach und nach vage Hinweise (alle 2 Würfe einer).
+**Legenden:** Jedes Meer hat ein sagenhaftes Monster mit einem echten Tier dahinter. Es taucht nur am richtigen Platz, zur richtigen Tageszeit und in passender Tiefe auf; mit zu schwachem Haken reißt die Leine. Hält der Haken, folgt ein kurzer **Kampf**: dem Monster mit dem Daumen folgen holt es ein, sonst steigt die Spannung bis die Leine reißt. **Opa Knut** erzählt davon und verrät nach und nach vage Hinweise (alle 2 Würfe einer).
 
 | Meer | Legende | Echtes Tier | Wo und wann |
 | --- | --- | --- | --- |

@@ -137,5 +137,20 @@
     "dayCasts": 4,
     "nightCasts": 2,
     "nightGlowBoost": 3
+  },
+  "fight": {
+    "reelPerSecond": 0.2,
+    "followRadius": 45,
+    "tensionUp": 0.45,
+    "tensionDown": 0.3,
+    "fishSpeed": [
+      200,
+      340
+    ],
+    "turnSeconds": [
+      0.4,
+      1.1
+    ],
+    "steerSpeed": 900
   }
 }

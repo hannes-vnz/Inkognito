@@ -1662,3 +1662,57 @@ body {
   font-size: 18px;
   animation: ready-glow 0.9s ease-in-out infinite alternate;
 }
+
+/* Legenden-Kampf */
+.fight {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 24px);
+  transform: translateX(-50%);
+  width: min(340px, calc(100vw - 32px));
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.fight.hidden {
+  opacity: 0;
+}
+
+.fight-row {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.fight-track {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--ink);
+  overflow: hidden;
+}
+
+.fight-fill {
+  height: 100%;
+  width: 0;
+  transition: width 0.1s linear;
+}
+
+.fight-fill.reel {
+  background: #7bd88f;
+}
+
+.fight-fill.tension {
+  background: #ffd23f;
+}
+
+.fight-fill.tension.danger {
+  background: #ff6b6b;
+  animation: ready-glow 0.25s ease-in-out infinite alternate;
+}

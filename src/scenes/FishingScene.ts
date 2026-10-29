@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { baitById, dailyParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { baitById, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
+import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
@@ -74,6 +75,8 @@ export class FishingScene extends Phaser.Scene {
   private legendUid = -1;
   private legendSeen = false;
   private legend: LegendDef | null = null;
+  /** Laufender Kampf mit der Legende (Runde pausiert solange). */
+  private fight: FightState | null = null;
   private limitSaid = false;
 
   constructor() {
@@ -318,6 +321,8 @@ export class FishingScene extends Phaser.Scene {
     this.round = createRound(seed, this.scale.width, line, hooks, pool, this.depth, params, this.spot.current, extra);
     this.legendUid = extra.length ? this.round.fish[this.round.fish.length - 1]!.uid : -1;
     this.legendSeen = false;
+    this.fight = null;
+    this.ui.setFight(null, null);
     if (bait) {
       this.save = consumeBait(this.save);
       writeSave(this.save);
@@ -354,6 +359,7 @@ export class FishingScene extends Phaser.Scene {
           this.cameras.main.shake(120, 0.006);
           play('bite');
           if (this.snapIfTooWeak(e.uid)) break;
+          if (e.uid === this.legendUid) this.startFight();
           this.celebrateRare(e.uid);
           this.hitstop = juice.hitstopSeconds;
           this.burst(r.hookX, r.hookY, 14, juice.spark);
@@ -371,6 +377,7 @@ export class FishingScene extends Phaser.Scene {
           break;
         case 'catch': {
           if (this.snapIfTooWeak(e.uid)) break;
+          if (e.uid === this.legendUid) this.startFight();
           const s = this.fishSprites.get(e.uid);
           if (s) this.tweens.add({ targets: s, scale: params.spriteScale * 1.4, duration: 90, yoyo: true });
           this.celebrateRare(e.uid);
@@ -572,6 +579,52 @@ export class FishingScene extends Phaser.Scene {
   private snapIfTooWeak(uid: number): boolean {
     const r = this.round;
     if (!r || uid !== this.legendUid || !this.legend || hookHolds(this.legend, r.capacity)) return false;
+    this.snap(uid);
+    return true;
+  }
+
+  /** Legende am Haken: Kampf beginnt, die Runde wartet. */
+  private startFight(): void {
+    const r = this.round!;
+    this.fight = createFight(r.hookX, r.rng, fightParams);
+    this.ui.shout(t('fight.start'), '#c78cff');
+    this.ui.setFight(0, this.fight.tension);
+    play('bite', 0.6);
+    navigator.vibrate?.([30, 30, 30, 30, 30]);
+  }
+
+  private updateFight(dt: number): void {
+    const r = this.round!;
+    const f = stepFight(this.fight!, this.steerX, r.width, r.rng, fightParams, dt);
+    r.prevHookX = r.hookX;
+    r.prevHookY = r.hookY;
+    r.hookX = f.hookX;
+    const legend = r.fish.find((x) => x.uid === this.legendUid);
+    if (legend) {
+      legend.px = legend.x;
+      legend.py = legend.y;
+      legend.x = f.fishX;
+      legend.y = r.hookY + 40;
+      legend.vx = f.fishVx;
+    }
+    this.ui.setFight(f.progress, f.tension);
+    if (f.tension > 0.6) this.cameras.main.shake(80, 0.002 + f.tension * 0.006);
+    this.line.setAlpha(following(f, fightParams) ? 1 : 0.6);
+    if (f.result === 'won') {
+      this.fight = null;
+      this.ui.setFight(null, null);
+      this.ui.shout(t('fight.won'), '#7bd88f');
+      this.burst(r.hookX, r.hookY, 30, juice.spark);
+      play('fanfare');
+    } else if (f.result === 'snapped') {
+      this.fight = null;
+      this.ui.setFight(null, null);
+      this.snap(this.legendUid);
+    }
+  }
+
+  private snap(uid: number): void {
+    const r = this.round!;
     releaseFish(r, uid);
     this.save = markSnapped(this.save, this.save.sea.current);
     writeSave(this.save);
@@ -580,7 +633,6 @@ export class FishingScene extends Phaser.Scene {
     navigator.vibrate?.([60, 40, 60]);
     this.ui.shout(t('legend.snap'), '#ff6b6b');
     this.fishSprites.get(uid)?.clearTint();
-    return true;
   }
 
   /** Seltene Art am Haken: Blitz, Schriftzug, heller Ton. */
@@ -705,7 +757,8 @@ export class FishingScene extends Phaser.Scene {
       this.keySteer(dt);
       const frozen = this.hitstop > 0;
       this.hitstop = Math.max(0, this.hitstop - dt);
-      const steps = frozen ? 0 : this.stepper.advance(dt);
+      if (this.fight && !frozen) this.updateFight(dt);
+      const steps = frozen || this.fight ? 0 : this.stepper.advance(dt);
       for (let i = 0; i < steps && this.round && this.mode === 'round'; i++) {
         this.handle(stepRound(this.round, this.steerX, speciesById, this.depth, params, this.stepper.step));
         if (this.mode === 'round') this.checkZone();

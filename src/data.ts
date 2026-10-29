@@ -27,6 +27,7 @@ import gagsJson from '../data/gags.json';
 import baitsJson from '../data/baits.json';
 import type { BaitDef } from './systems/bait';
 import type { HintParams, TimeParams } from './systems/legend';
+import type { FightParams } from './systems/fight';
 
 export interface AnimationDef {
   key: string;
@@ -93,6 +94,7 @@ export const juice = gameJson.juice as unknown as { hitstopSeconds: number; spla
 export const dailyParams = gameJson.daily as DailyParams;
 export const bottles = bottlesJson as string[];
 export const timeParams = gameJson.time as TimeParams;
+export const fightParams = gameJson.fight as unknown as FightParams;
 export const gags = gagsJson as string[];
 export const baits = baitsJson as BaitDef[];
 export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;

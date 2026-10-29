@@ -16,6 +16,9 @@ export class DeckUi {
   private readonly depthValue: HTMLDivElement;
   private readonly depthLabel: HTMLDivElement;
   private readonly timeLabel: HTMLDivElement;
+  private readonly fightBox: HTMLDivElement;
+  private readonly fightReel: HTMLDivElement;
+  private readonly fightTension: HTMLDivElement;
   private readonly deck: HTMLDivElement;
   private readonly castButton: HTMLButtonElement;
   private readonly upgradeRow: HTMLDivElement;
@@ -105,6 +108,22 @@ export class DeckUi {
       label();
       play('tap');
     });
+
+    this.fightBox = el('div', 'card fight hidden');
+    const bar = (label: string, cls: string) => {
+      const row = el('div', 'fight-row');
+      const name = el('span', 'fight-label');
+      name.textContent = label;
+      const track = el('div', 'fight-track');
+      const fill = el('div', `fight-fill ${cls}`);
+      track.append(fill);
+      row.append(name, track);
+      this.fightBox.append(row);
+      return fill;
+    };
+    this.fightReel = bar(t('fight.reel'), 'reel');
+    this.fightTension = bar(t('fight.tension'), 'tension');
+    root.append(this.fightBox);
 
     this.hint = el('div', 'card hint hidden');
     root.append(coinCard, this.depthCard, sound, this.deck, this.hint);
@@ -224,6 +243,15 @@ export class DeckUi {
       );
       anim.onfinish = () => c.remove();
     }
+  }
+
+  /** Kampf-Leisten (Einholen, Spannung); null blendet sie aus. */
+  setFight(progress: number | null, tension: number | null): void {
+    this.fightBox.classList.toggle('hidden', progress === null);
+    if (progress === null || tension === null) return;
+    this.fightReel.style.width = `${Math.round(progress * 100)}%`;
+    this.fightTension.style.width = `${Math.round(tension * 100)}%`;
+    this.fightTension.classList.toggle('danger', tension > 0.7);
   }
 
   /** Auswerfen-Knopf zeigt einen aktiven Köder an. */

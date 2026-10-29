@@ -569,5 +569,9 @@
   "bait.poor": "Bruno: „Ohne Münzen kein Köder, Kollege.“",
   "bait.active": "Köder schon dran: *{name}*.",
   "bait.cast": "Auswerfen mit {name}",
-  "npc.bruno.hub.bait": "Köder kaufen"
+  "npc.bruno.hub.bait": "Köder kaufen",
+  "fight.start": "KAMPF! Folge ihr!",
+  "fight.won": "GEFANGEN!",
+  "fight.reel": "Einholen",
+  "fight.tension": "Spannung"
 }

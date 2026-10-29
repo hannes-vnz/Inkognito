@@ -25,6 +25,8 @@ export interface SpeciesDef {
   source: string;
   /** Datum, an dem der Fakt gegen die Quelle geprüft wurde. */
   factChecked: string;
+  /** Meer, in dem die Art vorkommt (data/seas.json). */
+  sea: string;
 }
 
 export interface FishingParams {
@@ -71,6 +73,8 @@ export interface RoundState {
   caught: RoundFish[];
   deepestY: number;
   time: number;
+  /** Strömung des Angelplatzes: Haken treibt hin und her (Einheiten pro Sekunde). */
+  current: number;
 }
 
 export type RoundEvent =
@@ -107,6 +111,7 @@ export function createRound(
   species: readonly SpeciesDef[],
   map: DepthMap,
   p: FishingParams,
+  current = 0,
 ): RoundState {
   const rng = createRng(seed);
   const maxY = metersToY(lineMeters, map);
@@ -148,6 +153,7 @@ export function createRound(
     maxY,
     capacity,
     fish,
+    current,
     caught: [],
     deepestY: map.surfaceY,
     time: 0,
@@ -180,6 +186,11 @@ export function stepRound(
     const want = (target - s.hookX) * approachFactor(14, dt);
     const max = p.steerSpeed * dt;
     s.hookX += Math.max(-max, Math.min(max, want));
+  }
+
+  if (s.current) {
+    // Strömung wechselt langsam die Richtung, der Daumen muss gegenhalten.
+    s.hookX = Math.min(s.width - 16, Math.max(16, s.hookX + s.current * Math.sin(s.time * 0.9) * dt));
   }
 
   for (const f of s.fish) {

@@ -12,7 +12,8 @@
     "bonus": {
       "type": "crew",
       "value": 0.15
-    }
+    },
+    "sea": "atlantic"
   },
   {
     "id": "glow",
@@ -27,7 +28,8 @@
     "bonus": {
       "type": "coins",
       "value": 0.1
-    }
+    },
+    "sea": "atlantic"
   },
   {
     "id": "teeth",
@@ -41,7 +43,8 @@
     "bonus": {
       "type": "coins",
       "value": 0.1
-    }
+    },
+    "sea": "atlantic"
   },
   {
     "id": "not_fish",
@@ -57,7 +60,8 @@
     "bonus": {
       "type": "coins",
       "value": 0.15
-    }
+    },
+    "sea": "atlantic"
   },
   {
     "id": "legends",
@@ -71,6 +75,55 @@
     "bonus": {
       "type": "coins",
       "value": 0.25
-    }
+    },
+    "sea": "atlantic"
+  },
+  {
+    "id": "camouflage",
+    "nameKey": "set.camouflage.name",
+    "species": [
+      "plaice",
+      "turbot",
+      "brown_shrimp",
+      "weever",
+      "monkfish"
+    ],
+    "bonus": {
+      "type": "coins",
+      "value": 0.15
+    },
+    "sea": "northsea"
+  },
+  {
+    "id": "not_fish_northsea",
+    "nameKey": "set.not_fish_northsea.name",
+    "species": [
+      "brown_shrimp",
+      "moon_jelly",
+      "starfish",
+      "edible_crab",
+      "langoustine"
+    ],
+    "bonus": {
+      "type": "crew",
+      "value": 0.15
+    },
+    "sea": "northsea"
+  },
+  {
+    "id": "oddballs",
+    "nameKey": "set.oddballs.name",
+    "species": [
+      "gurnard",
+      "lumpsucker",
+      "garfish",
+      "catshark",
+      "cod"
+    ],
+    "bonus": {
+      "type": "coins",
+      "value": 0.1
+    },
+    "sea": "northsea"
   }
 ]

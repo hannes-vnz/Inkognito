@@ -1442,7 +1442,7 @@ body {
 }
 
 .map-ui .hint {
-  top: calc(var(--safe-top) + var(--ui-margin) + 64px);
+  top: calc(var(--safe-top) + var(--ui-margin) + 110px);
   width: min(320px, calc(100vw - 32px));
   white-space: normal;
   text-align: center;
@@ -1567,4 +1567,28 @@ body {
   min-height: 52px;
   font-size: 20px;
   font-weight: 800;
+}
+
+.map-prestige {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--ui-margin) + 58px);
+  right: calc(var(--safe-right) + var(--ui-margin));
+  max-width: 60vw;
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.map-prestige[hidden] {
+  display: none;
+}
+
+.map-prestige:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
+.map-prestige.ready {
+  animation: ready-glow 0.8s ease-in-out infinite alternate;
 }

@@ -94,14 +94,14 @@ Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 
 ## Prestige: Neue Meere
 
-Wenn das Fischbuch eines Meeres weit genug gefüllt ist, kann Bert weiterziehen: neues Meer, neue Arten und Zonen, Münzen und Upgrades setzen sich zurück, das Fischbuch und ein dauerhafter Bonus bleiben.
+Kennt Bert genug Arten eines Meeres (Atlantik: 15 von 21), leuchtet auf der Seekarte „Neues Meer“. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde lässt sich „rein zufällig“ mitversetzen.
 
-| Meer | Besonderheit |
-| --- | --- |
-| Startmeer (offener Atlantik) | alle Zonen, Grundarten |
-| Nordsee | flach, Strömung, Plattfische |
-| Korallenriff | bunt, Schwärme, giftige Arten |
-| Arktis | Eis an der Oberfläche, langsame Riesen |
+| Meer | Besonderheit | Stand |
+| --- | --- | --- |
+| Offener Atlantik | alle Zonen bis 11000 m, 21 Arten | fertig |
+| Nordsee | flach (bis 700 m), **Strömung** treibt den Haken, 14 Arten, 3 Sets | fertig |
+| Korallenriff | bunt, Schwärme, giftige Arten | später |
+| Arktis | Eis an der Oberfläche, langsame Riesen | später |
 
 ## Online
 
@@ -135,7 +135,7 @@ Phaser 3, TypeScript, Vite, Supabase. Spiellogik in `src/systems/` ohne Phaser, 
 3b. ✅ **Seekarte:** Angelplätze, Motor, Treibgut; dazu erste Sounds (synthetisiert, data/sounds.json), Münzflug und rollender Zähler.
 4. **Grafik & Juice:** Stil nach ARTSTIL.md, echte Sprites, Animationen.
 5. **Online:** Login und Cloud-Spielstand (vorhanden), Freunde und Bestenlisten.
-6. **Prestige:** weitere Meere.
+6. **Prestige:** ✅ System und Nordsee; Korallenriff und Arktis folgen.
 7. **Duelle:** Gleicher Seed, wer angelt in 3 Würfen mehr?
 
 ## Asset-Regeln

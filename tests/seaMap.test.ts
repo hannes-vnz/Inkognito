@@ -8,16 +8,18 @@ import { clampToRange, distance, flotsam, flotsamTaken, reachableMeters, spotAt,
 import type { SpeciesDef } from '../src/systems/fishing';
 import { newSave } from '../src/systems/save';
 
-const spots = spotsJson as SpotDef[];
+const allSpots = spotsJson as SpotDef[];
+const spots = allSpots.filter((s) => s.sea === 'atlantic');
 const home = spots.find((s) => s.harbor)!;
 const mp = gameJson.map as MapParams;
 const engine = upgradesJson.find((u) => u.id === 'engine')!.values;
 const species = fishJson as unknown as SpeciesDef[];
 
 describe('Seekarte', () => {
-  it('Daten: genau ein Hafen, Texte da, Boost-Arten existieren, alles in der Welt', () => {
-    expect(spots.filter((s) => s.harbor)).toHaveLength(1);
-    for (const s of spots) {
+  it('Daten: genau ein Hafen je Meer, Texte da, Boost-Arten aus dem Meer, alles in der Welt', () => {
+    for (const sea of new Set(allSpots.map((s) => s.sea))) expect(allSpots.filter((s) => s.sea === sea && s.harbor)).toHaveLength(1);
+    for (const s of allSpots) {
+      for (const b of s.boost) expect(species.find((f) => f.id === b)?.sea, `${s.id}: ${b}`).toBe(s.sea);
       for (const key of [s.nameKey, s.descKey]) expect(texts).toHaveProperty([key]);
       for (const b of s.boost) expect(species.map((f) => f.id)).toContain(b);
       expect(s.x).toBeLessThanOrEqual(mp.worldSize);
@@ -25,9 +27,13 @@ describe('Seekarte', () => {
     }
   });
 
-  it('jede Motorstufe schaltet genau einen neuen Platz frei, der letzte erreicht den Graben', () => {
-    const counts = engine.map((r) => spots.filter((s) => spotUnlocked(s, home, r)).length);
-    expect(counts).toEqual(engine.map((_, i) => i + 1));
+  it('jede Motorstufe schaltet genau einen neuen Platz frei (in jedem Meer), der letzte erreicht den Graben', () => {
+    for (const sea of new Set(allSpots.map((s) => s.sea))) {
+      const here = allSpots.filter((s) => s.sea === sea);
+      const h = here.find((s) => s.harbor)!;
+      const counts = engine.map((r) => here.filter((s) => spotUnlocked(s, h, r)).length);
+      expect(counts, sea).toEqual(engine.map((_, i) => Math.min(i + 1, here.length)));
+    }
     expect(reachableMeters(99999, spots, home, engine[engine.length - 1]!)).toBe(11000);
     expect(reachableMeters(500, spots, home, engine[0]!)).toBe(200);
   });

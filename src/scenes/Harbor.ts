@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { harbor, homeSpot, npcById, npcs, quiz, species, speciesById, spots, story, upgradeById } from '../data';
+import { harbor, homeOf, npcById, npcs, quiz, speciesById, speciesIn, spotsIn, story, upgradeById } from '../data';
 import { reachableMeters } from '../systems/seaMap';
 import { play } from '../audio/sfx';
 import { animKey } from '../entities/Octopus';
@@ -174,11 +174,11 @@ export class Harbor {
     if (!save.request) {
       const line = reachableMeters(
         upgradeValue(upgradeById('line'), save.upgrades.line),
-        spots,
-        homeSpot,
+        spotsIn(save.sea.current),
+        homeOf(save.sea.current),
         upgradeValue(upgradeById('engine'), save.upgrades.engine),
       );
-      const request = newRequest(`${save.createdAt}-request-${save.stats.casts}`, species, line, harbor.requestReward, this.lastRequest);
+      const request = newRequest(`${save.createdAt}-request-${save.stats.casts}`, speciesIn(save.sea.current), line, harbor.requestReward, this.lastRequest);
       save = { ...save, request };
       this.host.setSave(save);
     }

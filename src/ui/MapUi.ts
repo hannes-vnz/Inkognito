@@ -21,6 +21,7 @@ export class MapUi {
   private readonly engineEffect: HTMLSpanElement;
   private readonly engineCost: HTMLSpanElement;
   private readonly hint: HTMLDivElement;
+  private readonly prestige: HTMLButtonElement;
   private readonly toast: Toast;
   private lastCoins = -1;
   private shownSpot: string | null | undefined;
@@ -28,7 +29,7 @@ export class MapUi {
   constructor(
     private readonly root: HTMLElement,
     private readonly engineDef: UpgradeDef,
-    handlers: { back: () => void; fish: () => void; buyEngine: () => void },
+    handlers: { back: () => void; fish: () => void; buyEngine: () => void; prestige: () => void },
   ) {
     const coinCard = el('div', 'card hud-coins');
     this.coins = el('div', 'value');
@@ -60,9 +61,13 @@ export class MapUi {
     this.engine.addEventListener('click', handlers.buyEngine);
     panel.append(this.spotCard, this.engine);
 
+    this.prestige = el('button', 'button map-prestige');
+    this.prestige.type = 'button';
+    this.prestige.addEventListener('click', handlers.prestige);
+
     this.hint = el('div', 'card hint');
     setRichText(this.hint, t('map.hint'));
-    root.append(coinCard, back, panel, this.hint);
+    root.append(coinCard, back, this.prestige, panel, this.hint);
     this.toast = new Toast(root);
   }
 
@@ -86,6 +91,16 @@ export class MapUi {
     this.engineCost.textContent = maxed ? t('upgrade.max') : cost.toLocaleString('de-DE');
     this.engine.disabled = maxed || coins < cost;
     this.engine.classList.toggle('ready', !maxed && coins >= cost);
+  }
+
+  /** Fortschritt zum nächsten Meer; leuchtet, sobald man weiterziehen kann. */
+  showPrestige(progress: { known: number; need: number; nextName: string } | null, ready: boolean): void {
+    this.prestige.hidden = !progress;
+    if (!progress) return;
+    this.prestige.textContent = ready ? t('prestige.button', { sea: progress.nextName }) : t('prestige.progress', { known: progress.known, need: progress.need });
+    this.prestige.disabled = !ready;
+    this.prestige.classList.toggle('primary', ready);
+    this.prestige.classList.toggle('ready', ready);
   }
 
   /** Platz unter dem Boot zeigen (oder ausblenden). */

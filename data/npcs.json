@@ -109,6 +109,15 @@
             "next": null
           }
         ]
+      },
+      "northsea": {
+        "textKey": "npc.hilde.northsea",
+        "options": [
+          {
+            "textKey": "npc.hilde.northsea.opt",
+            "next": null
+          }
+        ]
       }
     }
   },

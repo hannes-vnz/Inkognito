@@ -6,6 +6,7 @@ export interface SetDef {
   nameKey: string;
   species: string[];
   bonus: { type: 'coins' | 'crew'; value: number };
+  sea: string;
 }
 
 export interface SetProgress {

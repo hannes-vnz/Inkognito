@@ -8,6 +8,15 @@
     }
   },
   {
+    "id": "hilde_northsea",
+    "npc": "hilde",
+    "node": "northsea",
+    "trigger": {
+      "type": "sea",
+      "value": "northsea"
+    }
+  },
+  {
     "id": "hilde_upgrades",
     "npc": "hilde",
     "node": "upgrades",

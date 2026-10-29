@@ -412,6 +412,37 @@ function drawSpecies(def) {
           for (const sx of [0.2, 0.5, 0.75]) for (let y = fh * 0.45; y < fh - 1; y++) img.set(ox + fw * sx, oy + y, ramp.shadow);
           break;
         }
+        case 'flat': {
+          // Plattfisch von der Seite: flache Scheibe mit Flossensaum, beide Augen oben
+          tail(3, fh * 0.25);
+          ellipse(img, ox, oy, cx, cy + 1, (fw * 0.4) * squash, fh * 0.34, ramp);
+          for (let x = -fw * 0.36; x < fw * 0.36; x += 2) {
+            img.set(ox + cx + x, oy + cy + 1 - fh * 0.38 + ((x + col) % 4 === 0 ? 0 : 1), ramp.shadow);
+            img.set(ox + cx + x, oy + cy + 1 + fh * 0.38, ramp.shadow);
+          }
+          for (let k = 0; k < 4; k++) img.set(ox + cx - 4 + k * 3, oy + cy + 1 + (k % 2), hex('#e8743a'));
+          break;
+        }
+        case 'star': {
+          // Fünf Arme um die Mitte, dreht sich langsam
+          for (let k = 0; k < 5; k++) {
+            const a = (k / 5) * Math.PI * 2 + col * 0.15 - Math.PI / 2;
+            for (let r = 0; r < fw * 0.46; r++) {
+              const w = Math.max(0, 2.2 - r * 0.28);
+              for (let d = -w; d <= w; d++) img.set(ox + fw / 2 + Math.cos(a) * r - Math.sin(a) * d, oy + fh / 2 + Math.sin(a) * r + Math.cos(a) * d, r % 3 === 0 ? ramp.light : ramp.base);
+            }
+          }
+          ellipse(img, ox, oy, fw / 2, fh / 2, 3, 3, ramp);
+          break;
+        }
+        case 'crab': {
+          // Breiter Panzer, Beinchen, zwei Scheren vorne
+          ellipse(img, ox, oy, fw / 2, fh * 0.5, fw * 0.36 * squash, fh * 0.28, ramp);
+          for (let k = 0; k < 4; k++)
+            for (const side of [-1, 1]) for (let i = 0; i < 3; i++) img.set(ox + fw / 2 + side * (fw * 0.28 + i), oy + fh * 0.55 + k * 1.5 + i * 0.6 + ((col + k) % 2), ramp.shadow);
+          for (const side of [-1, 1]) ellipse(img, ox, oy, fw / 2 + side * fw * 0.38, fh * 0.26 - (col % 2), 2.4, 2, ramp);
+          break;
+        }
         default: {
           tail(Math.max(3, Math.round(fw * 0.2)), fh * 0.34);
           ellipse(img, ox, oy, cx, cy, (fw * 0.36) * squash, fh * 0.4, ramp);
@@ -428,6 +459,9 @@ function drawSpecies(def) {
         squid: [fw * 0.5, cy - 1],
         vampire: [fw * 0.55, fh * 0.4],
         stilts: [cx + fw * 0.24 * squash, fh * 0.3],
+        flat: [cx + fw * 0.26, cy - fh * 0.12],
+        star: [fw / 2 + 1, fh / 2],
+        crab: [fw / 2 + 2, fh * 0.36],
       }[def.shape] ?? [cx + fw * 0.24 * squash, cy - 1];
       const ex = Math.round(ox + eyeAt[0]);
       const ey = Math.round(oy + eyeAt[1]);

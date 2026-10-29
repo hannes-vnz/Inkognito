@@ -64,5 +64,8 @@
       60,
       120
     ]
+  },
+  "prestige": {
+    "coinBonusPerSea": 0.25
   }
 }

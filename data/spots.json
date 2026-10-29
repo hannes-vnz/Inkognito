@@ -10,7 +10,9 @@
       "herring",
       "mackerel"
     ],
-    "harbor": true
+    "harbor": true,
+    "sea": "atlantic",
+    "current": 0
   },
   {
     "id": "shelf",
@@ -23,7 +25,9 @@
       "lanternfish",
       "hatchetfish"
     ],
-    "harbor": false
+    "harbor": false,
+    "sea": "atlantic",
+    "current": 0
   },
   {
     "id": "open",
@@ -36,7 +40,9 @@
       "giant_squid",
       "viperfish"
     ],
-    "harbor": false
+    "harbor": false,
+    "sea": "atlantic",
+    "current": 0
   },
   {
     "id": "plain",
@@ -49,7 +55,9 @@
       "dumbo",
       "sea_pig"
     ],
-    "harbor": false
+    "harbor": false,
+    "sea": "atlantic",
+    "current": 0
   },
   {
     "id": "trench",
@@ -62,6 +70,72 @@
       "snailfish",
       "amphipod"
     ],
-    "harbor": false
+    "harbor": false,
+    "sea": "atlantic",
+    "current": 0
+  },
+  {
+    "id": "watt",
+    "nameKey": "spot.watt.name",
+    "descKey": "spot.watt.desc",
+    "x": 200,
+    "y": 1000,
+    "maxMeters": 20,
+    "boost": [
+      "brown_shrimp",
+      "plaice",
+      "weever"
+    ],
+    "harbor": true,
+    "sea": "northsea",
+    "current": 0
+  },
+  {
+    "id": "dogger",
+    "nameKey": "spot.dogger.name",
+    "descKey": "spot.dogger.desc",
+    "x": 560,
+    "y": 820,
+    "maxMeters": 50,
+    "boost": [
+      "cod",
+      "garfish",
+      "gurnard"
+    ],
+    "harbor": false,
+    "sea": "northsea",
+    "current": 90
+  },
+  {
+    "id": "helgoland",
+    "nameKey": "spot.helgoland.name",
+    "descKey": "spot.helgoland.desc",
+    "x": 300,
+    "y": 400,
+    "maxMeters": 100,
+    "boost": [
+      "edible_crab",
+      "lumpsucker",
+      "catshark"
+    ],
+    "harbor": false,
+    "sea": "northsea",
+    "current": 140
+  },
+  {
+    "id": "rinne",
+    "nameKey": "spot.rinne.name",
+    "descKey": "spot.rinne.desc",
+    "x": 900,
+    "y": 420,
+    "maxMeters": 700,
+    "boost": [
+      "langoustine",
+      "monkfish",
+      "cod"
+    ],
+    "harbor": false,
+    "sea": "northsea",
+    "current": 40
   }
 ]

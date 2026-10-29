@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { bottles, homeSpot, mapParams, player, spotById, spots, upgradeById } from '../data';
+import { bottles, homeOf, mapParams, player, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
+import { canMoveOn, knownInSea, moveOn, nextSea } from '../systems/prestige';
+import type { SpotDef } from '../systems/seaMap';
 import { Sheet } from '../ui/Sheet';
 import { clampToRange, flotsam, flotsamTaken, spotAt, spotUnlocked, stepBoat, takeFlotsam, type Boat, type Flotsam, type Point } from '../systems/seaMap';
 import { buyUpgrade, isMaxed, upgradeCost, upgradeValue } from '../systems/economy';
@@ -19,6 +21,8 @@ const BOAT_SCALE = 2;
 export class SeaMapScene extends Phaser.Scene {
   private save!: Save;
   private ui!: MapUi;
+  private home!: SpotDef;
+  private seaSpots: SpotDef[] = [];
   private sheet!: Sheet;
   private boat!: Boat;
   private boatSprite!: Phaser.GameObjects.Image;
@@ -41,6 +45,8 @@ export class SeaMapScene extends Phaser.Scene {
 
   create(): void {
     this.save = loadSave(Date.now());
+    this.home = homeOf(this.save.sea.current);
+    this.seaSpots = spotsIn(this.save.sea.current);
     this.crates = new Map();
     this.buoys = new Map();
     this.keys = [];
@@ -59,13 +65,14 @@ export class SeaMapScene extends Phaser.Scene {
         if (here) this.leave(here.id);
       },
       buyEngine: () => this.buyEngine(),
+      prestige: () => this.offerPrestige(),
     });
 
     this.sheet = new Sheet(root);
     this.drawSea();
     this.rangeRing = this.add.graphics().setDepth(2);
     this.drawRange();
-    for (const s of spots) {
+    for (const s of this.seaSpots) {
       const icon = this.add.image(s.x, s.y, 'buoy').setScale(3).setOrigin(0.5, 0.8).setDepth(3);
       this.tweens.add({ targets: icon, angle: { from: -6, to: 6 }, duration: 900 + s.x, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       const label = this.add
@@ -106,17 +113,20 @@ export class SeaMapScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(0);
     const size = mapParams.worldSize;
     const rng = createRng('sea-map');
-    // Tiefe nach Entfernung vom Hafen: je weiter weg, desto dunkler
+    // Tiefe nach Entfernung vom Hafen: je weiter weg, desto dunkler (Farben aus den Zonen des Meeres)
+    const zones = seaById(this.save.sea.current).zones;
+    const near = Phaser.Display.Color.HexStringToColor(zones[0]!.water[0]);
+    const far = Phaser.Display.Color.HexStringToColor(zones[zones.length - 1]!.water[1]);
     for (let r = size * 1.6; r > 0; r -= 60) {
       const k = Math.min(1, r / (size * 1.4));
       const c = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0x3cc4d6),
-        Phaser.Display.Color.ValueToColor(0x0b2a4a),
+        near,
+        far,
         100,
         Math.round(k * 100),
       );
       g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillCircle(homeSpot.x, homeSpot.y, r);
+      g.fillCircle(this.home.x, this.home.y, r);
     }
     g.fillStyle(0xffffff, 0.18);
     for (let i = 0; i < 260; i++) g.fillRect(rng.range(-200, size + 200), rng.range(-200, size + 200), rng.range(6, 16), 2);
@@ -136,7 +146,7 @@ export class SeaMapScene extends Phaser.Scene {
       land.fillEllipse(x, y, rx * 2, ry * 2);
     }
     land.fillStyle(0x6b4a2b, 1);
-    land.fillRect(homeSpot.x - 60, homeSpot.y + 6, 10, 44);
+    land.fillRect(this.home.x - 60, this.home.y + 6, 10, 44);
   }
 
   /** Reichweite: gestrichelter Ring, dahinter Nebel. */
@@ -145,15 +155,15 @@ export class SeaMapScene extends Phaser.Scene {
     g.clear();
     const r = this.range;
     g.lineStyle(3000, 0x0b1a2e, 0.55);
-    g.strokeCircle(homeSpot.x, homeSpot.y, r + 1500);
+    g.strokeCircle(this.home.x, this.home.y, r + 1500);
     g.fillStyle(0xffffff, 0.5);
-    for (let a = 0; a < Math.PI * 2; a += 0.04) g.fillCircle(homeSpot.x + Math.cos(a) * r, homeSpot.y + Math.sin(a) * r, 2.5);
+    for (let a = 0; a < Math.PI * 2; a += 0.04) g.fillCircle(this.home.x + Math.cos(a) * r, this.home.y + Math.sin(a) * r, 2.5);
   }
 
   private spawnFlotsam(): void {
     for (const c of this.crates.values()) c.sprite.destroy();
     this.crates.clear();
-    for (const piece of flotsam(`${this.save.createdAt}-flotsam-${this.save.stats.casts}`, homeSpot, this.range, mapParams)) {
+    for (const piece of flotsam(`${this.save.createdAt}-flotsam-${this.save.stats.casts}`, this.home, this.range, mapParams)) {
       if (flotsamTaken(this.save, piece.id)) continue;
       const sprite = this.add.image(piece.x, piece.y, piece.bottle ? 'fx_bottle' : 'fx_crate').setScale(2).setDepth(3);
       this.tweens.add({ targets: sprite, y: piece.y - 4, angle: 8, duration: 1100 + piece.id * 90, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
@@ -162,21 +172,27 @@ export class SeaMapScene extends Phaser.Scene {
   }
 
   private spotHere() {
-    const s = spotAt(this.boat, spots, mapParams.spotRadius);
-    return s && spotUnlocked(s, homeSpot, this.range) ? s : null;
+    const s = spotAt(this.boat, this.seaSpots, mapParams.spotRadius);
+    return s && spotUnlocked(s, this.home, this.range) ? s : null;
   }
 
   private nextSpot() {
     if (isMaxed(upgradeById('engine'), this.save.upgrades.engine)) return null;
     const next = upgradeValue(upgradeById('engine'), this.save.upgrades.engine + 1);
-    return spots.find((s) => !spotUnlocked(s, homeSpot, this.range) && spotUnlocked(s, homeSpot, next)) ?? null;
+    return this.seaSpots.find((s) => !spotUnlocked(s, this.home, this.range) && spotUnlocked(s, this.home, next)) ?? null;
   }
 
   private refresh(): void {
     this.ui.update(this.save, this.nextSpot());
-    for (const s of spots) {
+    const sea = seaById(this.save.sea.current);
+    const next = nextSea(seas, sea.id);
+    this.ui.showPrestige(
+      next && sea.nextKnown !== null ? { known: knownInSea(this.save, species, sea.id), need: sea.nextKnown, nextName: t(next.nameKey) } : null,
+      canMoveOn(this.save, seas, species),
+    );
+    for (const s of this.seaSpots) {
       const b = this.buoys.get(s.id)!;
-      const open = spotUnlocked(s, homeSpot, this.range);
+      const open = spotUnlocked(s, this.home, this.range);
       b.icon.setTint(open ? 0xffffff : 0x6a7a8a);
       b.label.setAlpha(open ? 1 : 0.55);
     }
@@ -213,6 +229,35 @@ export class SeaMapScene extends Phaser.Scene {
     this.sheet.show(t('bottle.title'), `${t(letter)} ${t('bottle.reward', { coins })}`, [{ label: t('bottle.ok'), onSelect: () => this.sheet.close() }], undefined, portrait);
   }
 
+  /** Prestige: erklären, was bleibt und was neu beginnt, dann ins nächste Meer. */
+  private offerPrestige(): void {
+    const next = nextSea(seas, this.save.sea.current);
+    if (!next || !canMoveOn(this.save, seas, species)) return;
+    this.target = null;
+    play('tap');
+    const bonus = Math.round(prestigeParams.coinBonusPerSea * 100);
+    this.sheet.show(
+      t('prestige.title'),
+      t('prestige.text', { sea: t(next.nameKey), desc: t(next.descKey), bonus }),
+      [
+        {
+          label: t('prestige.go'),
+          onSelect: () => {
+            this.sheet.close();
+            const home = homeOf(next.id);
+            this.save = moveOn(this.save, next.id, home.id, Date.now());
+            writeSave(this.save);
+            play('fanfare');
+            this.cameras.main.flash(400, 255, 255, 255);
+            this.ui.say(t('prestige.arrive', { sea: t(next.nameKey), bonus: bonus * this.save.sea.left.length }), 4);
+            this.time.delayedCall(900, () => this.leave(home.id));
+          },
+        },
+        { label: t('prestige.stay'), onSelect: () => this.sheet.close() },
+      ],
+    );
+  }
+
   private leave(spotId: string): void {
     this.save = { ...this.save, map: { ...this.save.map, spot: spotId } };
     writeSave(this.save);
@@ -231,7 +276,7 @@ export class SeaMapScene extends Phaser.Scene {
       if (l || r || u || d) target = { x: this.boat.x + (r - l) * 100, y: this.boat.y + (d - u) * 100 };
     }
     const moved = stepBoat(this.boat, target, mapParams.boatSpeed, dt);
-    const clamped = clampToRange(moved, homeSpot, this.range, mapParams.worldSize);
+    const clamped = clampToRange(moved, this.home, this.range, mapParams.worldSize);
     if (clamped.limited && this.time.now - this.limitedSaid > 4000) {
       this.limitedSaid = this.time.now;
       this.ui.say(t('map.range'), 2.5);

@@ -25,11 +25,15 @@ describe('Sammel-Sets', () => {
     }
   });
 
-  it('„Keine Fische!“ enthält wirklich nur Nicht-Fische', () => {
-    const notFish = sets.find((s) => s.id === 'not_fish')!;
-    for (const id of notFish.species) expect(species.find((s) => s.id === id)!.group).not.toBe('fish');
-    const all = species.filter((s) => s.group !== 'fish').map((s) => s.id).sort();
-    expect([...notFish.species].sort()).toEqual(all);
+  it('„Keine Fische!“ enthält in jedem Meer genau alle Nicht-Fische', () => {
+    for (const notFish of sets.filter((s) => s.id.startsWith('not_fish'))) {
+      const all = species.filter((s) => s.sea === notFish.sea && s.group !== 'fish').map((s) => s.id).sort();
+      expect([...notFish.species].sort(), notFish.id).toEqual(all);
+    }
+  });
+
+  it('Sets enthalten nur Arten aus ihrem Meer', () => {
+    for (const set of sets) for (const id of set.species) expect(species.find((s) => s.id === id)!.sea, `${set.id}: ${id}`).toBe(set.sea);
   });
 
   it('Fortschritt und Bonus erst bei vollständigem Set', () => {

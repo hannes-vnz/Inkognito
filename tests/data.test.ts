@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import player from '../data/player.json';
 import fish from '../data/fish.json';
-import zones from '../data/zones.json';
+import seasJson from '../data/seas.json';
+
 import upgrades from '../data/upgrades.json';
 import texts from '../data/texts.de.json';
 
@@ -47,12 +48,18 @@ describe('Daten und Assets', () => {
     for (const f of fish) expect((texts as Record<string, string>)[f.factKey]!.length, f.id).toBeLessThanOrEqual(170);
   });
 
-  it('Zonen schließen lückenlos aneinander an und haben Texte', () => {
-    for (let i = 0; i < zones.length; i++) {
-      expect(texts).toHaveProperty([zones[i]!.nameKey]);
-      expect(texts).toHaveProperty([zones[i]!.enterKey]);
-      if (i > 0) expect(zones[i]!.depthMeters[0]).toBe(zones[i - 1]!.depthMeters[1]);
+  it('Meere: Texte da, Zonen schließen lückenlos an, jede Art lebt in einem Meer', () => {
+    for (const sea of seasJson) {
+      for (const key of [sea.nameKey, sea.descKey]) expect(texts).toHaveProperty([key]);
+      const zones = sea.zones;
+      expect(zones[0]!.depthMeters[0]).toBe(0);
+      for (let i = 0; i < zones.length; i++) {
+        expect(texts).toHaveProperty([zones[i]!.nameKey]);
+        expect(texts).toHaveProperty([zones[i]!.enterKey]);
+        if (i > 0) expect(zones[i]!.depthMeters[0]).toBe(zones[i - 1]!.depthMeters[1]);
+      }
     }
+    for (const f of fish) expect(seasJson.map((s) => s.id), f.id).toContain(f.sea);
   });
 
   it('Upgrades haben Texte, die Leine reicht bis in den Tiefseegraben', () => {
@@ -61,7 +68,7 @@ describe('Daten und Assets', () => {
       expect(texts).toHaveProperty([u.effectKey]);
     }
     const line = upgrades.find((u) => u.id === 'line')!;
-    expect(line.values[line.values.length - 1]!).toBeGreaterThanOrEqual(zones[zones.length - 1]!.depthMeters[0]!);
+    expect(line.values[line.values.length - 1]!).toBeGreaterThanOrEqual(seasJson[0]!.zones[seasJson[0]!.zones.length - 1]!.depthMeters[0]!);
   });
 
   it('kein Math.random in Spiellogik und Darstellung', () => {

@@ -17,7 +17,8 @@ const dayNumber = (key: string): number => Math.round(Date.parse(`${key}T00:00:0
 /** Serientag, den der Bonus heute hätte, oder null, wenn heute schon abgeholt. */
 export function dailyStreak(save: Save, today: string): number | null {
   const last = save.daily.lastDay;
-  if (last === today) return null;
+  // Heute schon abgeholt, oder die Uhr wurde zurückgedreht
+  if (last === today || (last && today < last)) return null;
   if (!last) return 1;
   return dayNumber(today) - dayNumber(last) === 1 ? save.daily.streak + 1 : 1;
 }

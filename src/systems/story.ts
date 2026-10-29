@@ -5,7 +5,8 @@ export type StoryTrigger =
   | { type: 'casts'; value: number }
   | { type: 'species'; value: number }
   | { type: 'deepest'; value: number }
-  | { type: 'caught'; value: string };
+  | { type: 'caught'; value: string }
+  | { type: 'sea'; value: string };
 
 export interface StoryBeat {
   id: string;
@@ -27,6 +28,8 @@ export function triggerMet(t: StoryTrigger, save: Save): boolean {
       return save.stats.deepestMeters >= t.value;
     case 'caught':
       return save.fishbook[t.value] !== undefined;
+    case 'sea':
+      return save.sea.current === t.value;
   }
 }
 

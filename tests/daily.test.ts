@@ -27,6 +27,7 @@ describe('Tagesbonus', () => {
     expect(s.daily.streak).toBe(2);
     expect(dailyStreak(s, '2026-11-02')).toBe(1);
     expect(dailyStreak(s, '2026-10-31')).toBe(3);
+    expect(dailyStreak(s, '2026-10-01')).toBeNull();
   });
 
   it('wächst mit der Crew und bleibt nach Tag 7 beim Höchstwert', () => {

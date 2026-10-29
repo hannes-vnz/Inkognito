@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { dailyParams, depthMap, fixedStepHz, mapParams, params, player, sets, species, speciesById, spotById, upgradeById, upgrades, zones } from '../data';
+import { dailyParams, depthMapFor, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import type { SeaDepthMap } from '../data';
+import { prestigeBonus } from '../systems/prestige';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
 import { play } from '../audio/sfx';
 import { claimDaily, dailyReward, dailyStreak, dayKey } from '../systems/daily';
@@ -61,6 +63,7 @@ export class FishingScene extends Phaser.Scene {
   private uiRoot!: HTMLElement;
   private harbor!: Harbor;
   private spot!: SpotDef;
+  private depth!: SeaDepthMap;
   private limitSaid = false;
 
   constructor() {
@@ -75,6 +78,7 @@ export class FishingScene extends Phaser.Scene {
     this.fishSprites = new Map();
     this.save = loadSave(now);
     this.spot = spotById(this.save.map.spot);
+    this.depth = depthMapFor(this.save.sea.current);
     this.limitSaid = false;
 
     this.uiRoot = document.getElementById('ui') as HTMLElement;
@@ -145,9 +149,8 @@ export class FishingScene extends Phaser.Scene {
   /** Himmel, Inseln, Wasser mit echten Zonenfarben, Lichtstrahlen, Boot mit Bert, Haken und Leine. */
   private buildWorld(): void {
     const width = this.scale.width;
-    const surface = depthMap.surfaceY;
-    const maxLine = upgradeValue(upgradeById('line'), upgradeById('line').values.length - 1);
-    this.worldHeight = metersToY(maxLine, depthMap) + 900;
+    const surface = this.depth.surfaceY;
+    this.worldHeight = metersToY(this.spot.maxMeters, this.depth) + 900;
 
     // Himmel und Inseln oberhalb der Wasserlinie
     const sky = this.add.image(width / 2, surface + 30, 'bg_sea_0').setOrigin(0.5, 1).setDepth(-20);
@@ -157,17 +160,17 @@ export class FishingScene extends Phaser.Scene {
 
     // Wasser: jede Zone als Verlauf in ihren echten Farben
     const water = this.add.graphics().setDepth(-10);
-    zones.forEach((z) => {
-      const top = metersToY(z.depthMeters[0], depthMap);
-      const bottom = metersToY(z.depthMeters[1], depthMap);
+    this.depth.zones.forEach((z) => {
+      const top = metersToY(z.depthMeters[0], this.depth);
+      const bottom = metersToY(z.depthMeters[1], this.depth);
       const a = color(z.water[0]);
       const b = color(z.water[1]);
       water.fillGradientStyle(a, a, b, b, 1);
       water.fillRect(0, top, width, bottom - top + 1);
     });
-    const last = zones[zones.length - 1]!;
+    const last = this.depth.zones[this.depth.zones.length - 1]!;
     water.fillStyle(color(last.water[1]), 1);
-    water.fillRect(0, metersToY(last.depthMeters[1], depthMap), width, 2000);
+    water.fillRect(0, metersToY(last.depthMeters[1], this.depth), width, 2000);
 
     // Lichtstrahlen in der Sonnenlichtzone, Leuchtpunkte in der Tiefe
     const fx = this.add.graphics().setDepth(-9);
@@ -176,16 +179,17 @@ export class FishingScene extends Phaser.Scene {
       const x = rng.range(-50, width);
       const w = rng.range(30, 80);
       fx.fillStyle(0xfff6d0, rng.range(0.05, 0.1));
-      fx.fillTriangle(x, surface, x + w, surface, x + w * 3 + 120, metersToY(180, depthMap));
+      fx.fillTriangle(x, surface, x + w, surface, x + w * 3 + 120, metersToY(this.depth.zones[0]!.depthMeters[1] * 0.9, this.depth));
     }
-    for (let i = 0; i < 260; i++) {
-      const y = rng.range(metersToY(250, depthMap), this.worldHeight);
+    const sparkle = this.depth.zones.find((z) => z.sparkle);
+    for (let i = 0; sparkle && i < 260; i++) {
+      const y = rng.range(metersToY(sparkle.depthMeters[0], this.depth), this.worldHeight);
       fx.fillStyle(rng.pick([0x5cf2ff, 0xb07cff, 0x7dff8a]), rng.range(0.2, 0.7));
       fx.fillRect(rng.range(0, width), y, 2, 2);
     }
     // Zonengrenzen als feine Linien
-    for (const z of zones.slice(1)) {
-      const y = metersToY(z.depthMeters[0], depthMap);
+    for (const z of this.depth.zones.slice(1)) {
+      const y = metersToY(z.depthMeters[0], this.depth);
       fx.fillStyle(0xffffff, 0.12);
       for (let x = 0; x < width; x += 16) fx.fillRect(x, y, 8, 2);
     }
@@ -218,7 +222,7 @@ export class FishingScene extends Phaser.Scene {
 
   /** Kamera an Deck: Wasserlinie bei etwa 45 % der Bildschirmhöhe. */
   private deckCamY(): number {
-    return Math.max(0, depthMap.surfaceY - this.scale.height * 0.45);
+    return Math.max(0, this.depth.surfaceY - this.scale.height * 0.45);
   }
 
   private rodTip(): { x: number; y: number } {
@@ -277,8 +281,8 @@ export class FishingScene extends Phaser.Scene {
       this.ui.say(t('spot.limit', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 4);
     }
     const hooks = upgradeValue(upgradeById('hook'), this.save.upgrades.hook);
-    const pool = spotSpecies(species, this.spot, mapParams.boostWeight);
-    this.round = createRound(`${this.save.createdAt}-${this.save.stats.casts}`, this.scale.width, line, hooks, pool, depthMap, params);
+    const pool = spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight);
+    this.round = createRound(`${this.save.createdAt}-${this.save.stats.casts}`, this.scale.width, line, hooks, pool, this.depth, params, this.spot.current);
     play('splash');
     this.round.hookX = this.rodTip().x;
     this.steerX = null;
@@ -340,11 +344,11 @@ export class FishingScene extends Phaser.Scene {
   /** Neue Zone erreicht: beim ersten Mal ein echter Fakt zur Zone (Lernen nebenbei). */
   private checkZone(): void {
     const r = this.round!;
-    const m = yToMeters(r.hookY, depthMap);
-    const i = zoneIndexAt(m, depthMap);
+    const m = yToMeters(r.hookY, this.depth);
+    const i = zoneIndexAt(m, this.depth);
     if (i <= this.zoneShown) return;
     this.zoneShown = i;
-    const z = zones[i]!;
+    const z = this.depth.zones[i]!;
     if (i > 0 && z.depthMeters[0] > this.save.stats.deepestMeters) this.ui.say(t(z.enterKey), 3.2);
   }
 
@@ -370,7 +374,7 @@ export class FishingScene extends Phaser.Scene {
       this.tweens.add({
         targets: s,
         x: { from: s.x, to: targetX },
-        y: { from: depthMap.surfaceY, to: depthMap.surfaceY - 40 },
+        y: { from: this.depth.surfaceY, to: this.depth.surfaceY - 40 },
         angle: { from: 0, to: (i % 2 ? 1 : -1) * 360 },
         duration: params.flightSeconds * 1000,
         delay: i * 120,
@@ -378,7 +382,7 @@ export class FishingScene extends Phaser.Scene {
         onUpdate: (tw) => {
           // Bogen: zuerst hoch hinaus, dann runter aufs Deck
           const p = tw.progress;
-          s.y = depthMap.surfaceY - 40 - Math.sin(p * Math.PI) * (this.scale.height * 0.35);
+          s.y = this.depth.surfaceY - 40 - Math.sin(p * Math.PI) * (this.scale.height * 0.35);
         },
       });
       return s;
@@ -396,14 +400,14 @@ export class FishingScene extends Phaser.Scene {
         speciesById,
         params,
         Date.now(),
-        setBonus(this.save, sets, 'coins'),
+        setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams),
       );
       const completed = newlyCompleted(this.save, landed.save, sets);
       const record = landed.save.stats.deepestMeters > this.save.stats.deepestMeters && this.save.stats.casts > 0;
       this.save = landed.save;
       writeSave(this.save);
       this.harbor.landed(caught);
-      const boatScreenY = depthMap.surfaceY - this.cameras.main.scrollY;
+      const boatScreenY = this.depth.surfaceY - this.cameras.main.scrollY;
       if (landed.coins > 0) {
         this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, boatScreenY - 90, '#ffd23f');
         this.ui.coinBurst(this.boat.x, boatScreenY - 40, Math.ceil(landed.coins / 10));
@@ -479,7 +483,8 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private zoneName(def: SpeciesDef): string {
-    return t(zones[zoneIndexAt(def.depthMeters[0], depthMap)]!.nameKey);
+    const map = depthMapFor(def.sea);
+    return t(map.zones[zoneIndexAt(def.depthMeters[0], map)]!.nameKey);
   }
 
   /** Seltene Art am Haken: Blitz, Schriftzug, heller Ton. */
@@ -501,7 +506,9 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private openFishbook(): void {
-    showFishbook(this.uiRoot, species, sets, this.save, (s) => this.imageOf(s), (s) => this.zoneName(s), (s) => this.showFact(s, false, () => this.openFishbook()));
+    const visited = [...this.save.sea.left, this.save.sea.current];
+    const book = seas.filter((s) => visited.includes(s.id)).flatMap((s) => speciesIn(s.id));
+    showFishbook(this.uiRoot, book, sets.filter((x) => visited.includes(x.sea)), this.save, (s) => this.imageOf(s), (s) => this.zoneName(s), (s) => this.showFact(s, false, () => this.openFishbook()));
   }
 
   private buy(u: UpgradeDef): void {
@@ -512,9 +519,9 @@ export class FishingScene extends Phaser.Scene {
     writeSave(this.save);
     this.bert.play(animKey(player.id, 'cheer'));
     play('upgrade');
-    this.ui.confetti(this.boat.x, depthMap.surfaceY - this.cameras.main.scrollY - 40);
+    this.ui.confetti(this.boat.x, this.depth.surfaceY - this.cameras.main.scrollY - 40);
     this.time.delayedCall(700, () => this.mode === 'deck' && this.bert.play(animKey(player.id, 'idle')));
-    this.bubbles.burst(this.boat.x, depthMap.surfaceY, 10);
+    this.bubbles.burst(this.boat.x, this.depth.surfaceY, 10);
     this.refresh(true);
   }
 
@@ -569,8 +576,9 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private refresh(bump = false): void {
-    const known = species.filter((s) => this.save.fishbook[s.id]).length;
-    this.ui.update(this.save, known, species.length, bump);
+    const here = speciesIn(this.save.sea.current);
+    const known = here.filter((s) => this.save.fishbook[s.id]).length;
+    this.ui.update(this.save, known, here.length, bump);
     this.harbor.refresh();
   }
 
@@ -593,7 +601,7 @@ export class FishingScene extends Phaser.Scene {
       this.keySteer(dt);
       const steps = this.stepper.advance(dt);
       for (let i = 0; i < steps && this.round && this.mode === 'round'; i++) {
-        this.handle(stepRound(this.round, this.steerX, speciesById, depthMap, params, this.stepper.step));
+        this.handle(stepRound(this.round, this.steerX, speciesById, this.depth, params, this.stepper.step));
         if (this.mode === 'round') this.checkZone();
       }
     }
@@ -606,8 +614,8 @@ export class FishingScene extends Phaser.Scene {
       this.hook.setPosition(hx, hy);
       const target = hy - cam.height * (r.phase === 'descent' ? HOOK_SCREEN_DESCENT : HOOK_SCREEN_ASCENT);
       this.camY += (target - this.camY) * Math.min(1, dt * 8);
-      const meters = yToMeters(hy, depthMap);
-      this.ui.setDepth(meters, t(zones[zoneIndexAt(meters, depthMap)]!.nameKey), this.save.stats.deepestMeters, true);
+      const meters = yToMeters(hy, this.depth);
+      this.ui.setDepth(meters, t(this.depth.zones[zoneIndexAt(meters, this.depth)]!.nameKey), this.save.stats.deepestMeters, true);
       this.bubbles.update(dt, hx, hy, 0, r.phase === 'descent' ? 300 : -300, 0.6);
     } else if (this.mode === 'deck') {
       this.camY += (this.deckCamY() - this.camY) * Math.min(1, dt * 4);

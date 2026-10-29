@@ -1,0 +1,144 @@
+[
+  {
+    "id": "atlantic",
+    "nameKey": "sea.atlantic.name",
+    "descKey": "sea.atlantic.desc",
+    "nextKnown": 15,
+    "zones": [
+      {
+        "id": "sunlight",
+        "nameKey": "zone.sunlight.name",
+        "depthMeters": [
+          0,
+          200
+        ],
+        "water": [
+          "#6fd6e6",
+          "#2a8fbf"
+        ],
+        "enterKey": "zone.sunlight.enter",
+        "sparkle": false
+      },
+      {
+        "id": "twilight",
+        "nameKey": "zone.twilight.name",
+        "depthMeters": [
+          200,
+          1000
+        ],
+        "water": [
+          "#2a7fb0",
+          "#123d6e"
+        ],
+        "enterKey": "zone.twilight.enter",
+        "sparkle": true
+      },
+      {
+        "id": "midnight",
+        "nameKey": "zone.midnight.name",
+        "depthMeters": [
+          1000,
+          4000
+        ],
+        "water": [
+          "#10305e",
+          "#0a1a3a"
+        ],
+        "enterKey": "zone.midnight.enter",
+        "sparkle": true
+      },
+      {
+        "id": "abyss",
+        "nameKey": "zone.abyss.name",
+        "depthMeters": [
+          4000,
+          6000
+        ],
+        "water": [
+          "#0a1838",
+          "#070f26"
+        ],
+        "enterKey": "zone.abyss.enter",
+        "sparkle": true
+      },
+      {
+        "id": "hadal",
+        "nameKey": "zone.hadal.name",
+        "depthMeters": [
+          6000,
+          11000
+        ],
+        "water": [
+          "#070e24",
+          "#050a18"
+        ],
+        "enterKey": "zone.hadal.enter",
+        "sparkle": true
+      }
+    ]
+  },
+  {
+    "id": "northsea",
+    "nameKey": "sea.northsea.name",
+    "descKey": "sea.northsea.desc",
+    "nextKnown": null,
+    "zones": [
+      {
+        "id": "coast",
+        "nameKey": "zone.coast.name",
+        "enterKey": "zone.coast.enter",
+        "depthMeters": [
+          0,
+          20
+        ],
+        "water": [
+          "#7fc9b0",
+          "#4f9f8f"
+        ],
+        "sparkle": false
+      },
+      {
+        "id": "shallow",
+        "nameKey": "zone.shallow.name",
+        "enterKey": "zone.shallow.enter",
+        "depthMeters": [
+          20,
+          50
+        ],
+        "water": [
+          "#4f9f8f",
+          "#3a7f7a"
+        ],
+        "sparkle": false
+      },
+      {
+        "id": "bank",
+        "nameKey": "zone.bank.name",
+        "enterKey": "zone.bank.enter",
+        "depthMeters": [
+          50,
+          100
+        ],
+        "water": [
+          "#3a7f7a",
+          "#2a5f6a"
+        ],
+        "sparkle": false
+      },
+      {
+        "id": "trench_ns",
+        "nameKey": "zone.trench_ns.name",
+        "enterKey": "zone.trench_ns.enter",
+        "depthMeters": [
+          100,
+          700
+        ],
+        "water": [
+          "#2a5f6a",
+          "#0f2a3a"
+        ],
+        "sparkle": false
+      }
+    ]
+  }
+]

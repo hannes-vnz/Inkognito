@@ -22,7 +22,8 @@
     },
     "placeholderColor": "#9f8cff",
     "source": "https://www.nationalgeographic.com/animals/invertebrates/p/portuguese-man-of-war/",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "flying_fish",
@@ -47,7 +48,8 @@
     },
     "placeholderColor": "#5fa8e8",
     "source": "https://www.guinnessworldrecords.com/world-records/498196-longest-flight-by-a-flyingfish-duration",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "herring",
@@ -72,7 +74,8 @@
     },
     "placeholderColor": "#a9c4d4",
     "source": "https://pubmed.ncbi.nlm.nih.gov/15101430/",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "mackerel",
@@ -97,7 +100,8 @@
     },
     "placeholderColor": "#3f8fa0",
     "source": "https://dfo-mpo.gc.ca/species-especes/profiles-profils/atl-mackerel-maquereau-eng.html",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "tuna",
@@ -122,7 +126,8 @@
     },
     "placeholderColor": "#2f4f7f",
     "source": "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2025.1512043/pdf",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "sunfish",
@@ -147,7 +152,8 @@
     },
     "placeholderColor": "#c9c2b0",
     "source": "https://oceanario.pt/en/exhibitions/aquarium/fishes/ocean-sunfish",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "hatchetfish",
@@ -172,7 +178,8 @@
     },
     "placeholderColor": "#b9c7d6",
     "source": "https://penntoday.upenn.edu/news/penn-physicists-investigate-how-hatchetfish-camouflage-deep-sea",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "lanternfish",
@@ -197,7 +204,8 @@
     },
     "placeholderColor": "#5f7fa8",
     "source": "https://nora.nerc.ac.uk/id/eprint/541206",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "giant_squid",
@@ -222,7 +230,8 @@
     },
     "placeholderColor": "#c4553f",
     "source": "https://ui.adsabs.harvard.edu/abs/2012CBio...22..683N",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "viperfish",
@@ -247,7 +256,8 @@
     },
     "placeholderColor": "#3b4a6b",
     "source": "https://www.australiangeographic.com.au/blogs/creatura-blog/2018/10/the-glass-fanged-viperfish-is-nightmare-material/",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "fangtooth",
@@ -272,7 +282,8 @@
     },
     "placeholderColor": "#6a3f3a",
     "source": "https://ocean.si.edu/node/108355",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "barreleye",
@@ -297,7 +308,8 @@
     },
     "placeholderColor": "#9fd8d0",
     "source": "https://www.mbari.org/news/news_releases/2009/barreleye/barreleye.html",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "vampire_squid",
@@ -322,7 +334,8 @@
     },
     "placeholderColor": "#7a2a3a",
     "source": "https://oceanservice.noaa.gov/facts/vampire-squid-fish.html",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "gulper",
@@ -347,7 +360,8 @@
     },
     "placeholderColor": "#2e2a3a",
     "source": "https://www.practicalfishkeeping.co.uk/fishkeeping-news/weird-fish-of-the-week-pelican-gulper-eel/",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "black_swallower",
@@ -372,7 +386,8 @@
     },
     "placeholderColor": "#24222e",
     "source": "https://www.whoi.edu/?p=606825",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "anglerfish",
@@ -397,7 +412,8 @@
     },
     "placeholderColor": "#4a3a5a",
     "source": "https://news.yale.edu/2024/05/23/sea-love-behind-unusual-sexual-parasitism-deep-water-anglerfish",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "tripod_fish",
@@ -422,7 +438,8 @@
     },
     "placeholderColor": "#8f8a7a",
     "source": "https://www.fishbase.se/summary/9136",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "sea_pig",
@@ -447,7 +464,8 @@
     },
     "placeholderColor": "#e8a8b8",
     "source": "https://www.mbari.org/animal/sea-pig/",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "dumbo",
@@ -472,7 +490,8 @@
     },
     "placeholderColor": "#f0a070",
     "source": "https://www.aquariumofpacific.org/onlinelearningcenter/species/dumbo_octopus",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "snailfish",
@@ -497,7 +516,8 @@
     },
     "placeholderColor": "#efd8e8",
     "source": "https://mapress.com/zt/article/download/zootaxa.4358.1.7/13080",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
   },
   {
     "id": "amphipod",
@@ -522,6 +542,371 @@
     },
     "placeholderColor": "#f4ecd8",
     "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3419748/",
-    "factChecked": "2026-10-29"
+    "factChecked": "2026-10-29",
+    "sea": "atlantic"
+  },
+  {
+    "id": "brown_shrimp",
+    "nameKey": "fish.brown_shrimp.name",
+    "factKey": "fish.brown_shrimp.fact",
+    "commentKey": "fish.brown_shrimp.comment",
+    "group": "crustacean",
+    "depthMeters": [
+      0,
+      130
+    ],
+    "value": 2,
+    "weight": 10,
+    "behavior": "dart",
+    "speed": 0.9,
+    "glow": false,
+    "shape": "shrimp",
+    "sprite": "fish_brown_shrimp",
+    "frame": {
+      "width": 16,
+      "height": 10
+    },
+    "placeholderColor": "#c9a77a",
+    "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5818513/",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "moon_jelly",
+    "nameKey": "fish.moon_jelly.name",
+    "factKey": "fish.moon_jelly.fact",
+    "commentKey": "fish.moon_jelly.comment",
+    "group": "cnidarian",
+    "depthMeters": [
+      0,
+      200
+    ],
+    "value": 3,
+    "weight": 8,
+    "behavior": "drift",
+    "speed": 0.3,
+    "glow": false,
+    "shape": "jelly",
+    "sprite": "fish_moon_jelly",
+    "frame": {
+      "width": 16,
+      "height": 18
+    },
+    "placeholderColor": "#d9c6ff",
+    "source": "https://wildlifetrusts.org/node/3318",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "plaice",
+    "nameKey": "fish.plaice.name",
+    "factKey": "fish.plaice.fact",
+    "commentKey": "fish.plaice.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      200
+    ],
+    "value": 4,
+    "weight": 9,
+    "behavior": "cruise",
+    "speed": 0.7,
+    "glow": false,
+    "shape": "flat",
+    "sprite": "fish_plaice",
+    "frame": {
+      "width": 22,
+      "height": 12
+    },
+    "placeholderColor": "#b8925a",
+    "source": "https://www.ecomare.nl/en/in-depth/reading-material/animals/animals-the-mud-flats/flatfish/",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "weever",
+    "nameKey": "fish.weever.name",
+    "factKey": "fish.weever.fact",
+    "commentKey": "fish.weever.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      50
+    ],
+    "value": 5,
+    "weight": 7,
+    "behavior": "dart",
+    "speed": 1.0,
+    "glow": false,
+    "shape": "default",
+    "sprite": "fish_weever",
+    "frame": {
+      "width": 18,
+      "height": 9
+    },
+    "placeholderColor": "#d9c27a",
+    "source": "https://www.countryfile.com/wildlife/marine-life/weever-fish",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "garfish",
+    "nameKey": "fish.garfish.name",
+    "factKey": "fish.garfish.fact",
+    "commentKey": "fish.garfish.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      20
+    ],
+    "value": 6,
+    "weight": 6,
+    "behavior": "cruise",
+    "speed": 1.5,
+    "glow": false,
+    "shape": "eel",
+    "sprite": "fish_garfish",
+    "frame": {
+      "width": 30,
+      "height": 8
+    },
+    "placeholderColor": "#5fa7c9",
+    "source": "https://link.springer.com/article/10.1007/s00217-013-1932-y",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "starfish",
+    "nameKey": "fish.starfish.name",
+    "factKey": "fish.starfish.fact",
+    "commentKey": "fish.starfish.comment",
+    "group": "echinoderm",
+    "depthMeters": [
+      0,
+      200
+    ],
+    "value": 4,
+    "weight": 6,
+    "behavior": "drift",
+    "speed": 0.15,
+    "glow": false,
+    "shape": "star",
+    "sprite": "fish_starfish",
+    "frame": {
+      "width": 16,
+      "height": 16
+    },
+    "placeholderColor": "#e8743a",
+    "source": "https://www.huntsmanmarine.ca/species/asterias-rubens-(linnaeus,-1758)",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "gurnard",
+    "nameKey": "fish.gurnard.name",
+    "factKey": "fish.gurnard.fact",
+    "commentKey": "fish.gurnard.comment",
+    "group": "fish",
+    "depthMeters": [
+      10,
+      200
+    ],
+    "value": 7,
+    "weight": 6,
+    "behavior": "cruise",
+    "speed": 0.8,
+    "glow": false,
+    "shape": "wings",
+    "sprite": "fish_gurnard",
+    "frame": {
+      "width": 22,
+      "height": 10
+    },
+    "placeholderColor": "#9aa6b8",
+    "source": "https://epic.awi.de/id/eprint/37179/",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "edible_crab",
+    "nameKey": "fish.edible_crab.name",
+    "factKey": "fish.edible_crab.fact",
+    "commentKey": "fish.edible_crab.comment",
+    "group": "crustacean",
+    "depthMeters": [
+      0,
+      100
+    ],
+    "value": 8,
+    "weight": 5,
+    "behavior": "drift",
+    "speed": 0.4,
+    "glow": false,
+    "shape": "crab",
+    "sprite": "fish_edible_crab",
+    "frame": {
+      "width": 20,
+      "height": 14
+    },
+    "placeholderColor": "#c76a3a",
+    "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3667170/",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "lumpsucker",
+    "nameKey": "fish.lumpsucker.name",
+    "factKey": "fish.lumpsucker.fact",
+    "commentKey": "fish.lumpsucker.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      300
+    ],
+    "value": 10,
+    "weight": 4,
+    "behavior": "drift",
+    "speed": 0.4,
+    "glow": false,
+    "shape": "round",
+    "sprite": "fish_lumpsucker",
+    "frame": {
+      "width": 18,
+      "height": 16
+    },
+    "placeholderColor": "#7a9a5a",
+    "source": "https://en.wikipedia.org/wiki/Cyclopterus",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "catshark",
+    "nameKey": "fish.catshark.name",
+    "factKey": "fish.catshark.fact",
+    "commentKey": "fish.catshark.comment",
+    "group": "fish",
+    "depthMeters": [
+      10,
+      400
+    ],
+    "value": 14,
+    "weight": 4,
+    "behavior": "cruise",
+    "speed": 0.9,
+    "glow": false,
+    "shape": "default",
+    "sprite": "fish_catshark",
+    "frame": {
+      "width": 28,
+      "height": 10
+    },
+    "placeholderColor": "#c9a46a",
+    "source": "https://wildlifetrusts.org/node/3364",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "cod",
+    "nameKey": "fish.cod.name",
+    "factKey": "fish.cod.fact",
+    "commentKey": "fish.cod.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      600
+    ],
+    "value": 18,
+    "weight": 5,
+    "behavior": "cruise",
+    "speed": 0.8,
+    "glow": false,
+    "shape": "default",
+    "sprite": "fish_cod",
+    "frame": {
+      "width": 26,
+      "height": 12
+    },
+    "placeholderColor": "#8f9a6a",
+    "source": "https://pure.uhi.ac.uk/en/publications/cutaneous-taste-buds-in-cod/",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "turbot",
+    "nameKey": "fish.turbot.name",
+    "factKey": "fish.turbot.fact",
+    "commentKey": "fish.turbot.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      80
+    ],
+    "value": 25,
+    "weight": 2,
+    "behavior": "cruise",
+    "speed": 0.5,
+    "glow": false,
+    "shape": "flat",
+    "sprite": "fish_turbot",
+    "frame": {
+      "width": 26,
+      "height": 16
+    },
+    "placeholderColor": "#8a7a5a",
+    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5383827",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "monkfish",
+    "nameKey": "fish.monkfish.name",
+    "factKey": "fish.monkfish.fact",
+    "commentKey": "fish.monkfish.comment",
+    "group": "fish",
+    "depthMeters": [
+      20,
+      1000
+    ],
+    "value": 40,
+    "weight": 2,
+    "behavior": "drift",
+    "speed": 0.3,
+    "glow": false,
+    "shape": "belly",
+    "sprite": "fish_monkfish",
+    "frame": {
+      "width": 30,
+      "height": 18
+    },
+    "placeholderColor": "#7a6a5a",
+    "source": "https://en.wikipedia.org/wiki/Lophius_piscatorius",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
+  },
+  {
+    "id": "langoustine",
+    "nameKey": "fish.langoustine.name",
+    "factKey": "fish.langoustine.fact",
+    "commentKey": "fish.langoustine.comment",
+    "group": "crustacean",
+    "depthMeters": [
+      200,
+      800
+    ],
+    "value": 30,
+    "weight": 3,
+    "behavior": "dart",
+    "speed": 0.6,
+    "glow": false,
+    "shape": "shrimp",
+    "sprite": "fish_langoustine",
+    "frame": {
+      "width": 20,
+      "height": 12
+    },
+    "placeholderColor": "#f29a8a",
+    "source": "https://www.marlin.ac.uk/species/detail/1672",
+    "factChecked": "2026-10-29",
+    "sea": "northsea"
   }
 ]

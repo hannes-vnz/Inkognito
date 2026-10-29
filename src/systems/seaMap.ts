@@ -17,6 +17,9 @@ export interface SpotDef extends Point {
   boost: string[];
   /** Hafen mit Steg, Fischstand und Figuren. */
   harbor: boolean;
+  sea: string;
+  /** Strömung: so stark (Einheiten pro Sekunde) treibt der Haken seitlich. */
+  current: number;
 }
 
 export interface MapParams {

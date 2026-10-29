@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -52,11 +52,17 @@ export interface SaveV6 extends Omit<SaveV5, 'version' | 'map'> {
   daily: { lastDay: string; streak: number };
 }
 
-export type Save = SaveV6;
+export interface SaveV7 extends Omit<SaveV6, 'version'> {
+  version: 7;
+  /** Aktuelles Meer und alle Meere, die Bert schon hinter sich gelassen hat (Prestige). */
+  sea: { current: string; left: string[] };
+}
+
+export type Save = SaveV7;
 
 export function newSave(now: number): Save {
   return {
-    version: 6,
+    version: 7,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -70,6 +76,7 @@ export function newSave(now: number): Save {
     quiz: { nextAtCast: 0, correct: 0, asked: 0 },
     map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [], bottlesRead: 0 },
     daily: { lastDay: '', streak: 0 },
+    sea: { current: 'atlantic', left: [] },
   };
 }
 
@@ -108,6 +115,8 @@ const migrations: Record<number, Migration> = {
     map: { ...(old.map as Record<string, unknown>), bottlesRead: 0 },
     daily: { lastDay: '', streak: 0 },
   }),
+  // v6 → v7: mehrere Meere. Bisher gab es nur den Atlantik.
+  6: (old) => ({ ...old, sea: { current: 'atlantic', left: [] } }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

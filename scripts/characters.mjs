@@ -37,6 +37,11 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     hawaii: rampOf(hex('#ff7ab0')),
     straw: rampOf(hex('#e8c878')),
     sunburn: rampOf(hex('#f4a080')),
+    octo: rampOf(hex('#f2955e')),
+    coat: rampOf(hex('#f2a52a')),
+    boot: rampOf(hex('#3f7a4a')),
+    stache: rampOf(hex('#6b4226')),
+    nose: rampOf(hex('#ff8a8a')),
   };
 
   // ------------------------------------------------------------ Porträts 64×64
@@ -186,34 +191,82 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       eye(img, 0, 0, 26, 25, 2, hex('#f2e05a'), 1, -1);
       line(img, 0, 0, 21, 19, 30, 22, P.gullGrey.outline);
     },
-    bert(img) {
-      for (let k = 0; k < 5; k++) {
-        const x0 = 14 + k * 9;
-        for (let y = 50; y < 64; y++) {
-          const x = x0 + Math.sin(y * 0.4 + k) * 2;
-          rect(img, 0, 0, x, y, 4, 1, k % 2 ? P.pink.base : P.pink.shadow);
+    /** Bert: als Mensch verkleideter Oktopus. Ölmantel, Südwester, Nasen-Brille, Fake-Bart; Tentakel mit Saugnäpfen verraten ihn. */
+    bert(img, face = 'normal') {
+      // Ölmantel mit Matrosenhemd im Ausschnitt
+      blob(img, 0, 0, 32, 70, 31, 22, P.coat);
+      poly(img, 0, 0, [[25, 49], [32, 60], [39, 49]], (x, y) => (y % 3 === 0 ? hex('#3a6ac8') : white));
+      poly(img, 0, 0, [[16, 52], [25, 47], [30, 63], [18, 63]], P.coat.light);
+      poly(img, 0, 0, [[48, 52], [39, 47], [34, 63], [46, 63]], P.coat.shadow);
+      for (const y of [56, 61]) rect(img, 0, 0, 36, y, 2, 2, hex('#7a5a2a'));
+      // Kopf: runder Oktopus-Mantel, warme Farbe mit Flecken
+      blob(img, 0, 0, 32, 30, 17, 19, P.octo);
+      for (const [x, y, r] of [[21, 22, 1.6], [42, 20, 1.4], [44, 34, 1.2], [19, 36, 1.2]]) blob(img, 0, 0, x, y, r, r, rampOf(hex('#d9734a')));
+      // Augen: waagerechte Balken-Pupillen (echtes Oktopus-Merkmal)
+      const lid = face === 'happy' ? 0.35 : face === 'annoyed' ? 0.55 : face === 'shock' ? 1.25 : 1;
+      for (const ex of [25, 39]) {
+        const h = Math.max(1, Math.round(3 * lid));
+        for (let j = -h; j <= h; j++) for (let k = -4; k <= 4; k++) if ((k * k) / 16 + (j * j) / (h * h) <= 1) img.set(ex + k, 30 + j, white);
+        if (face === 'happy') {
+          for (let k = -3; k <= 3; k++) img.set(ex + k, 29 - Math.round(Math.sqrt(9 - k * k) * 0.6), ink);
+          rect(img, 0, 0, ex - 3, 30, 7, 2, P.octo.base);
+        } else {
+          // Kleine Balken-Pupille mit Glanzpunkt, Blick leicht zur Seite
+          rect(img, 0, 0, ex - 1, 30, face === 'shock' ? 2 : 3, 2, ink);
+          img.set(ex, 30, hex('#3a2a20'));
+          img.set(ex - 1, 29, white);
+          if (face !== 'shock') rect(img, 0, 0, ex - 4, 27, 9, 1, P.octo.shadow);
         }
       }
-      blob(img, 0, 0, 32, 32, 19, 18, P.pink);
-      for (const [x, y] of [[20, 26], [44, 30], [24, 38]]) blob(img, 0, 0, x, y, 1.6, 1.6, rampOf(hex('#c8406a')));
-      // Fake-Bart mit sichtbarem Gummiband
-      line(img, 0, 0, 14, 34, 22, 40, hex('#e8e0d0'));
-      line(img, 0, 0, 50, 34, 42, 40, hex('#e8e0d0'));
-      for (let i = 0; i < 18; i++) {
-        const a = (i / 18) * Math.PI * 2;
-        blob(img, 0, 0, 32 + Math.cos(a) * 14, 47 + Math.sin(a) * 8, 3.2, 3.2, P.fakeBeard);
+      // Runde Brille
+      for (const ex of [25, 39])
+        for (let a = 0; a < 36; a++) img.set(ex + Math.round(Math.cos((a / 36) * Math.PI * 2) * 6), 30 + Math.round(Math.sin((a / 36) * Math.PI * 2) * 5.5), hex('#3a2a20'));
+      line(img, 0, 0, 30, 29, 34, 29, hex('#3a2a20'));
+      // Buschige Fake-Augenbrauen, je nach Laune
+      const brow = { normal: [0, 0], happy: [-2, -2], annoyed: [2, -2], shock: [-4, -4] }[face] ?? [0, 0];
+      blob(img, 0, 0, 25, 22 + brow[0] * 0.5, 6, 1.8, P.stache);
+      blob(img, 0, 0, 39, 22 + brow[0] * 0.5, 6, 1.8, P.stache);
+      if (face === 'annoyed') {
+        line(img, 0, 0, 20, 21, 30, 24, P.stache.shadow);
+        line(img, 0, 0, 34, 24, 44, 21, P.stache.shadow);
       }
-      blob(img, 0, 0, 32, 46, 16, 10, P.fakeBeard);
-      for (const [x, y] of [[24, 44], [30, 49], [37, 45], [42, 50], [27, 53], [35, 54]]) {
-        img.set(x, y, P.fakeBeard.shadow);
-        img.set(x + 1, y - 1, P.fakeBeard.light);
+      // Gummiband der Verkleidung bis hinter die Ohren
+      line(img, 0, 0, 15, 31, 19, 30, hex('#e8e0d0'));
+      line(img, 0, 0, 45, 30, 49, 31, hex('#e8e0d0'));
+      // Fake-Bart unten, Mund dazwischen, großer Schnurrbart, Knollennase
+      for (let k = 0; k < 14; k++) {
+        const a = Math.PI * 0.1 + (k / 13) * Math.PI * 0.8;
+        blob(img, 0, 0, 32 + Math.cos(a) * 13, 45 + Math.sin(a) * 7, 3.2, 3.2, P.stache);
       }
-      eye(img, 0, 0, 25, 31, 5, ink, 1, -1);
-      eye(img, 0, 0, 40, 31, 5, ink, 1, -1);
-      // Südwester
-      blob(img, 0, 0, 32, 16, 25, 5, P.sou);
-      blob(img, 0, 0, 32, 10, 15, 8, P.sou);
-      line(img, 0, 0, 18, 15, 46, 15, P.sou.shadow);
+      blob(img, 0, 0, 32, 48, 11, 6, P.stache);
+      if (face === 'happy') {
+        poly(img, 0, 0, [[26, 43], [38, 43], [35, 48], [29, 48]], hex('#5a2030'));
+        rect(img, 0, 0, 27, 43, 10, 2, white);
+      } else if (face === 'shock') blob(img, 0, 0, 32, 46, 3, 3.5, rampOf(hex('#5a2030')));
+      else line(img, 0, 0, 28, 45, 36, 45 - (face === 'annoyed' ? 0 : 1), hex('#5a2030'));
+      for (const side of [-1, 1]) {
+        blob(img, 0, 0, 32 + side * 6, 41, 6, 2.4, P.stache);
+        blob(img, 0, 0, 32 + side * 12, 40 - (face === 'happy' ? 2 : 0), 2.4, 1.8, P.stache);
+      }
+      blob(img, 0, 0, 32, 36, 4.2, 3.8, P.nose);
+      img.set(31, 34, white);
+      // Tentakel-Hand aus dem Ärmel, mit Saugnäpfen
+      const wave = face === 'happy' ? -6 : face === 'shock' ? -10 : 0;
+      for (let k = 0; k < 14; k++) {
+        const x = 52 + Math.sin(k * 0.45) * 3;
+        const y = 62 - k + wave * (k / 14);
+        blob(img, 0, 0, x, y, 2.6 - k * 0.12, 1.4, P.octo);
+        if (k % 3 === 1) img.set(x - 1, y, hex('#ffd0b0'));
+      }
+      if (face === 'shock') {
+        blob(img, 0, 0, 51, 13, 2.2, 3, rampOf(hex('#9ff0ff')));
+        img.set(50, 11, white);
+      }
+      // Südwester, leicht schief
+      blob(img, 0, 0, 32, 15, 25, 4.6, P.sou);
+      blob(img, 0, 0, 31, 9, 15, 7.5, P.sou);
+      line(img, 0, 0, 10, 16, 54, 14, P.sou.shadow);
+      for (let x = 18; x < 44; x += 4) img.set(x, 6 + ((x / 4) % 2), P.sou.light);
     },
   };
 
@@ -224,7 +277,6 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     qualle: { skin: white, eyes: [[24, 29, 3], [40, 29, 3]], mouth: [29, 35, 37], mouthSkin: P.jelly.base },
     knut: { skin: P.skinRed.base, eyes: [[26, 30, 2], [37, 30, 3]] },
     gisela: { skin: P.gullWhite.base, eyes: [[26, 25, 2]] },
-    bert: { skin: P.pink.base, eyes: [[25, 31, 5], [40, 31, 5]] },
   };
 
   /** Gesichtsausdruck über das neutrale Porträt legen: happy, annoyed, shock. */
@@ -267,8 +319,11 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
   /** Porträt 64×64; `face`: normal, happy, annoyed oder shock. */
   function portrait(id, face = 'normal') {
     const img = new Image(64, 64);
-    portraits[id](img);
-    if (face !== 'normal') expression(img, id, face);
+    if (id === 'bert') portraits.bert(img, face);
+    else {
+      portraits[id](img);
+      if (face !== 'normal') expression(img, id, face);
+    }
     outlineRegion(img, 0, 0, 64, 64, DARK);
     return img;
   }
@@ -514,72 +569,80 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
   // ------------------------------------------------------------ Bert (Spielfigur) 32×32
 
   /** Reihen: idle (6), cast (4), cheer (4), sweat (4). Rosa Oktopus, Südwester, viel zu großer Fake-Bart. */
+  /**
+   * Reihen: idle (6), cast (4), cheer (4), sweat (4). Bert im Ölmantel mit Gummistiefeln, Nasen-Brille
+   * und Fake-Bart; Tentakel-Arme aus den Ärmeln, ab und zu lugt ein Tentakel aus dem Stiefel.
+   */
   function bert() {
     const F = 32;
     const img = new Image(F * 6, F * 4);
     const rod = hex('#6b4a2b');
     const rows = [
-      Array.from({ length: 6 }, (_, f) => ({ bob: f < 3 ? 0 : 1, wig: f, blink: f === 4, rod: -1.15 })),
-      [0, 1, 2, 3].map((f) => ({ bob: 0, wig: f, rod: [-2.3, -1.9, -0.7, -0.2][f], lean: [-1, -1, 1, 1][f] })),
-      [0, 1, 2, 3].map((f) => ({ bob: f % 2 ? -2 : 0, wig: f, cheer: f % 2, rod: -1.6, happy: true })),
-      [0, 1, 2, 3].map((f) => ({ bob: f % 2, wig: f, sweat: f, rod: -0.9, shake: f % 2 ? 1 : -1 })),
+      Array.from({ length: 6 }, (_, f) => ({ bob: f === 2 || f === 3 ? 1 : 0, blink: f === 4, peek: f === 5, rod: -1.15, arm: 0 })),
+      [0, 1, 2, 3].map((f) => ({ bob: 0, rod: [-2.3, -1.9, -0.7, -0.2][f], arm: [-3, -2, 1, 2][f], lean: [-1, -1, 1, 1][f] })),
+      [0, 1, 2, 3].map((f) => ({ bob: f % 2 ? -2 : 0, rod: -1.6, cheer: f % 2, happy: true })),
+      [0, 1, 2, 3].map((f) => ({ bob: f % 2, rod: -0.9, sweat: f, fix: f % 2, shake: f % 2 ? 1 : -1 })),
     ];
     rows.forEach((frames, row) =>
       frames.forEach((o, col) => {
         const frame = new Image(F, F);
         const b = o.bob;
-        const sx = (o.shake ?? 0) + (o.lean ?? 0) * 0.5;
-        // Arme unten: fünf kringelige Tentakel
-        for (let k = 0; k < 5; k++) {
-          const ax = 7 + k * 4.5 + sx;
-          for (let y = 22; y < 31; y++) {
-            const x = ax + Math.sin(y * 0.7 + k + o.wig * 1.2) * 1.1;
-            frame.set(x, y, P.pink.base);
-            frame.set(x + 1, y, y > 27 ? P.pink.shadow : P.pink.base);
-          }
-          frame.set(ax + Math.sin(31 * 0.7 + k + o.wig * 1.2), 30, P.pink.light);
+        const sx = (o.shake ?? 0) * 0.5 + (o.lean ?? 0) * 0.5;
+        // Gummistiefel; aus dem einen lugt manchmal ein Tentakel
+        for (const bx of [11, 18]) {
+          rect(frame, 0, 0, bx, 26, 4, 5, (i) => (i === 0 ? P.boot.light : P.boot.base));
+          rect(frame, 0, 0, bx - 1, 30, 6, 2, P.boot.shadow);
         }
-        // Kopf mit Flecken
-        blob(frame, 0, 0, 16 + sx, 13 + b, 10, 9, P.pink);
-        for (const [x, y] of [[9, 10], [23, 12], [11, 16]]) frame.set(x + sx, y + b, P.pink.shadow);
-        // Südwester
-        blob(frame, 0, 0, 16 + sx, 6 + b, 13, 2.4, P.sou);
-        blob(frame, 0, 0, 16 + sx, 3.5 + b, 7, 3.4, P.sou);
-        line(frame, 0, 0, 5 + sx, 7 + b, 27 + sx, 7 + b, P.sou.shadow);
-        // Fake-Bart mit Gummiband
-        line(frame, 0, 0, 6 + sx, 13 + b, 10 + sx, 17 + b, hex('#e8e0d0'));
-        line(frame, 0, 0, 26 + sx, 13 + b, 22 + sx, 17 + b, hex('#e8e0d0'));
-        for (const [bx, by, r] of [[11, 18, 3.6], [16, 20, 4.4], [21, 18, 3.6], [13, 22, 3], [19, 22, 3], [16, 24, 2.6]]) blob(frame, 0, 0, bx + sx, by + b, r, r, P.fakeBeard);
-        for (const [x, y] of [[12, 19], [17, 21], [20, 18], [15, 23]]) frame.set(x + sx, y + b, P.fakeBeard.shadow);
-        // Große Kulleraugen (beim Jubeln zufrieden zugekniffen)
-        for (const ex of [12, 20]) {
+        if (o.peek) for (let k = 0; k < 4; k++) frame.set(21 + k * 0.6, 25 - k, k === 3 ? hex('#ffd0b0') : P.octo.base);
+        // Ölmantel
+        poly(frame, 0, 0, [[11 + sx, 14 + b], [21 + sx, 14 + b], [24 + sx, 27], [8 + sx, 27]], (x) => (x < 12 + sx ? P.coat.light : x > 20 + sx ? P.coat.shadow : P.coat.base));
+        for (const y of [18, 22]) frame.set(16 + sx, y + b, hex('#7a5a2a'));
+        poly(frame, 0, 0, [[14 + sx, 14 + b], [16 + sx, 17 + b], [18 + sx, 14 + b]], white);
+        // Tentakel-Arme aus den Ärmeln
+        const armL = o.cheer !== undefined ? -1 : 1;
+        for (let k = 0; k < 6; k++) frame.set(10 + sx - k * 0.3, 18 + b + k * armL * (o.cheer !== undefined ? 1.4 : 0.9) - (o.cheer ? 1 : 0), P.octo.base);
+        // Kopf
+        blob(frame, 0, 0, 16 + sx, 9 + b, 6.5, 6.5, P.octo);
+        frame.set(12 + sx, 6 + b, rampOf(hex('#d9734a')).base);
+        // Augen hinter der Brille (zu beim Blinzeln, glücklich beim Jubeln)
+        for (const ex of [13, 19]) {
           const x = ex + sx;
-          const y = 12 + b;
-          if (o.blink) line(frame, 0, 0, x - 2, y, x + 1, y, ink);
-          else if (o.happy) {
-            line(frame, 0, 0, x - 2, y, x - 1, y - 1, ink);
-            line(frame, 0, 0, x, y - 1, x + 1, y, ink);
+          const y = 9 + b;
+          for (const [dx, dy] of [[-2, -1], [-1, -2], [0, -2], [1, -1], [1, 0], [1, 1], [0, 2], [-1, 2], [-2, 1], [-2, 0]]) frame.set(x + dx, y + dy, hex('#3a2a20'));
+          if (o.blink || o.happy) {
+            frame.set(x - 1, y, ink);
+            frame.set(x, y, ink);
           } else {
-            rect(frame, 0, 0, x - 2, y - 2, 4, 5, white);
-            rect(frame, 0, 0, x, y - 1, 2, 3, ink);
-            frame.set(x - 1, y - 2, white);
+            rect(frame, 0, 0, x - 1, y - 1, 2, 3, white);
+            rect(frame, 0, 0, x - 1, y, 2, 1, ink);
           }
         }
-        // Jubelarme
-        if (o.cheer !== undefined)
-          for (const s of [-1, 1])
-            for (let i = 0; i < 8; i++) {
-              frame.set(16 + sx + s * (9 + i * 0.4), 15 + b - i - o.cheer, P.pink.base);
-              frame.set(16 + sx + s * (9 + i * 0.4) + s, 15 + b - i - o.cheer, P.pink.shadow);
-            }
-        // Angel in der rechten Hand
-        const hx = 24 + sx;
-        const hy = 20 + b;
+        frame.set(16 + sx, 9 + b, hex('#3a2a20'));
+        // Brauen, Knollennase, Schnurrbart, Bart
+        line(frame, 0, 0, 11 + sx, 6 + b - (o.happy ? 1 : 0), 14 + sx, 6 + b, P.stache.base);
+        line(frame, 0, 0, 18 + sx, 6 + b, 21 + sx, 6 + b - (o.happy ? 1 : 0), P.stache.base);
+        blob(frame, 0, 0, 16 + sx + (o.fix ? 1 : 0), 11.5 + b, 1.8, 1.4, P.nose);
+        line(frame, 0, 0, 12 + sx, 13 + b, 20 + sx, 13 + b, P.stache.base);
+        frame.set(11 + sx, 12 + b, P.stache.base);
+        frame.set(21 + sx, 12 + b, P.stache.base);
+        blob(frame, 0, 0, 16 + sx, 15.5 + b, 4.5, 2.4, P.stache);
+        if (o.happy) rect(frame, 0, 0, 15 + sx, 14 + b, 3, 1, hex('#5a2030'));
+        // Südwester
+        blob(frame, 0, 0, 16 + sx, 4 + b, 10, 1.8, P.sou);
+        blob(frame, 0, 0, 16 + sx, 2 + b, 5.5, 2.6, P.sou);
+        // Angel in der rechten Tentakel-Hand
+        const hx = 23 + sx + (o.arm ?? 0) * 0.3;
+        const hy = 18 + b;
+        for (let k = 0; k < 4; k++) frame.set(21 + sx + k * 0.6, 16 + b + k * 0.5, P.octo.base);
         for (let i = 0; i < 15; i++) frame.set(hx + Math.cos(o.rod) * i, hy + Math.sin(o.rod) * i, rod);
-        blob(frame, 0, 0, hx, hy, 1.6, 1.6, P.pink);
+        blob(frame, 0, 0, hx, hy, 1.5, 1.5, P.octo);
+        frame.set(hx, hy, hex('#ffd0b0'));
+        // Jubelarme, Schweißtropfen
+        if (o.cheer !== undefined)
+          for (const side of [-1, 1]) for (let i = 0; i < 7; i++) frame.set(16 + sx + side * (8 + i * 0.4), 15 + b - i - o.cheer, P.octo.base);
         if (o.sweat !== undefined) {
-          blob(frame, 0, 0, 27 + sx, 9 + b + (o.sweat % 2) * 2, 1.4, 2, rampOf(hex('#9ff0ff')));
-          frame.set(27 + sx, 7 + b + (o.sweat % 2) * 2, white);
+          blob(frame, 0, 0, 24 + sx, 6 + b + (o.sweat % 2) * 2, 1.2, 1.8, rampOf(hex('#9ff0ff')));
+          frame.set(24 + sx, 4 + b + (o.sweat % 2) * 2, white);
         }
         outlineRegion(frame, 0, 0, F, F, DARK);
         for (let y = 0; y < F; y++)
@@ -617,10 +680,9 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     // Schornstein mit Rauchwölkchen
     rect(img, 0, 0, 47, 2, 3, 4, hex('#2a3a4a'));
     rect(img, 0, 0, 47, 2, 3, 1, hex('#ffd23f'));
-    // Mast mit Wimpel, Tau, Anker am Bug
+    // Mast mit Wimpel, Taurolle, Anker am Bug
     line(img, 0, 0, 22, 1, 22, 18, wood.shadow);
     poly(img, 0, 0, [[23, 1], [29, 3], [23, 5]], hex('#ffd23f'));
-    line(img, 0, 0, 22, 2, 4, 18, hex('#e8e0d0'));
     blob(img, 0, 0, 10, 17, 3, 1.4, wood);
     line(img, 0, 0, 59, 19, 59, 23, hex('#5a5a6a'));
     line(img, 0, 0, 57, 23, 61, 23, hex('#5a5a6a'));

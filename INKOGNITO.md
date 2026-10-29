@@ -85,7 +85,7 @@ Der Hafen ist das Menü der Basis. Hier wohnen die Figuren, die das Spiel tragen
 
 | Figur | Rolle | Gag |
 | --- | --- | --- |
-| Der Oktopus („Kapitän Bert“) | Spielfigur | Fake-Bart, schlechte Ausreden, „acht Arme? Das ist Rheuma“ |
+| Der Oktopus („Kapitän Bert“) | Spielfigur | Sieht fast aus wie ein gemütlicher Fischer: orange Haut, Ölmantel, Südwester, Nasen-Brille mit Schnurrbart und Fake-Bart. Nur die Tentakel-Hände mit Saugnäpfen und die Tentakel in den Gummistiefeln verraten ihn. Schlechte Ausreden, „acht Arme? Das ist Rheuma“ |
 | Hafenmeisterin Hilde | Upgrades, Leine und Boot | Ist sich sicher, dass mit Bert was nicht stimmt |
 | Bruno | Fischhändler | Ein Hai im Trenchcoat, ebenfalls inkognito; die beiden decken sich gegenseitig |
 | Professorin Qualle | Fischbuch, Quiz | Liebt Fakten, hat kein Gehirn und sagt das auch |

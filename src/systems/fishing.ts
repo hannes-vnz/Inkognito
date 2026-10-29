@@ -31,7 +31,10 @@ export interface FishingParams {
   fallSpeed: number;
   riseSpeed: number;
   steerSpeed: number;
-  hookRadius: number;
+  /** Abstieg: kleiner Biss-Radius, Ausweichen soll fair wirken. */
+  biteRadius: number;
+  /** Aufstieg: großer Fang-Radius, Einsammeln soll sich großzügig anfühlen. */
+  catchRadius: number;
   fishPerThousandUnits: number;
   spawnStartBelowSurface: number;
   spriteScale: number;
@@ -151,8 +154,8 @@ export function createRound(
   };
 }
 
-const touches = (s: RoundState, f: RoundFish, p: FishingParams): boolean =>
-  !f.caught && Math.hypot(f.x - s.hookX, f.y - s.hookY) <= f.radius + p.hookRadius;
+const touches = (s: RoundState, f: RoundFish, reach: number): boolean =>
+  !f.caught && Math.hypot(f.x - s.hookX, f.y - s.hookY) <= reach;
 
 /**
  * Ein Schritt. `steerX`: Zielposition des Hakens (Daumen) oder null.
@@ -199,7 +202,8 @@ export function stepRound(
   if (s.phase === 'descent') {
     s.hookY = Math.min(s.maxY, s.hookY + p.fallSpeed * dt);
     s.deepestY = Math.max(s.deepestY, s.hookY);
-    const bitten = s.fish.find((f) => touches(s, f, p));
+    // Im Abstieg zählt nur der Kern des Fisches, knappes Vorbeischrammen geht gut.
+    const bitten = s.fish.find((f) => touches(s, f, f.radius * 0.6 + p.biteRadius));
     if (bitten) {
       bitten.caught = true;
       s.caught.push(bitten);
@@ -214,7 +218,7 @@ export function stepRound(
     s.hookY = Math.max(map.surfaceY, s.hookY - p.riseSpeed * (full ? 1.6 : 1) * dt);
     if (!full) {
       for (const f of s.fish) {
-        if (s.caught.length >= s.capacity || !touches(s, f, p)) continue;
+        if (s.caught.length >= s.capacity || !touches(s, f, f.radius + p.catchRadius)) continue;
         f.caught = true;
         s.caught.push(f);
         events.push({ type: 'catch', uid: f.uid });

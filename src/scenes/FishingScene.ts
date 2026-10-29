@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { baitById, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
-import { markSeen } from '../systems/story';
 import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isLegend, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
@@ -42,7 +41,6 @@ const color = (hex: string): number => Phaser.Display.Color.HexStringToColor(hex
 const HOOK_SCREEN_DESCENT = 0.32;
 const HOOK_SCREEN_ASCENT = 0.62;
 /** Story-Marke für das Backstory-Intro (in save.story.seen). */
-const INTRO_ID = 'intro_backstory';
 
 /**
  * Das Angel-Spiel: Bert wirft vom Boot aus, der Haken fällt durch die echten Meereszonen,
@@ -161,14 +159,7 @@ export class FishingScene extends Phaser.Scene {
           intro();
           this.harbor.announceLife();
         });
-      // Ganz am Anfang: wie aus einem Oktopus Kapitän Bert wurde
-      if (this.spot.harbor && !this.save.story.seen.includes(INTRO_ID) && this.save.stats.casts === 0)
-        playScene(this, this.uiRoot, 'intro', {}, () => {
-          this.save = markSeen(this.save, INTRO_ID);
-          writeSave(this.save);
-          harborStory();
-        });
-      else if (this.spot.harbor) harborStory();
+      if (this.spot.harbor) harborStory();
       else if (!data.toast) this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
       if (data.toast) {
         this.ui.say(data.toast, 3);

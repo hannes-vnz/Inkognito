@@ -47,8 +47,6 @@ export interface Shot {
   focus?: [number, number, number] | 'eyes';
   /** Größe des Requisits in % der Bildbreite (Standard 60). */
   propSize?: number;
-  /** Schmale Kinobalken nur für die Augen (Spannung). */
-  bars?: 'normal' | 'eyes';
   /** Vordergrund-Ebene, die sich gegen den Hintergrund bewegt (Parallaxe). */
   fg?: 'kelp' | 'net';
   particles?: ShotParticles;
@@ -373,7 +371,6 @@ export function playCutscene(root: HTMLElement, shots: readonly Shot[], art: Cut
       frame.style.transformOrigin = `${s.focus[0]}% ${s.focus[1]}%`;
       frame.style.setProperty('--z', `${s.focus[2]}`);
     }
-    node.classList.toggle('bars-eyes', s.bars === 'eyes');
     frame.append(bg);
     if (s.particles) frame.append(particles(s.particles));
     if (s.panels?.length) {
@@ -418,25 +415,28 @@ export function playCutscene(root: HTMLElement, shots: readonly Shot[], art: Cut
     if (s.gleam) frame.append(el('div', 'cut-gleam'));
     if (s.fx?.length) frame.append(fxLayer(s.fx));
     const caption = s.polaroid ? '' : (s.caption ?? (s.captionKey ? art.text(s.captionKey) : ''));
+    // Text steht im unteren Kinobalken, nie über dem Bild: kurze Texte groß, lange als Untertitel
+    bottom.replaceChildren();
     if (caption) {
-      // Lange Texte wie Untertitel unten, kurze groß oben
       const text = el('div', caption.length > 40 ? 'cut-caption long' : 'cut-caption');
       setRichText(text, caption);
-      frame.append(text);
+      bottom.append(text);
     }
     stage.replaceChildren(frame);
     if (s.focus === 'eyes') {
-      // Augen sitzen bei ~46 % der Figurhöhe; Kamera zoomt genau dorthin
+      // Großaufnahme vom Kopf (obere ~60 % der Figur): so nah wie möglich, aber der ganze Kopf bleibt im Bild
       // Ruheposition aus dem Layout (ohne die Einspring-Animation)
       const fig = frame.querySelector<HTMLElement>('.cut-figure');
       const box = { width: frame.clientWidth, height: frame.clientHeight };
       if (fig) {
-        const ex = fig.offsetLeft + fig.offsetWidth / 2 - (fig.classList.contains('solo') ? fig.offsetWidth / 2 : 0);
-        const ey = fig.offsetTop + fig.offsetHeight * 0.44;
-        frame.style.transformOrigin = `${ex}px ${ey}px`;
-        frame.style.setProperty('--z', '2.6');
-        // Augen in die Bildmitte schieben (dort ist der schmale Streifen offen)
-        frame.style.translate = `${box.width / 2 - ex}px ${box.height / 2 - ey}px`;
+        const hx = fig.offsetLeft + fig.offsetWidth / 2 - (fig.classList.contains('solo') ? fig.offsetWidth / 2 : 0);
+        const head = fig.offsetHeight * 0.62;
+        const hy = fig.offsetTop + head / 2;
+        // Platz lassen für die leichte Kamerafahrt (bis ×1.05)
+        const z = Math.min(2.6, (box.height * 0.92) / head / 1.05, (box.width * 0.92) / fig.offsetWidth / 1.05);
+        frame.style.transformOrigin = `${hx}px ${hy}px`;
+        frame.style.setProperty('--z', `${Math.max(1, z)}`);
+        frame.style.translate = `${box.width / 2 - hx}px ${box.height / 2 - hy}px`;
       }
     }
     if (s.flash) {

@@ -1778,32 +1778,49 @@ body {
   animation: reaction-out 0.22s ease-in forwards;
 }
 
+.cut {
+  /* Kinobalken: oben schmal, unten Platz für den Text. Die Bühne liegt dazwischen, nichts wird verdeckt. */
+  --bt: max(28px, 6%);
+  --bb: max(110px, 20%);
+}
+@media (orientation: landscape) {
+  .cut {
+    --bb: max(78px, 22%);
+  }
+}
+
 .cut .bar {
   position: absolute;
   left: 0;
   right: 0;
-  height: 9%;
   background: #000;
   z-index: 5;
-  transition: height 0.25s ease-out;
-}
-/* Augen-Einstellung: nur ein schmaler Streifen bleibt offen */
-.cut.bars-eyes .bar {
-  height: 37%;
 }
 
 .cut .bar.top {
   top: 0;
+  height: var(--bt);
 }
 
 .cut .bar.bottom {
   bottom: 0;
+  height: var(--bb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px env(safe-area-inset-bottom);
 }
 
 .cut-stage,
 .cut-frame {
   position: absolute;
   inset: 0;
+}
+.cut-stage {
+  top: var(--bt);
+  bottom: var(--bb);
+  overflow: hidden;
+  container-type: size;
 }
 
 .cut-bg {
@@ -1836,12 +1853,12 @@ body {
     transform: scale(var(--z, 1));
   }
   to {
-    transform: scale(calc(var(--z, 1) * 1.12));
+    transform: scale(calc(var(--z, 1) * 1.05));
   }
 }
 @keyframes cam-pull {
   from {
-    transform: scale(calc(var(--z, 1) * 1.18));
+    transform: scale(calc(var(--z, 1) * 1.06));
   }
   to {
     transform: scale(var(--z, 1));
@@ -1849,18 +1866,18 @@ body {
 }
 @keyframes cam-pan-left {
   from {
-    transform: scale(1.1) translateX(4%);
+    transform: scale(1.06) translateX(2.5%);
   }
   to {
-    transform: scale(1.1) translateX(-4%);
+    transform: scale(1.06) translateX(-2.5%);
   }
 }
 @keyframes cam-pan-right {
   from {
-    transform: scale(1.1) translateX(-4%);
+    transform: scale(1.06) translateX(-2.5%);
   }
   to {
-    transform: scale(1.1) translateX(4%);
+    transform: scale(1.06) translateX(2.5%);
   }
 }
 @keyframes cam-shake {
@@ -1882,8 +1899,8 @@ body {
 /* Figuren groß, pixelscharf, mit Randlicht und Schatten */
 .cut-figure {
   position: absolute;
-  bottom: 9%;
-  height: min(70%, 92vw);
+  bottom: 3%;
+  height: min(80%, 88vw);
   aspect-ratio: 1;
   image-rendering: pixelated;
   filter: drop-shadow(0 0 0 #000) drop-shadow(4px 0 0 rgba(255, 255, 255, 0.25)) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6));
@@ -1896,13 +1913,13 @@ body {
 }
 .cut-figure.left {
   left: 2%;
-  height: min(62%, 60vw);
+  height: min(74%, 47vw);
   transform: scaleX(-1);
   animation-name: fig-pop-flip;
 }
 .cut-figure.right {
   right: 2%;
-  height: min(62%, 60vw);
+  height: min(74%, 47vw);
 }
 .cut-figure.dim {
   filter: brightness(0.28) saturate(0.6);
@@ -1990,15 +2007,11 @@ body {
 }
 
 .cut-caption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 12%;
-  padding: 0 16px;
+  max-width: 760px;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(24px, 7.5vw, 52px);
+  font-size: clamp(22px, 6.5vw, 40px);
   line-height: 1.05;
   color: #fff;
   -webkit-text-stroke: 3px var(--ink);
@@ -2256,12 +2269,9 @@ body {
 }
 
 .cut-caption.long {
-  top: auto;
-  bottom: 9%;
-  padding: 18px 16px 12px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.65) 35%);
-  font-size: clamp(16px, 4.4vw, 28px);
-  line-height: 1.25;
+  font-family: var(--font-body);
+  font-size: clamp(15px, 4.2vw, 22px);
+  line-height: 1.3;
   -webkit-text-stroke: 2px var(--ink);
 }
 
@@ -2445,8 +2455,11 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(72%, 58vh);
-  padding: 4% 4% 13%;
+  /* Maße an der Bühne, nicht an der Bildbreite: Höhe ≈ 0,86 × Breite, passt mit Drehung und Kamerafahrt hinein */
+  --pw: min(72cqw, 92cqh);
+  box-sizing: border-box;
+  width: var(--pw);
+  padding: calc(var(--pw) * 0.04) calc(var(--pw) * 0.04) calc(var(--pw) * 0.13);
   background: #fbfaf4;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   transform: translate(-50%, -50%) rotate(-4deg);
@@ -2478,7 +2491,8 @@ body {
   text-align: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(14px, 3.6vw, 24px);
+  font-size: max(11px, calc(var(--pw) * 0.05));
+  white-space: nowrap;
   color: #2a3a6a;
   transform: rotate(-1deg);
 }
@@ -2495,4 +2509,54 @@ body {
   to {
     filter: none;
   }
+}
+
+/* Intro: Kinobalken mit eigenem Platz für Untertitel und „Überspringen“, die Bühne liegt dazwischen */
+.intro {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.intro-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+.intro-bar.top {
+  top: 0;
+  height: var(--top, 40px);
+  justify-content: flex-end;
+  padding-top: env(safe-area-inset-top);
+}
+.intro-bar.bottom {
+  bottom: 0;
+  height: var(--bottom, 120px);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.intro-skip {
+  pointer-events: auto;
+  font-size: 14px;
+  padding: 4px 12px;
+  min-height: 0;
+  opacity: 0.85;
+}
+.intro-sub {
+  max-width: 720px;
+  text-align: center;
+  font-family: var(--font-body, 'Nunito', sans-serif);
+  font-weight: 800;
+  font-size: clamp(15px, 4.2vw, 22px);
+  line-height: 1.3;
+  color: #fff;
+}
+.intro-sub.hidden {
+  visibility: hidden;
+}
+.intro-sub .mark {
+  color: #ffd23f;
 }

@@ -1,116 +1,4 @@
 {
-  "intro": [
-    {
-      "bg": "deep",
-      "ms": 2600,
-      "cam": "pushIn",
-      "particles": "bubbles",
-      "fg": "kelp",
-      "figures": [
-        {
-          "who": "bert",
-          "face": "normal",
-          "anim": "raw"
-        }
-      ],
-      "captionKey": "intro.1"
-    },
-    {
-      "bg": "deep",
-      "ms": 2300,
-      "cam": "still",
-      "prop": "fx_crate",
-      "motion": "sink",
-      "particles": "bubbles",
-      "fg": "kelp",
-      "captionKey": "intro.2",
-      "sfx": "bubble"
-    },
-    {
-      "bg": "night",
-      "ms": 1000,
-      "cam": "pushIn",
-      "figures": [
-        {
-          "who": "bert",
-          "face": "normal",
-          "anim": "raw"
-        }
-      ],
-      "focus": "eyes",
-      "bars": "eyes"
-    },
-    {
-      "bg": "spotlight",
-      "ms": 3200,
-      "cam": "still",
-      "flash": true,
-      "figures": [
-        {
-          "who": "bert",
-          "face": "normal",
-          "anim": "dressup"
-        }
-      ],
-      "captionKey": "intro.3",
-      "sfx": "chest"
-    },
-    {
-      "bg": "spotlight",
-      "ms": 1400,
-      "cam": "pushIn",
-      "gleam": true,
-      "figures": [
-        {
-          "who": "bert",
-          "face": "normal",
-          "anim": "talk"
-        }
-      ],
-      "captionKey": "intro.4"
-    },
-    {
-      "bg": "black",
-      "ms": 350,
-      "cam": "still"
-    },
-    {
-      "bg": "sparkle",
-      "ms": 2200,
-      "cam": "pullOut",
-      "prop": "boat_1",
-      "captionKey": "intro.5"
-    },
-    {
-      "bg": "marquee",
-      "ms": 2000,
-      "cam": "pushIn",
-      "flash": true,
-      "figures": [
-        {
-          "who": "bert",
-          "face": "happy",
-          "anim": "happy"
-        }
-      ],
-      "particles": "confetti",
-      "captionKey": "intro.6",
-      "sfx": "fanfare"
-    },
-    {
-      "bg": "table",
-      "ms": 2800,
-      "cam": "pushIn",
-      "polaroid": true,
-      "figures": [
-        {
-          "who": "bert",
-          "face": "happy"
-        }
-      ],
-      "captionKey": "intro.photo"
-    }
-  ],
   "legend": [
     {
       "bg": "deep",
@@ -139,7 +27,6 @@
         }
       ],
       "focus": "eyes",
-      "bars": "eyes",
       "sfx": "bite"
     },
     {
@@ -265,8 +152,7 @@
           "face": "annoyed"
         }
       ],
-      "focus": "eyes",
-      "bars": "eyes"
+      "focus": "eyes"
     },
     {
       "bg": "split",
@@ -454,7 +340,6 @@
         }
       ],
       "focus": "eyes",
-      "bars": "eyes",
       "sfx": "reel"
     },
     {

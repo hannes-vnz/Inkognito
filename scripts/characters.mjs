@@ -34,6 +34,9 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     sou: rampOf(hex('#ffd23f')),
     barrel: rampOf(hex('#9a6a3a')),
     red: rampOf(hex('#d9503f')),
+    hawaii: rampOf(hex('#ff7ab0')),
+    straw: rampOf(hex('#e8c878')),
+    sunburn: rampOf(hex('#f4a080')),
   };
 
   // ------------------------------------------------------------ Porträts 64×64
@@ -377,6 +380,67 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       eye(img, ox, oy, 11, 10 + b, 1, hex('#f2e05a'), 1, -1);
       line(img, ox, oy, 9, 8 + b, 13, 9 + b, P.gullGrey.outline);
     },
+  };
+
+  /** Herr Schulze: Hawaiihemd mit Blüten, Strohhut, Sonnenbrille auf der Stirn, Kamera, Sonnenbrand. */
+  portraits.schulze = (img) => {
+    blob(img, 0, 0, 32, 68, 31, 20, P.hawaii);
+    for (const [x, y] of [[16, 54], [26, 60], [40, 55], [48, 61], [33, 52], [20, 62]]) {
+      for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) img.set(x + dx, y + dy, white);
+      img.set(x, y, P.gold.base);
+    }
+    poly(img, 0, 0, [[27, 48], [32, 56], [37, 48]], P.sunburn.base);
+    // Kamera am Riemen
+    line(img, 0, 0, 22, 48, 30, 58, ink);
+    line(img, 0, 0, 42, 48, 34, 58, ink);
+    rect(img, 0, 0, 28, 56, 10, 7, hex('#2a2a3a'));
+    blob(img, 0, 0, 33, 59.5, 2.4, 2.4, rampOf(hex('#5ce1e6')));
+    rect(img, 0, 0, 35, 55, 2, 1, hex('#ff6b6b'));
+    blob(img, 0, 0, 32, 32, 13, 14, P.sunburn);
+    blob(img, 0, 0, 19, 33, 3, 4, P.sunburn);
+    blob(img, 0, 0, 45, 33, 3, 4, P.sunburn);
+    blob(img, 0, 0, 32, 35, 3, 2.6, rampOf(hex('#ff5a4a')));
+    // Schnurrbart
+    blob(img, 0, 0, 28, 39, 4, 1.6, rampOf(hex('#8a6a4a')));
+    blob(img, 0, 0, 36, 39, 4, 1.6, rampOf(hex('#8a6a4a')));
+    line(img, 0, 0, 29, 42, 35, 42, ink);
+    eye(img, 0, 0, 27, 31, 2, hex('#3a6aa8'), 1, -1);
+    eye(img, 0, 0, 38, 31, 2, hex('#3a6aa8'), 1, -1);
+    // Sonnenbrille auf der Stirn, Strohhut
+    rect(img, 0, 0, 22, 24, 8, 3, ink);
+    rect(img, 0, 0, 34, 24, 8, 3, ink);
+    line(img, 0, 0, 30, 25, 34, 25, ink);
+    blob(img, 0, 0, 32, 18, 24, 4, P.straw);
+    blob(img, 0, 0, 32, 12, 13, 7, P.straw);
+    rect(img, 0, 0, 20, 15, 24, 2, hex('#3a6ac8'));
+    for (let x = 10; x < 54; x += 3) img.set(x, 19 + ((x / 3) % 2), P.straw.shadow);
+  };
+  faces.schulze = { skin: P.sunburn.base, eyes: [[27, 31, 2], [38, 31, 2]], mouth: [29, 35, 42] };
+  sprites.schulze = (img, ox, oy, f, row) => {
+    const b = f === 1 || f === 2 ? 1 : 0;
+    // Shorts, Socken in Sandalen
+    rect(img, ox, oy, 12, 27, 3, 4, P.sunburn.base);
+    rect(img, ox, oy, 17, 27, 3, 4, P.sunburn.base);
+    rect(img, ox, oy, 12, 29, 3, 2, white);
+    rect(img, ox, oy, 17, 29, 3, 2, white);
+    rect(img, ox, oy, 11, 31, 4, 1, hex('#7a4a2a'));
+    rect(img, ox, oy, 17, 31, 4, 1, hex('#7a4a2a'));
+    rect(img, ox, oy, 11, 24, 10, 4, hex('#d9c27a'));
+    blob(img, ox, oy, 16, 20 + b, 8, 6, P.hawaii);
+    for (const [x, y] of [[12, 18], [19, 21], [15, 23]]) img.set(ox + x, oy + y + b, white);
+    blob(img, ox, oy, 16, 11 + b, 6.5, 6.5, P.sunburn);
+    img.set(ox + 16, oy + 12 + b, hex('#ff5a4a'));
+    line(img, ox, oy, 13, 14 + b, 19, 14 + b, hex('#8a6a4a'));
+    if (row === 1 && f % 2) rect(img, ox, oy, 15, 15 + b, 3, 1, hex('#5a2030'));
+    eye(img, ox, oy, 13, 10 + b, 1, ink, f === 3 && row === 0 ? 0 : 1, -1);
+    eye(img, ox, oy, 19, 10 + b, 1, ink, f === 3 && row === 0 ? 0 : 1, -1);
+    blob(img, ox, oy, 16, 6 + b, 10, 2, P.straw);
+    blob(img, ox, oy, 16, 3.5 + b, 5.5, 3, P.straw);
+    rect(img, ox, oy, 11, 4 + b, 11, 1, hex('#3a6ac8'));
+    // Kamera; bei react blitzt sie
+    rect(img, ox, oy, 19, 19 + b, 6, 4, hex('#2a2a3a'));
+    img.set(ox + 22, oy + 21 + b, hex('#5ce1e6'));
+    if (row === 2 && f % 2 === 0) for (const [dx, dy] of [[0, -3], [3, 0], [-3, 0], [0, 3], [0, 0]]) img.set(ox + 24 + dx, oy + 17 + b + dy, white);
   };
 
   function sheet(id) {

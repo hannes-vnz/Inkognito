@@ -1,0 +1,282 @@
+[
+  {
+    "id": "kruemel",
+    "steps": [
+      [
+        {
+          "speaker": "bruno",
+          "textKey": "chatter.kruemel.1.1"
+        },
+        {
+          "speaker": "kruemel",
+          "textKey": "chatter.kruemel.1.2"
+        }
+      ],
+      [
+        {
+          "speaker": "bruno",
+          "textKey": "chatter.kruemel.2.1"
+        },
+        {
+          "speaker": "kruemel",
+          "textKey": "chatter.kruemel.2.2"
+        }
+      ],
+      [
+        {
+          "speaker": "bruno",
+          "textKey": "chatter.kruemel.3.1"
+        },
+        {
+          "speaker": "kruemel",
+          "textKey": "chatter.kruemel.3.2"
+        }
+      ],
+      [
+        {
+          "speaker": "bruno",
+          "textKey": "chatter.kruemel.4.1"
+        },
+        {
+          "speaker": "kruemel",
+          "textKey": "chatter.kruemel.4.2"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "knut_size",
+    "steps": [
+      [
+        {
+          "speaker": "knut",
+          "textKey": "chatter.knut_size.1.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.knut_size.1.2"
+        }
+      ],
+      [
+        {
+          "speaker": "knut",
+          "textKey": "chatter.knut_size.2.1"
+        },
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.knut_size.2.2"
+        }
+      ],
+      [
+        {
+          "speaker": "knut",
+          "textKey": "chatter.knut_size.3.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.knut_size.3.2"
+        }
+      ],
+      [
+        {
+          "speaker": "knut",
+          "textKey": "chatter.knut_size.4.1"
+        },
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.knut_size.4.2"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "schulze",
+    "steps": [
+      [
+        {
+          "speaker": "schulze",
+          "textKey": "chatter.schulze.1.1"
+        },
+        {
+          "speaker": "qualle",
+          "textKey": "chatter.schulze.1.2"
+        }
+      ],
+      [
+        {
+          "speaker": "schulze",
+          "textKey": "chatter.schulze.2.1"
+        },
+        {
+          "speaker": "qualle",
+          "textKey": "chatter.schulze.2.2"
+        }
+      ],
+      [
+        {
+          "speaker": "schulze",
+          "textKey": "chatter.schulze.3.1"
+        },
+        {
+          "speaker": "bruno",
+          "textKey": "chatter.schulze.3.2"
+        }
+      ],
+      [
+        {
+          "speaker": "schulze",
+          "textKey": "chatter.schulze.4.1"
+        },
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.schulze.4.2"
+        }
+      ],
+      [
+        {
+          "speaker": "schulze",
+          "textKey": "chatter.schulze.5.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.schulze.5.2"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "gisela_hat",
+    "steps": [
+      [
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.gisela_hat.1.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.gisela_hat.1.2"
+        }
+      ],
+      [
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.gisela_hat.2.1"
+        },
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.gisela_hat.2.2"
+        }
+      ],
+      [
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.gisela_hat.3.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.gisela_hat.3.2"
+        }
+      ],
+      [
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.gisela_hat.4.1"
+        },
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.gisela_hat.4.2"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "jens",
+    "steps": [
+      [
+        {
+          "speaker": "jens",
+          "textKey": "chatter.jens.1.1"
+        },
+        {
+          "speaker": "knut",
+          "textKey": "chatter.jens.1.2"
+        }
+      ],
+      [
+        {
+          "speaker": "jens",
+          "textKey": "chatter.jens.2.1"
+        },
+        {
+          "speaker": "bruno",
+          "textKey": "chatter.jens.2.2"
+        }
+      ],
+      [
+        {
+          "speaker": "jens",
+          "textKey": "chatter.jens.3.1"
+        },
+        {
+          "speaker": "hilde",
+          "textKey": "chatter.jens.3.2"
+        }
+      ],
+      [
+        {
+          "speaker": "jens",
+          "textKey": "chatter.jens.4.1"
+        },
+        {
+          "speaker": "knut",
+          "textKey": "chatter.jens.4.2"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "qualle",
+    "steps": [
+      [
+        {
+          "speaker": "qualle",
+          "textKey": "chatter.qualle.1.1"
+        },
+        {
+          "speaker": "knut",
+          "textKey": "chatter.qualle.1.2"
+        }
+      ],
+      [
+        {
+          "speaker": "qualle",
+          "textKey": "chatter.qualle.2.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.qualle.2.2"
+        }
+      ],
+      [
+        {
+          "speaker": "qualle",
+          "textKey": "chatter.qualle.3.1"
+        },
+        {
+          "speaker": "gisela",
+          "textKey": "chatter.qualle.3.2"
+        }
+      ],
+      [
+        {
+          "speaker": "qualle",
+          "textKey": "chatter.qualle.4.1"
+        },
+        {
+          "speaker": "knut",
+          "textKey": "chatter.qualle.4.2"
+        }
+      ]
+    ]
+  }
+]

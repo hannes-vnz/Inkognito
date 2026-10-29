@@ -25,6 +25,9 @@ import type { SparkStyle } from './render/Sparks';
 import bottlesJson from '../data/bottles.json';
 import gagsJson from '../data/gags.json';
 import baitsJson from '../data/baits.json';
+import harborLifeJson from '../data/harbor_life.json';
+import chatterJson from '../data/chatter.json';
+import type { ChatterGag, LifeDef } from './systems/harborLife';
 import type { BaitDef } from './systems/bait';
 import type { HintParams, TimeParams } from './systems/legend';
 import type { FightParams } from './systems/fight';
@@ -97,6 +100,8 @@ export const timeParams = gameJson.time as TimeParams;
 export const fightParams = gameJson.fight as unknown as FightParams;
 export const gags = gagsJson as string[];
 export const baits = baitsJson as BaitDef[];
+export const harborLife = harborLifeJson as unknown as LifeDef[];
+export const chatter = chatterJson as ChatterGag[];
 export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;
 export const texts = textsJson as TextTable;
 

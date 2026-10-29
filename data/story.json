@@ -71,6 +71,15 @@
     }
   },
   {
+    "id": "schulze_intro",
+    "npc": "schulze",
+    "node": "intro",
+    "trigger": {
+      "type": "species",
+      "value": 8
+    }
+  },
+  {
     "id": "qualle_twilight",
     "npc": "qualle",
     "node": "twilight",

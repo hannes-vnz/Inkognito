@@ -1719,15 +1719,22 @@ body {
 
 .pan-hint {
   position: absolute;
-  top: 34%;
+  top: 56%;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding-bottom: 6px;
+  border: var(--edge);
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 4px 0 var(--ink);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 44px;
+  font-size: 52px;
   line-height: 1;
-  color: #fff;
-  -webkit-text-stroke: 2px var(--ink);
-  paint-order: stroke fill;
-  opacity: 0.85;
+  color: var(--ink);
+  opacity: 0.95;
   pointer-events: none;
   transition: opacity 0.3s;
   animation: pan-nudge 1.2s ease-in-out infinite alternate;

@@ -14,6 +14,7 @@ import type { Save } from '../systems/save';
 import { t } from '../i18n';
 import type { Sheet } from '../ui/Sheet';
 import { playReaction } from '../ui/ReactionShot';
+import { HarborLife } from './HarborLife';
 
 export interface HarborHost {
   readonly save: Save;
@@ -35,6 +36,7 @@ export class Harbor {
   private readonly markers = new Map<string, Phaser.GameObjects.Text>();
   private lastRequest: string | undefined;
   private gagIndex = 0;
+  private life: HarborLife | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -81,6 +83,8 @@ export class Harbor {
       stall: { x: sx, y: surface - 18 },
       roof: { x: sx - 16, y: surface - 90 },
       water: wide ? { x: width * 0.3, y: surface + 80 } : { x: width / 2 + 80, y: surface + 96 },
+      // Zwischen Boot und Fischstand
+      promenade: { x: (width / 2 + 96 + sx - 34) / 2, y: surface - 4 },
     };
     for (const n of npcs) {
       const p = spots[n.place];
@@ -97,7 +101,29 @@ export class Harbor {
       this.sprites.set(n.id, s);
       this.markers.set(n.id, m);
     }
+    const host = this.host;
+    const sprites = this.sprites;
+    this.life = new HarborLife(this.scene, {
+      get save() {
+        return host.save;
+      },
+      setSave: (s) => host.setSave(s),
+      canTalk: () => host.canTalk(),
+      say: (text) => host.say(text),
+      npcSprite: (id) => sprites.get(id),
+    });
+    this.life.build({ surface, worldW: width, pierEnd: wide ? 280 : 92, boatRight: width / 2 + 96, stallLeft: sx - 34 });
     this.refresh();
+  }
+
+  /** Neue Hafenbewohner ankündigen (nach Story-Momenten, wenn das Deck frei ist). */
+  announceLife(): void {
+    this.life?.announce();
+  }
+
+  /** Sprite einer Figur oder eines Bewohners (für Spezial-Animationen). */
+  figure(id: string): Phaser.GameObjects.Sprite | undefined {
+    return this.sprites.get(id) ?? this.life?.sprite(id);
   }
 
   /** Sichtbarkeit und Hinweisblasen: „!“ wenn Bruno einen neuen Wunsch hat, „?“ wenn ein Quiz wartet. */

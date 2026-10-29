@@ -148,7 +148,11 @@ export class FishingScene extends Phaser.Scene {
     this.refresh();
     const intro = () => this.save.stats.casts === 0 && this.ui.showHint(t('ui.hint.cast'));
     const story = () => {
-      if (this.spot.harbor) this.harbor.playNext(intro);
+      if (this.spot.harbor)
+        this.harbor.playNext(() => {
+          intro();
+          this.harbor.announceLife();
+        });
       else if (!data.toast) this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
       if (data.toast) {
         this.ui.say(data.toast, 3);
@@ -477,7 +481,7 @@ export class FishingScene extends Phaser.Scene {
         s.setTint(0xffe27a);
         play('coin', 1 + combos.size * 0.1);
         this.cameras.main.shake(60, 0.004);
-        this.ui.floater(t('round.combo'), s.x, s.y - this.cameras.main.scrollY - 20, '#ffd23f');
+        this.ui.floater(t('round.combo'), s.x - this.cameras.main.scrollX, s.y - this.cameras.main.scrollY - 20, '#ffd23f');
         this.bubbles.burst(s.x, s.y, 6);
       });
       this.tweens.add({
@@ -498,7 +502,7 @@ export class FishingScene extends Phaser.Scene {
           const def = speciesById.get(f.speciesId)!;
           const value = fishValue(def, this.save.fishbook[def.id] !== undefined, combos.has(i), params, setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams));
           this.burst(s.x, s.y, 6, juice.coinSpark);
-          this.ui.floater(`+${value}`, s.x, s.y - this.cameras.main.scrollY - 24, '#ffd23f');
+          this.ui.floater(`+${value}`, s.x - this.cameras.main.scrollX, s.y - this.cameras.main.scrollY - 24, '#ffd23f');
           play('coin', 1 + i * 0.07);
           s.setVisible(false);
         },
@@ -507,6 +511,8 @@ export class FishingScene extends Phaser.Scene {
     });
     this.bert.play(animKey(player.id, caught.length > 0 ? 'cheer' : 'sweat'));
     if (caught.length === 0) this.ui.say(t('round.empty'), 2.5);
+    // Running Gag: Ab und zu stürzt Gisela herab und schnappt sich einen Fisch (zählt trotzdem)
+    if (this.spot.harbor && flying.length >= 2 && this.save.stats.casts % 5 === 4 && this.harbor.figure('gisela')?.visible) this.giselaSteals(flying[flying.length - 1]!);
 
     const total = (params.flightSeconds + caught.length * 0.12) * 1000 + 200;
     this.time.delayedCall(total, () => {
@@ -527,18 +533,19 @@ export class FishingScene extends Phaser.Scene {
       writeSave(this.save);
       this.harbor.landed(caught);
       const boatScreenY = this.depth.surfaceY - this.cameras.main.scrollY;
+      const boatScreenX = this.boat.x - this.cameras.main.scrollX;
       if (landed.coins > 0) {
-        this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, boatScreenY - 90, '#ffd23f');
-        this.ui.coinBurst(this.boat.x, boatScreenY - 40, Math.ceil(landed.coins / 10));
+        this.ui.floater(t('round.summary', { coins: landed.coins }), boatScreenX, boatScreenY - 90, '#ffd23f');
+        this.ui.coinBurst(boatScreenX, boatScreenY - 40, Math.ceil(landed.coins / 10));
       }
       if (this.legend && caught.includes(this.legend.id)) {
         this.ui.shout(t(this.legend.legend.nameKey), '#c78cff');
-        this.ui.confetti(this.boat.x, boatScreenY - 60, 40);
+        this.ui.confetti(boatScreenX, boatScreenY - 60, 40);
         this.cameras.main.flash(500, 255, 240, 200);
         play('fanfare');
       } else if (record) {
         this.ui.shout(t('round.record', { depth: Math.round(landed.save.stats.deepestMeters).toLocaleString('de-DE') }));
-        this.ui.confetti(this.boat.x, boatScreenY - 60, 28);
+        this.ui.confetti(boatScreenX, boatScreenY - 60, 28);
         play('fanfare');
       }
       this.refresh(true);
@@ -569,7 +576,7 @@ export class FishingScene extends Phaser.Scene {
         this.ui.setMode('deck');
         this.bert.play(animKey(player.id, 'idle'));
         this.refresh();
-        this.harbor.playNext(() => undefined);
+        this.harbor.playNext(() => this.harbor.announceLife());
         return;
       }
       play('newSpecies');
@@ -621,6 +628,40 @@ export class FishingScene extends Phaser.Scene {
 
   private burst(x: number, y: number, count: number, style: Omit<SparkStyle, 'tint'> & { tint: string }): void {
     this.sparks.burst(x, y, count, { ...style, tint: color(style.tint) });
+  }
+
+  /** Möwe Gisela fliegt vom Dach, packt einen Fisch mitten im Flug und verschwindet damit. */
+  private giselaSteals(fish: Phaser.GameObjects.Sprite): void {
+    const home = this.harbor.figure('gisela')!;
+    const cam = this.cameras.main;
+    this.time.delayedCall(params.flightSeconds * 450, () => {
+      if (!fish.active) return;
+      this.tweens.killTweensOf(fish);
+      home.setVisible(false);
+      const gull = this.add.sprite(home.x, home.y, home.texture.key, 8).setOrigin(0.5, 1).setScale(2).setDepth(14).setFlipX(true);
+      gull.play(animKey(home.texture.key, 'react'));
+      play('talk', 0.6);
+      this.tweens.add({
+        targets: gull,
+        x: fish.x,
+        y: fish.y + 20,
+        duration: 320,
+        ease: 'Quad.In',
+        onComplete: () => {
+          this.ui.floater(t('steal.floater'), fish.x - cam.scrollX, fish.y - cam.scrollY - 30, '#ff6b6b');
+          this.cameras.main.shake(120, 0.004);
+          play('bite', 1.4);
+          const flyOff = { x: cam.scrollX - 80, y: cam.scrollY - 60 };
+          this.tweens.add({ targets: [gull, fish], x: flyOff.x, y: flyOff.y, duration: 900, ease: 'Quad.Out' });
+          this.time.delayedCall(2600, () => {
+            gull.destroy();
+            home.setVisible(true).setScale(0);
+            this.tweens.add({ targets: home, scale: 2, duration: 250, ease: 'Back.Out' });
+            this.ui.say(t('chatter.gisela_steal'), 2.5);
+          });
+        },
+      });
+    });
   }
 
   /** Legende am Haken, aber der Haken ist zu schwach: Leine reißt, sie schwimmt davon. */
@@ -715,7 +756,7 @@ export class FishingScene extends Phaser.Scene {
     writeSave(this.save);
     this.bert.play(animKey(player.id, 'cheer'));
     play('upgrade');
-    this.ui.confetti(this.boat.x, this.depth.surfaceY - this.cameras.main.scrollY - 40);
+    this.ui.confetti(this.boat.x - this.cameras.main.scrollX, this.depth.surfaceY - this.cameras.main.scrollY - 40);
     this.time.delayedCall(700, () => this.mode === 'deck' && this.bert.play(animKey(player.id, 'idle')));
     this.bubbles.burst(this.boat.x, this.depth.surfaceY, 10);
     this.refresh(true);

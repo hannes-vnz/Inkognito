@@ -32,7 +32,7 @@ export type Face = 'normal' | 'happy' | 'annoyed' | 'shock';
 export const faceOf = (node: DialogNode): Face =>
   node.face ?? (node.reaction ? ({ shock: 'shock', joy: 'happy', smug: 'annoyed' } as const)[node.reaction.mood] : 'normal');
 
-export type NpcPlace = 'pier' | 'bench' | 'stall' | 'roof' | 'water';
+export type NpcPlace = 'pier' | 'bench' | 'stall' | 'roof' | 'water' | 'promenade';
 
 export interface NpcDef {
   id: string;

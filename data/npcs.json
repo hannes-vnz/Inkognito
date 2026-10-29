@@ -553,5 +553,88 @@
         }
       }
     }
+  },
+  {
+    "id": "schulze",
+    "nameKey": "npc.schulze.name",
+    "sprite": "npc_schulze",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#ff8ab8",
+    "place": "promenade",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.schulze.intro",
+        "reaction": {
+          "background": "sparkle",
+          "mood": "joy"
+        },
+        "options": [
+          {
+            "textKey": "npc.schulze.intro.opt",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.schulze.intro2",
+        "face": "happy",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.schulze.hub",
+        "face": "happy",
+        "options": [
+          {
+            "textKey": "npc.schulze.hub.opt",
+            "next": "bruno"
+          },
+          {
+            "textKey": "npc.bye",
+            "next": null
+          }
+        ]
+      },
+      "bruno": {
+        "textKey": "npc.schulze.bruno",
+        "face": "shock",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      }
+    }
   }
 ]

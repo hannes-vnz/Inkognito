@@ -4,13 +4,13 @@ import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
 import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
-import { castsUntilSwitch, hookHolds, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
+import { castsUntilSwitch, hookHolds, isLegend, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
 import { play } from '../audio/sfx';
 import { claimDaily, dailyReward, dailyStreak, dayKey } from '../systems/daily';
 import { showDailyCard } from '../ui/DailyCard';
 import { newlyCompleted, setBonus, type SetDef } from '../systems/sets';
-import { playReaction } from '../ui/ReactionShot';
+import { playScene } from './cutscenes';
 import { animKey } from '../entities/Octopus';
 import { MarineSnow } from '../render/MarineSnow';
 import { BubbleTrail } from '../render/BubbleTrail';
@@ -178,7 +178,7 @@ export class FishingScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, stopAuth);
 
     if (new URLSearchParams(window.location.search).has('debug') || window.location.hash === '#debug') {
-      (window as unknown as { inkognito: unknown }).inkognito = { fishing: this };
+      (window as unknown as { inkognito: unknown }).inkognito = { fishing: this, scene: (id: string, vars: Record<string, string> = {}) => playScene(this, this.uiRoot, id, vars, () => undefined) };
     }
   }
 
@@ -579,8 +579,11 @@ export class FishingScene extends Phaser.Scene {
         this.harbor.playNext(() => this.harbor.announceLife());
         return;
       }
+      const def = speciesById.get(id)!;
       play('newSpecies');
-      this.showFact(speciesById.get(id)!, true, next);
+      // Legende zum ersten Mal: große Zwischensequenz vor der Fakt-Karte
+      if (isLegend(def)) playScene(this, this.uiRoot, 'legend', { legend: def.id, legendName: t(def.legend.nameKey) }, () => this.showFact(def, true, next));
+      else this.showFact(def, true, next);
     };
     this.time.delayedCall(500, next);
   }
@@ -604,9 +607,7 @@ export class FishingScene extends Phaser.Scene {
           },
         },
       ], undefined, portrait);
-    play('fanfare');
-    if (portrait) playReaction(this.uiRoot, portrait, { background: 'burst', mood: 'joy' }, t('reaction.set'), card);
-    else card();
+    playScene(this, this.uiRoot, 'set_complete', {}, card);
   }
 
   private showFact(def: SpeciesDef, isNew: boolean, done: () => void): void {
@@ -653,11 +654,11 @@ export class FishingScene extends Phaser.Scene {
           play('bite', 1.4);
           const flyOff = { x: cam.scrollX - 80, y: cam.scrollY - 60 };
           this.tweens.add({ targets: [gull, fish], x: flyOff.x, y: flyOff.y, duration: 900, ease: 'Quad.Out' });
+          this.time.delayedCall(500, () => playScene(this, this.uiRoot, 'gisela_steal', {}, () => undefined));
           this.time.delayedCall(2600, () => {
             gull.destroy();
             home.setVisible(true).setScale(0);
             this.tweens.add({ targets: home, scale: 2, duration: 250, ease: 'Back.Out' });
-            this.ui.say(t('chatter.gisela_steal'), 2.5);
           });
         },
       });

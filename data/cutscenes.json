@@ -1,0 +1,217 @@
+{
+  "legend": [
+    {
+      "bg": "night",
+      "ms": 1300,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock"
+        }
+      ],
+      "fx": [
+        "sweat"
+      ],
+      "captionKey": "cut.legend.1"
+    },
+    {
+      "bg": "speedlines",
+      "ms": 1100,
+      "cam": "shake",
+      "flash": true,
+      "species": "{legend}",
+      "sfx": "bite"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1600,
+      "cam": "still",
+      "panels": [
+        {
+          "who": "knut",
+          "face": "shock"
+        },
+        {
+          "who": "hilde",
+          "face": "shock"
+        },
+        {
+          "who": "schulze",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "flashbulb"
+      ]
+    },
+    {
+      "bg": "marquee",
+      "ms": 2000,
+      "cam": "pushIn",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "sparkle",
+        "coins"
+      ],
+      "caption": "{legendName}",
+      "sfx": "fanfare"
+    }
+  ],
+  "bruno_deal": [
+    {
+      "bg": "spotlight",
+      "ms": 1300,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bruno",
+          "face": "annoyed"
+        }
+      ],
+      "captionKey": "cut.deal.1"
+    },
+    {
+      "bg": "split",
+      "ms": 1500,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "happy"
+        },
+        {
+          "who": "bruno",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "coins"
+      ],
+      "captionKey": "cut.deal.2",
+      "sfx": "coin"
+    }
+  ],
+  "set_complete": [
+    {
+      "bg": "marquee",
+      "ms": 1700,
+      "cam": "pushIn",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "sparkle"
+      ],
+      "captionKey": "reaction.set",
+      "sfx": "fanfare"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1500,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "hilde",
+          "face": "annoyed"
+        },
+        {
+          "who": "bert",
+          "face": "happy"
+        }
+      ],
+      "captionKey": "cut.set.2"
+    }
+  ],
+  "gisela_steal": [
+    {
+      "bg": "speedlines",
+      "ms": 1000,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "gisela",
+          "face": "happy"
+        }
+      ],
+      "captionKey": "cut.steal.1"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1500,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock"
+        }
+      ],
+      "fx": [
+        "sweat",
+        "tears"
+      ]
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1200,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "hilde",
+          "face": "happy"
+        },
+        {
+          "who": "bert",
+          "face": "annoyed",
+          "dim": true
+        }
+      ],
+      "captionKey": "cut.steal.3"
+    }
+  ],
+  "schulze_photo": [
+    {
+      "bg": "crayon",
+      "ms": 1500,
+      "cam": "pushIn",
+      "flash": true,
+      "figures": [
+        {
+          "who": "schulze",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "flashbulb"
+      ],
+      "captionKey": "reaction.schulze.intro"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1300,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock"
+        }
+      ],
+      "fx": [
+        "sweat"
+      ],
+      "captionKey": "cut.photo.2"
+    }
+  ]
+}

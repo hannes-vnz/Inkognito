@@ -13,7 +13,7 @@ import { upgradeValue } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { t } from '../i18n';
 import type { Sheet } from '../ui/Sheet';
-import { playReaction } from '../ui/ReactionShot';
+import { playReactionShot, playScene } from './cutscenes';
 import { HarborLife } from './HarborLife';
 
 export interface HarborHost {
@@ -164,8 +164,8 @@ export class Harbor {
     if (!r.speciesId) return;
     this.lastRequest = r.speciesId;
     this.host.setSave(r.save);
-    play('fanfare');
-    this.host.say(t('request.done', { fish: t(speciesById.get(r.speciesId)!.nameKey), reward: r.reward }));
+    const fish = t(speciesById.get(r.speciesId)!.nameKey);
+    playScene(this.scene, this.uiRoot, 'bruno_deal', { fish }, () => this.host.say(t('request.done', { fish, reward: r.reward })));
     this.refresh();
   }
 
@@ -219,11 +219,13 @@ export class Harbor {
         portrait,
       );
     };
-    if (node.reaction && portrait) {
+    if (node.cutscene) {
       this.anim(npc, 'react');
-      playReaction(this.uiRoot, portrait, node.reaction, t(`reaction.${npc.id}.${node.id}`), show);
-    }
-    else show();
+      playScene(this.scene, this.uiRoot, node.cutscene, {}, show);
+    } else if (node.reaction) {
+      this.anim(npc, 'react');
+      playReactionShot(this.scene, this.uiRoot, npc.id, node.reaction, t(`reaction.${npc.id}.${node.id}`), show);
+    } else show();
   }
 
   /** Möwe Gisela: der Reihe nach ihre Sprüche, mit Gekreische. */
@@ -337,10 +339,8 @@ export class Harbor {
           const face = this.portrait(npc, result.right ? 'happy' : 'shock');
           const after = () => this.sheet.show(t(npc.nameKey), text, [{ label: t('quiz.next'), onSelect: () => this.finish(npc, done) }], undefined, face);
           this.sheet.close();
-          if (portrait) {
-            const reaction = result.right ? ({ background: 'sparkle', mood: 'joy' } as const) : ({ background: 'waves', mood: 'shock' } as const);
-            playReaction(this.uiRoot, face ?? portrait, reaction, t(result.right ? 'reaction.right' : 'reaction.wrong'), after);
-          } else after();
+          const reaction = result.right ? ({ background: 'sparkle', mood: 'joy' } as const) : ({ background: 'waves', mood: 'shock' } as const);
+          playReactionShot(this.scene, this.uiRoot, npc.id, reaction, t(result.right ? 'reaction.right' : 'reaction.wrong'), after);
         },
       })),
       undefined,

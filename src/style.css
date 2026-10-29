@@ -1761,3 +1761,434 @@ body {
     transform: translateX(4px);
   }
 }
+
+/* ---------------------------------------------------------------- Zwischensequenzen (Dave-the-Diver-Stil) */
+
+.cut {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  background: #000;
+  pointer-events: auto;
+  animation: reaction-in 0.15s ease-out;
+}
+
+.cut.out {
+  animation: reaction-out 0.22s ease-in forwards;
+}
+
+.cut .bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 9%;
+  background: #000;
+  z-index: 5;
+}
+
+.cut .bar.top {
+  top: 0;
+}
+
+.cut .bar.bottom {
+  bottom: 0;
+}
+
+.cut-stage,
+.cut-frame {
+  position: absolute;
+  inset: 0;
+}
+
+.cut-bg {
+  position: absolute;
+  inset: -6%;
+  width: 112%;
+  height: 112%;
+  object-fit: cover;
+}
+
+/* Kamera: läuft über die ganze Einstellung */
+.cut-frame.cam-pushIn {
+  animation: cam-push var(--ms) ease-out forwards;
+}
+.cut-frame.cam-pullOut {
+  animation: cam-pull var(--ms) ease-out forwards;
+}
+.cut-frame.cam-panLeft {
+  animation: cam-pan-left var(--ms) ease-in-out forwards;
+}
+.cut-frame.cam-panRight {
+  animation: cam-pan-right var(--ms) ease-in-out forwards;
+}
+.cut-frame.cam-shake {
+  animation: cam-shake 0.12s linear infinite;
+}
+
+@keyframes cam-push {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+@keyframes cam-pull {
+  from {
+    transform: scale(1.18);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes cam-pan-left {
+  from {
+    transform: scale(1.1) translateX(4%);
+  }
+  to {
+    transform: scale(1.1) translateX(-4%);
+  }
+}
+@keyframes cam-pan-right {
+  from {
+    transform: scale(1.1) translateX(-4%);
+  }
+  to {
+    transform: scale(1.1) translateX(4%);
+  }
+}
+@keyframes cam-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.05);
+  }
+  25% {
+    transform: translate(-1.2%, 0.8%) scale(1.05);
+  }
+  75% {
+    transform: translate(1.2%, -0.8%) scale(1.05);
+  }
+}
+
+/* Figuren groß, pixelscharf, mit Randlicht und Schatten */
+.cut-figure {
+  position: absolute;
+  bottom: 9%;
+  height: min(70%, 92vw);
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 0 #000) drop-shadow(4px 0 0 rgba(255, 255, 255, 0.25)) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6));
+  animation: fig-pop 0.32s cubic-bezier(0.34, 1.7, 0.64, 1) both;
+}
+.cut-figure.solo {
+  left: 50%;
+  margin-left: calc(min(70%, 92vw) / -2);
+}
+.cut-figure.left {
+  left: 2%;
+  height: min(62%, 60vw);
+  transform: scaleX(-1);
+  animation-name: fig-pop-flip;
+}
+.cut-figure.right {
+  right: 2%;
+  height: min(62%, 60vw);
+}
+.cut-figure.dim {
+  filter: brightness(0.28) saturate(0.6);
+}
+
+@keyframes fig-pop {
+  from {
+    transform: translateY(14%) scale(0.86, 1.08);
+    opacity: 0;
+  }
+}
+@keyframes fig-pop-flip {
+  from {
+    transform: scaleX(-1) translateY(14%) scale(0.86, 1.08);
+    opacity: 0;
+  }
+}
+
+/* Comic-Panels: schräg geschnittene Felder */
+.cut-panels {
+  position: absolute;
+  inset: 9% 0;
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  background: #0e1a2b;
+}
+.cut-panels.n2 {
+  grid-template-columns: 1fr 1fr;
+}
+.cut-panels.n3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.cut-panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: end center;
+  border: 3px solid #fffaf0;
+  animation: panel-in 0.25s ease-out both;
+}
+.cut-panel.p0 {
+  background: linear-gradient(160deg, #ffd23f, #ff7a3d);
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+}
+.cut-panel.p1 {
+  background: linear-gradient(160deg, #5ce1e6, #3a6ac8);
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+  animation-delay: 0.12s;
+}
+.cut-panel.p2 {
+  background: linear-gradient(160deg, #ff8ab8, #b07cff);
+  clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
+  animation-delay: 0.24s;
+}
+.cut-panel .cut-figure.in-panel {
+  position: static;
+  height: auto;
+  width: 120%;
+  margin-bottom: -6%;
+  animation: none;
+}
+@keyframes panel-in {
+  from {
+    transform: translateY(-30%);
+    opacity: 0;
+  }
+}
+
+.cut-species {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: min(80%, 520px);
+  transform: translate(-50%, -50%) rotate(-8deg);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 220, 0.8));
+  animation: species-in 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) both;
+}
+@keyframes species-in {
+  from {
+    transform: translate(-50%, 40%) rotate(10deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.cut-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12%;
+  padding: 0 16px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(24px, 7.5vw, 52px);
+  line-height: 1.05;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  animation: pop-text 0.3s cubic-bezier(0.34, 1.8, 0.64, 1) 0.1s backwards;
+  z-index: 3;
+}
+
+.cut-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.cut-flash.on {
+  animation: cut-flash 0.35s ease-out;
+}
+@keyframes cut-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Effekte */
+.cut-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.cut-fx > * {
+  position: absolute;
+}
+.cut-sweat {
+  width: 22px;
+  height: 30px;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: linear-gradient(180deg, #e8fbff, #6fd6ff);
+  border: 3px solid var(--ink);
+  animation: sweat 0.9s ease-in infinite;
+}
+@keyframes sweat {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+.cut-sparkle,
+.cut-hearts {
+  width: 18px;
+  height: 18px;
+  background: #fff6c0;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: twinkle 0.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 0.11s);
+}
+.cut-hearts {
+  background: #ff5a8a;
+  clip-path: path('M9 16 L2 9 A4 4 0 0 1 9 3 A4 4 0 0 1 16 9 Z');
+}
+@keyframes twinkle {
+  from {
+    transform: scale(0.4) rotate(0deg);
+    opacity: 0.3;
+  }
+  to {
+    transform: scale(1.3) rotate(45deg);
+    opacity: 1;
+  }
+}
+.cut-anger {
+  width: 42px;
+  height: 42px;
+  background:
+    linear-gradient(#e0303a, #e0303a) center/100% 22% no-repeat,
+    linear-gradient(#e0303a, #e0303a) center/22% 100% no-repeat;
+  border-radius: 30%;
+  animation: anger 0.4s ease-in-out infinite alternate;
+}
+@keyframes anger {
+  to {
+    transform: scale(1.25) rotate(8deg);
+  }
+}
+.cut-question {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 64px;
+  color: #ffd23f;
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  animation: anger 0.5s ease-in-out infinite alternate;
+}
+.cut-flashbulb {
+  inset: 0;
+  left: 0 !important;
+  top: 0 !important;
+  background: #fff;
+  animation: bulb 1.2s steps(1) infinite;
+}
+@keyframes bulb {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  14% {
+    opacity: 0;
+  }
+  55% {
+    opacity: 0.8;
+  }
+  58% {
+    opacity: 0;
+  }
+}
+.cut-coins {
+  width: 34px;
+  height: 34px;
+  image-rendering: pixelated;
+  animation: coin-rain 1.1s linear infinite;
+  animation-delay: calc(var(--i) * -0.08s);
+}
+@keyframes coin-rain {
+  from {
+    transform: translateY(0) rotate(0deg);
+  }
+  to {
+    transform: translateY(120vh) rotate(540deg);
+  }
+}
+.cut-tears {
+  width: 10px;
+  height: 60px;
+  background: linear-gradient(180deg, #9ff0ff, rgba(159, 240, 255, 0));
+  border-radius: 6px;
+  animation: tears 0.5s linear infinite;
+}
+@keyframes tears {
+  from {
+    transform: scaleY(0.3);
+    transform-origin: top;
+  }
+  to {
+    transform: scaleY(1.2);
+    transform-origin: top;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cut *,
+  .cut {
+    animation-duration: 0.01s !important;
+  }
+}
+
+@media (orientation: portrait) {
+  /* Hochkant: Panels übereinander, Köpfe groß und rechts im Bild wie bei Comic-Reihen */
+  .cut-panels.n2,
+  .cut-panels.n3 {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+  }
+  .cut-panel {
+    place-items: center end;
+  }
+  .cut-panel.p0 {
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+  }
+  .cut-panel.p1 {
+    clip-path: polygon(0 10%, 100% 0, 100% 90%, 0 100%);
+  }
+  .cut-panel.p2 {
+    clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%);
+  }
+  .cut-panel .cut-figure.in-panel {
+    width: auto;
+    height: 118%;
+    margin: 0 6% -12% 0;
+  }
+  .cut-panel:nth-child(even) {
+    place-items: center start;
+  }
+  .cut-panel:nth-child(even) .cut-figure.in-panel {
+    margin: 0 0 -12% 6%;
+    transform: scaleX(-1);
+  }
+}

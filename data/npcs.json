@@ -599,7 +599,8 @@
             "textKey": "npc.schulze.intro.opt",
             "next": "intro2"
           }
-        ]
+        ],
+        "cutscene": "schulze_photo"
       },
       "intro2": {
         "textKey": "npc.schulze.intro2",

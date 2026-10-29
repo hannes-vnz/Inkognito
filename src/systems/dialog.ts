@@ -20,6 +20,8 @@ export interface DialogNode {
   redirect?: DialogRedirect[];
   /** Gesichtsausdruck im Porträt (sonst aus der Reaktions-Stimmung abgeleitet). */
   face?: Face;
+  /** Mehrteilige Zwischensequenz (data/cutscenes.json) statt der einfachen Reaktion. */
+  cutscene?: string;
   /** Kurze Reaktions-Szene, bevor der Text erscheint (Hintergrund und Stimmung). */
   reaction?: { background: 'waves' | 'burst' | 'sparkle'; mood: 'shock' | 'joy' | 'smug' };
 }

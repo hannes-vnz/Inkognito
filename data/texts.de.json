@@ -641,5 +641,12 @@
   "npc.schulze.bruno": "Der Fischhändler? Der hat aber *viele Zähne* für einen Verkäufer.",
   "chatter.gisela_steal": "*KRAA!* Danke für den Fisch!",
   "steal.floater": "Gisela klaut!",
-  "reaction.schulze.intro": "URLAUB!"
+  "reaction.schulze.intro": "URLAUB!",
+  "cut.legend.1": "Da zieht was …",
+  "cut.deal.1": "Ein *{fish}*. Genau wie bestellt …",
+  "cut.deal.2": "DEAL!",
+  "cut.set.2": "Hilde: „Hm. Nicht schlecht … für einen *Menschen*.“",
+  "cut.steal.1": "KRAAA!",
+  "cut.steal.3": "Hilde: „Gute Möwe.“",
+  "cut.photo.2": "*Klick.* Beweisfoto."
 }

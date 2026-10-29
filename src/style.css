@@ -14,6 +14,10 @@
 
 html,
 body {
+  /* Fixiert, damit iOS Safari beim Drehen nicht scrollt oder zoomt. */
+  position: fixed;
+  inset: 0;
+  width: 100%;
   margin: 0;
   height: 100%;
   overflow: hidden;
@@ -30,9 +34,14 @@ body {
 #game {
   position: fixed;
   inset: 0;
+  overflow: hidden;
 }
 
 #game canvas {
+  /* Absolut, damit ein kurz zu großes Canvas beim Drehen die Seite nie breiter macht. */
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
   /* Pixel-Sprites scharf halten, wenn der Browser auf Retina hochskaliert. */
   image-rendering: pixelated;

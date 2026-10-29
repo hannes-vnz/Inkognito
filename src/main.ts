@@ -8,7 +8,7 @@ document.title = t('game.title');
 const loading = document.getElementById('loading');
 if (loading) loading.textContent = t('ui.loading');
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: '#0b3550',
@@ -23,3 +23,15 @@ new Phaser.Game({
   },
   scene: [BootScene, DiveScene],
 });
+
+// iOS meldet die neue Größe nach dem Drehen verspätet: mehrfach nachmessen und Scroll-Versatz zurücksetzen.
+const settle = (): void => {
+  window.scrollTo(0, 0);
+  game.scale.refresh();
+};
+const onViewportChange = (): void => {
+  settle();
+  for (const ms of [100, 300, 700]) window.setTimeout(settle, ms);
+};
+window.addEventListener('orientationchange', onViewportChange);
+window.visualViewport?.addEventListener('resize', onViewportChange);

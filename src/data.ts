@@ -30,6 +30,7 @@ import chatterJson from '../data/chatter.json';
 import cutscenesJson from '../data/cutscenes.json';
 import type { ActingAnim, Shot } from './ui/Cutscene';
 import animsJson from '../data/anims.json';
+import creditsJson from '../data/credits.json';
 import type { ChatterGag, LifeDef } from './systems/harborLife';
 import type { BaitDef } from './systems/bait';
 import type { HintParams, TimeParams } from './systems/legend';
@@ -107,6 +108,7 @@ export const harborLife = harborLifeJson as unknown as LifeDef[];
 export const chatter = chatterJson as ChatterGag[];
 export const cutscenes = cutscenesJson as unknown as Record<string, Shot[]>;
 export const anims = animsJson as Record<string, ActingAnim>;
+export const creditLines = creditsJson as string[];
 export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;
 export const texts = textsJson as TextTable;
 

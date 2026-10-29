@@ -1785,6 +1785,11 @@ body {
   height: 9%;
   background: #000;
   z-index: 5;
+  transition: height 0.25s ease-out;
+}
+/* Augen-Einstellung: nur ein schmaler Streifen bleibt offen */
+.cut.bars-eyes .bar {
+  height: 37%;
 }
 
 .cut .bar.top {
@@ -1828,18 +1833,18 @@ body {
 
 @keyframes cam-push {
   from {
-    transform: scale(1);
+    transform: scale(var(--z, 1));
   }
   to {
-    transform: scale(1.12);
+    transform: scale(calc(var(--z, 1) * 1.12));
   }
 }
 @keyframes cam-pull {
   from {
-    transform: scale(1.18);
+    transform: scale(calc(var(--z, 1) * 1.18));
   }
   to {
-    transform: scale(1);
+    transform: scale(var(--z, 1));
   }
 }
 @keyframes cam-pan-left {
@@ -1861,14 +1866,17 @@ body {
 @keyframes cam-shake {
   0%,
   100% {
-    transform: translate(0, 0) scale(1.05);
+    transform: translate(0, 0) scale(calc(var(--z, 1) * 1.05));
   }
   25% {
-    transform: translate(-1.2%, 0.8%) scale(1.05);
+    transform: translate(-1.2%, 0.8%) scale(calc(var(--z, 1) * 1.05));
   }
   75% {
-    transform: translate(1.2%, -0.8%) scale(1.05);
+    transform: translate(1.2%, -0.8%) scale(calc(var(--z, 1) * 1.05));
   }
+}
+.cut-frame.cam-still {
+  transform: scale(var(--z, 1));
 }
 
 /* Figuren groß, pixelscharf, mit Randlicht und Schatten */
@@ -2255,4 +2263,236 @@ body {
   font-size: clamp(16px, 4.4vw, 28px);
   line-height: 1.25;
   -webkit-text-stroke: 2px var(--ink);
+}
+
+/* Partikel */
+.cut-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.cut-particles > div {
+  position: absolute;
+  transform: scale(var(--s));
+}
+.p-bubbles > div {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(220, 250, 255, 0.8);
+  border-radius: 50%;
+  animation: p-rise 2.6s linear infinite;
+  animation-delay: calc(var(--i) * -0.17s);
+}
+@keyframes p-rise {
+  from {
+    transform: translateY(40vh) scale(var(--s));
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(2vw, -40vh) scale(var(--s));
+    opacity: 0;
+  }
+}
+.p-shards > div {
+  width: 12px;
+  height: 6px;
+  background: #e8fbff;
+  clip-path: polygon(0 0, 100% 40%, 60% 100%);
+  animation: p-shard 0.9s ease-out forwards;
+}
+@keyframes p-shard {
+  from {
+    transform: translate(0, 0) rotate(0deg) scale(var(--s));
+    left: 50%;
+    top: 50%;
+  }
+  to {
+    transform: translate(calc((var(--i) - 11) * 3vw), calc((var(--i) % 5 - 2.5) * 8vh)) rotate(540deg) scale(var(--s));
+    opacity: 0;
+  }
+}
+.p-petals > div,
+.p-confetti > div {
+  width: 9px;
+  height: 6px;
+  border-radius: 50% 0;
+  background: #ffb7c8;
+  animation: p-fall 3s linear infinite;
+  animation-delay: calc(var(--i) * -0.13s);
+}
+.p-confetti > div {
+  border-radius: 1px;
+  background: hsl(calc(var(--i) * 47deg) 90% 60%);
+}
+@keyframes p-fall {
+  from {
+    transform: translate(0, -50vh) rotate(0deg) scale(var(--s));
+  }
+  to {
+    transform: translate(6vw, 60vh) rotate(720deg) scale(var(--s));
+  }
+}
+
+/* Vordergrund-Ebenen bewegen sich schneller als der Rest (Parallaxe) */
+.cut-fg {
+  position: absolute;
+  inset: -10% -20%;
+  pointer-events: none;
+  z-index: 3;
+  animation: fg-drift var(--ms) linear forwards;
+}
+.fg-kelp {
+  background:
+    radial-gradient(ellipse 30px 220px at 6% 100%, #06141f 98%, transparent) ,
+    radial-gradient(ellipse 22px 160px at 14% 100%, #0a1c28 98%, transparent),
+    radial-gradient(ellipse 26px 200px at 90% 100%, #06141f 98%, transparent),
+    radial-gradient(ellipse 18px 140px at 82% 100%, #0a1c28 98%, transparent);
+}
+.fg-net {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 22px, rgba(10, 20, 30, 0.55) 22px 24px),
+    repeating-linear-gradient(-45deg, transparent 0 22px, rgba(10, 20, 30, 0.55) 22px 24px);
+  mask-image: linear-gradient(90deg, #000, transparent 30%, transparent 70%, #000);
+}
+@keyframes fg-drift {
+  from {
+    transform: translateX(6%);
+  }
+  to {
+    transform: translateX(-6%);
+  }
+}
+
+/* Requisiten in Bewegung */
+.cut-species.move-sink {
+  animation: mv-sink var(--ms) ease-out forwards;
+}
+@keyframes mv-sink {
+  from {
+    transform: translate(-50%, -160%) rotate(-12deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(6deg);
+  }
+}
+.cut-species.move-pass {
+  animation: mv-pass var(--ms) linear forwards;
+}
+@keyframes mv-pass {
+  from {
+    transform: translate(40%, -40%);
+  }
+  to {
+    transform: translate(-140%, -55%);
+  }
+}
+.cut-species.move-toCamera {
+  animation: mv-cam var(--ms) cubic-bezier(0.6, 0, 0.9, 0.4) forwards;
+}
+@keyframes mv-cam {
+  from {
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  to {
+    transform: translate(-50%, -40%) scale(3.2);
+  }
+}
+.cut-species.silhouette {
+  filter: brightness(0) drop-shadow(0 0 18px rgba(120, 200, 255, 0.5));
+}
+
+/* Licht geht an: erst Schattenriss, dann Spot */
+.cut-figure.lights-on {
+  animation:
+    lights-on calc(var(--ms) * 0.45) steps(1) both,
+    breathe 1.4s ease-in-out 0.32s infinite alternate;
+}
+@keyframes lights-on {
+  from {
+    filter: brightness(0);
+  }
+  to {
+    filter: brightness(1);
+  }
+}
+
+/* Lichtblitz streicht über das Bild */
+.cut-gleam {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.85) 48%, transparent 56%);
+  background-size: 300% 100%;
+  animation: gleam 0.7s ease-in 0.3s both;
+  mix-blend-mode: screen;
+}
+@keyframes gleam {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -40% 0;
+  }
+}
+
+/* Polaroid auf dem Tisch */
+.cut-polaroid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(72%, 58vh);
+  padding: 4% 4% 13%;
+  background: #fbfaf4;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%) rotate(-4deg);
+  animation: polaroid-drop 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+.cut-polaroid-pic {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: linear-gradient(180deg, #6fd6e6, #2a8fbf 70%, #e8c878 70%);
+  animation: develop 2.2s ease-in 0.4s both;
+}
+.cut-figure.in-photo {
+  position: relative;
+  height: 72%;
+  width: auto;
+  margin: 0 -6%;
+  animation: none;
+  filter: none;
+}
+.cut-polaroid-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(14px, 3.6vw, 24px);
+  color: #2a3a6a;
+  transform: rotate(-1deg);
+}
+@keyframes polaroid-drop {
+  from {
+    transform: translate(-50%, -120%) rotate(8deg);
+    opacity: 0;
+  }
+}
+@keyframes develop {
+  from {
+    filter: brightness(2.4) saturate(0) contrast(0.4);
+  }
+  to {
+    filter: none;
+  }
 }

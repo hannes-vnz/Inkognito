@@ -658,5 +658,10 @@
   "account.reset": "Neu anfangen",
   "account.resetText": "Wirklich ganz von vorn? Münzen, Upgrades, Fischbuch und Story sind dann weg, auch im Online-Spielstand. Das Intro läuft noch einmal.",
   "account.resetYes": "Ja, alles zurücksetzen",
-  "account.resetNo": "Lieber nicht"
+  "account.resetNo": "Lieber nicht",
+  "menu.open": "☰ Menü",
+  "menu.title": "Menü",
+  "menu.text": "Einstellungen und Neustart.",
+  "intro.photo": "Kapitän Bert, Tag 1",
+  "cut.photo.3": "Urlaubsfoto mit Fischer (echt?)"
 }

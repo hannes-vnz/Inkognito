@@ -7,7 +7,9 @@ import { createFight, following, stepFight, type FightState } from '../systems/f
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isLegend, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
-import { play } from '../audio/sfx';
+import { isMuted, play, setMuted } from '../audio/sfx';
+import { resetProgress } from '../online/sync';
+import { creditLines } from '../data';
 import { claimDaily, dailyReward, dailyStreak, dayKey } from '../systems/daily';
 import { showDailyCard } from '../ui/DailyCard';
 import { newlyCompleted, setBonus, type SetDef } from '../systems/sets';
@@ -124,6 +126,7 @@ export class FishingScene extends Phaser.Scene {
       buy: (u) => this.buy(u),
       book: () => this.openFishbook(),
       map: () => this.openMap(),
+      menu: () => this.openMenu(),
     });
     this.sheet = new Sheet(this.uiRoot);
     this.account = new AccountMenu(this.uiRoot, this.sheet, (r) => this.applySync(r), (text) => this.ui.say(text, 3));
@@ -620,7 +623,7 @@ export class FishingScene extends Phaser.Scene {
           },
         },
       ], undefined, portrait);
-    playScene(this, this.uiRoot, 'set_complete', {}, card);
+    playScene(this, this.uiRoot, 'set_complete', { set: t(set.nameKey) }, card);
   }
 
   private showFact(def: SpeciesDef, isNew: boolean, done: () => void): void {
@@ -748,6 +751,33 @@ export class FishingScene extends Phaser.Scene {
     this.ui.shout(t('round.rare'), '#c78cff');
     play('newSpecies', 1.2);
     navigator.vibrate?.([20, 40, 20]);
+  }
+
+  /** Menü oben links: Ton, Neu anfangen (mit Rückfrage), Mitwirkende. */
+  private openMenu(): void {
+    if (this.overlayOpen()) return;
+    const show = () =>
+      this.sheet.show(t('menu.title'), t('menu.text'), [
+        {
+          label: t(isMuted() ? 'hud.soundOff' : 'hud.soundOn'),
+          onSelect: () => {
+            setMuted(!isMuted());
+            play('tap');
+            show();
+          },
+        },
+        {
+          label: t('account.reset'),
+          onSelect: () =>
+            this.sheet.show(t('account.reset'), t('account.resetText'), [
+              { label: t('account.resetYes'), onSelect: () => void resetProgress() },
+              { label: t('account.resetNo'), onSelect: show },
+            ]),
+        },
+        { label: t('credits.title'), onSelect: () => this.sheet.show(t('credits.title'), creditLines.join(' · '), [{ label: t('account.back'), onSelect: show }]) },
+        { label: t('riff.close'), onSelect: () => this.sheet.close() },
+      ]);
+    show();
   }
 
   private openMap(): void {

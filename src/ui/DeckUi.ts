@@ -4,7 +4,7 @@ import { setRichText } from './rich';
 import { t } from '../i18n';
 import { isMaxed, upgradeCost, upgradeValue, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
-import { isMuted, play, setMuted } from '../audio/sfx';
+import { play } from '../audio/sfx';
 
 /**
  * Oberfläche des Angel-Spiels: Münzen oben rechts, Tiefe oben links, unten das Deck mit
@@ -38,7 +38,7 @@ export class DeckUi {
   constructor(
     private readonly root: HTMLElement,
     private readonly upgrades: readonly UpgradeDef[],
-    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void; map: () => void },
+    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void; map: () => void; menu: () => void },
   ) {
     const coinCard = el('div', 'card hud-coins');
     this.coinCard = coinCard;
@@ -100,15 +100,14 @@ export class DeckUi {
     });
 
     this.deck.append(this.upgradeRow, this.mapButton, this.bookButton, this.castButton);
+    // Menü: Ton, Neu anfangen, Mitwirkende
     const sound = el('button', 'button sound-button');
     sound.type = 'button';
-    const label = () => (sound.textContent = t(isMuted() ? 'hud.soundOff' : 'hud.soundOn'));
-    label();
+    sound.textContent = t('menu.open');
     sound.addEventListener('click', (e) => {
       e.stopPropagation();
-      setMuted(!isMuted());
-      label();
       play('tap');
+      handlers.menu();
     });
 
     this.fightBox = el('div', 'card fight hidden');

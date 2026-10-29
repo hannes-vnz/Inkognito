@@ -3,7 +3,9 @@ import { setRichText } from './rich';
 import { play, type SoundId } from '../audio/sfx';
 
 /** Hintergründe im Stil der Zwischenschnitte von Dave the Diver. */
-export type ShotBackground = 'spotlight' | 'marquee' | 'speedlines' | 'burst' | 'split' | 'crayon' | 'waves' | 'sparkle' | 'night';
+export type ShotBackground = 'spotlight' | 'marquee' | 'speedlines' | 'burst' | 'split' | 'crayon' | 'waves' | 'sparkle' | 'night' | 'deep' | 'table' | 'black' | 'white';
+export type ShotParticles = 'bubbles' | 'shards' | 'petals' | 'confetti';
+export type PropMotion = 'still' | 'sink' | 'pass' | 'toCamera';
 export type ShotCamera = 'still' | 'pushIn' | 'pullOut' | 'panLeft' | 'panRight' | 'shake';
 export type ShotFx = 'sweat' | 'sparkle' | 'anger' | 'hearts' | 'question' | 'flashbulb' | 'coins' | 'tears';
 
@@ -41,6 +43,25 @@ export interface Shot {
   flash?: boolean;
   fx?: ShotFx[];
   sfx?: SoundId;
+  /** Bildausschnitt: Kamera zielt auf [x %, y %] mit Zoomfaktor, oder 'eyes' = Augen der Figur. */
+  focus?: [number, number, number] | 'eyes';
+  /** Größe des Requisits in % der Bildbreite (Standard 60). */
+  propSize?: number;
+  /** Schmale Kinobalken nur für die Augen (Spannung). */
+  bars?: 'normal' | 'eyes';
+  /** Vordergrund-Ebene, die sich gegen den Hintergrund bewegt (Parallaxe). */
+  fg?: 'kelp' | 'net';
+  particles?: ShotParticles;
+  /** Wie sich Requisit oder Art durchs Bild bewegt. */
+  motion?: PropMotion;
+  /** Requisit/Art erst als Schattenriss. */
+  silhouette?: boolean;
+  /** Figur steht im Dunkeln, dann geht das Licht an. */
+  lightsOn?: boolean;
+  /** Lichtblitz, der übers Bild streicht (wie über eine Klinge). */
+  gleam?: boolean;
+  /** Schlussbild: Polaroid, das sich auf dem Tisch entwickelt (Figuren im Foto). */
+  polaroid?: boolean;
 }
 
 export interface CutsceneArt {
@@ -61,6 +82,54 @@ function background(kind: ShotBackground): HTMLCanvasElement {
   const g = c.getContext('2d')!;
   const cx = BW / 2;
   switch (kind) {
+    case 'black':
+    case 'white':
+      g.fillStyle = kind === 'black' ? '#000' : '#fff';
+      g.fillRect(0, 0, BW, BH);
+      break;
+    case 'deep': {
+      // Weite Tiefsee: Licht von oben, das nach unten ins Dunkle verläuft, Felsen an den Seiten
+      const grad = g.createLinearGradient(0, 0, 0, BH);
+      grad.addColorStop(0, '#2a7f9a');
+      grad.addColorStop(0.45, '#0f3a5a');
+      grad.addColorStop(1, '#040c18');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, BW, BH);
+      const glow = g.createRadialGradient(cx, -40, 10, cx, -40, 260);
+      glow.addColorStop(0, 'rgba(200,255,255,0.45)');
+      glow.addColorStop(1, 'rgba(200,255,255,0)');
+      g.fillStyle = glow;
+      g.fillRect(0, 0, BW, BH);
+      g.fillStyle = '#06141f';
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(90, 60, 40, 160, 110, BH);
+      g.lineTo(0, BH);
+      g.fill();
+      g.beginPath();
+      g.moveTo(BW, 30);
+      g.bezierCurveTo(BW - 70, 110, BW - 20, 190, BW - 120, BH);
+      g.lineTo(BW, BH);
+      g.fill();
+      break;
+    }
+    case 'table': {
+      // Holztisch für das Polaroid
+      g.fillStyle = '#7a5232';
+      g.fillRect(0, 0, BW, BH);
+      for (let y = 0; y < BH; y += 30) {
+        g.fillStyle = y % 60 ? '#6d4829' : '#845a37';
+        g.fillRect(0, y, BW, 28);
+        g.fillStyle = 'rgba(0,0,0,0.15)';
+        for (let x = (y * 7) % 90; x < BW; x += 90) g.fillRect(x, y + 6, 40, 2);
+      }
+      const v = g.createRadialGradient(cx, BH / 2, 60, cx, BH / 2, 300);
+      v.addColorStop(0, 'rgba(0,0,0,0)');
+      v.addColorStop(1, 'rgba(0,0,0,0.55)');
+      g.fillStyle = v;
+      g.fillRect(0, 0, BW, BH);
+      break;
+    }
     case 'spotlight':
     case 'night': {
       // Dunkle Bühne mit weichem Lichtkegel von oben, wie die Charakter-Großaufnahmen
@@ -232,6 +301,21 @@ function fxLayer(fx: readonly ShotFx[]): HTMLDivElement {
   return layer;
 }
 
+/** Partikel, die durchs Bild treiben (Blasen steigen, Splitter fliegen, Blätter fallen). */
+function particles(kind: ShotParticles): HTMLDivElement {
+  const layer = el('div', `cut-particles p-${kind}`);
+  const n = kind === 'shards' ? 22 : 28;
+  for (let i = 0; i < n; i++) {
+    const p = el('div', '');
+    p.style.setProperty('--i', `${i}`);
+    p.style.left = `${(i * 37) % 100}%`;
+    p.style.top = `${(i * 53) % 100}%`;
+    p.style.setProperty('--s', `${0.6 + ((i * 7) % 5) * 0.25}`);
+    layer.append(p);
+  }
+  return layer;
+}
+
 function figure(art: CutsceneArt, f: ShotFigure, cls: string): HTMLElement {
   const anim = f.anim ? art.anim(`${f.who}_${f.anim}`) : undefined;
   if (anim) {
@@ -285,7 +369,13 @@ export function playCutscene(root: HTMLElement, shots: readonly Shot[], art: Cut
     bg.className = 'cut-bg';
     const frame = el('div', `cut-frame cam-${s.cam ?? 'pushIn'}`);
     frame.style.setProperty('--ms', `${s.ms}ms`);
+    if (Array.isArray(s.focus)) {
+      frame.style.transformOrigin = `${s.focus[0]}% ${s.focus[1]}%`;
+      frame.style.setProperty('--z', `${s.focus[2]}`);
+    }
+    node.classList.toggle('bars-eyes', s.bars === 'eyes');
     frame.append(bg);
+    if (s.particles) frame.append(particles(s.particles));
     if (s.panels?.length) {
       const panels = el('div', `cut-panels n${s.panels.length}`);
       s.panels.forEach((p, k) => {
@@ -295,23 +385,39 @@ export function playCutscene(root: HTMLElement, shots: readonly Shot[], art: Cut
       });
       frame.append(panels);
     }
+    const motion = s.motion ? ` move-${s.motion}` : '';
+    const sil = s.silhouette ? ' silhouette' : '';
     if (s.species) {
-      const fish = el('img', 'cut-species');
+      const fish = el('img', `cut-species${motion}${sil}`);
       fish.src = art.speciesImage(s.species) ?? '';
       fish.alt = '';
       frame.append(fish);
     }
     if (s.prop) {
-      const prop = el('img', 'cut-species cut-prop');
+      const prop = el('img', `cut-species cut-prop${motion}${sil}`);
       prop.src = art.texture(s.prop) ?? '';
       prop.alt = '';
+      if (s.propSize) prop.style.width = `${s.propSize}%`;
       frame.append(prop);
     }
-    const figs = s.figures ?? [];
-    if (figs.length === 1) frame.append(figure(art, figs[0]!, 'solo'));
-    if (figs.length >= 2) frame.append(figure(art, figs[0]!, 'left'), figure(art, figs[1]!, 'right'));
+    if (s.polaroid) {
+      // Foto auf dem Tisch: weißer Rahmen, Bild entwickelt sich langsam
+      const photo = el('div', 'cut-polaroid');
+      const pic = el('div', 'cut-polaroid-pic');
+      for (const f of s.figures ?? []) pic.append(figure(art, f, 'in-photo'));
+      const label = el('div', 'cut-polaroid-label');
+      setRichText(label, s.caption ?? (s.captionKey ? art.text(s.captionKey) : ''));
+      photo.append(pic, label);
+      frame.append(photo);
+    }
+    const figs = s.polaroid ? [] : (s.figures ?? []);
+    const lit = s.lightsOn ? ' lights-on' : '';
+    if (figs.length === 1) frame.append(figure(art, figs[0]!, `solo${lit}`));
+    if (figs.length >= 2) frame.append(figure(art, figs[0]!, `left${lit}`), figure(art, figs[1]!, `right${lit}`));
+    if (s.fg) frame.append(el('div', `cut-fg fg-${s.fg}`));
+    if (s.gleam) frame.append(el('div', 'cut-gleam'));
     if (s.fx?.length) frame.append(fxLayer(s.fx));
-    const caption = s.caption ?? (s.captionKey ? art.text(s.captionKey) : '');
+    const caption = s.polaroid ? '' : (s.caption ?? (s.captionKey ? art.text(s.captionKey) : ''));
     if (caption) {
       // Lange Texte wie Untertitel unten, kurze groß oben
       const text = el('div', caption.length > 40 ? 'cut-caption long' : 'cut-caption');
@@ -319,6 +425,20 @@ export function playCutscene(root: HTMLElement, shots: readonly Shot[], art: Cut
       frame.append(text);
     }
     stage.replaceChildren(frame);
+    if (s.focus === 'eyes') {
+      // Augen sitzen bei ~46 % der Figurhöhe; Kamera zoomt genau dorthin
+      // Ruheposition aus dem Layout (ohne die Einspring-Animation)
+      const fig = frame.querySelector<HTMLElement>('.cut-figure');
+      const box = { width: frame.clientWidth, height: frame.clientHeight };
+      if (fig) {
+        const ex = fig.offsetLeft + fig.offsetWidth / 2 - (fig.classList.contains('solo') ? fig.offsetWidth / 2 : 0);
+        const ey = fig.offsetTop + fig.offsetHeight * 0.44;
+        frame.style.transformOrigin = `${ex}px ${ey}px`;
+        frame.style.setProperty('--z', '2.6');
+        // Augen in die Bildmitte schieben (dort ist der schmale Streifen offen)
+        frame.style.translate = `${box.width / 2 - ex}px ${box.height / 2 - ey}px`;
+      }
+    }
     if (s.flash) {
       flash.classList.remove('on');
       void flash.offsetWidth;

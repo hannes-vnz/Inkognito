@@ -1,32 +1,188 @@
 {
-  "legend": [
+  "intro": [
+    {
+      "bg": "deep",
+      "ms": 2600,
+      "cam": "pushIn",
+      "particles": "bubbles",
+      "fg": "kelp",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "normal",
+          "anim": "raw"
+        }
+      ],
+      "captionKey": "intro.1"
+    },
+    {
+      "bg": "deep",
+      "ms": 2300,
+      "cam": "still",
+      "prop": "fx_crate",
+      "motion": "sink",
+      "particles": "bubbles",
+      "fg": "kelp",
+      "captionKey": "intro.2",
+      "sfx": "bubble"
+    },
     {
       "bg": "night",
-      "ms": 1300,
+      "ms": 1000,
       "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "normal",
+          "anim": "raw"
+        }
+      ],
+      "focus": "eyes",
+      "bars": "eyes"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 3200,
+      "cam": "still",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "normal",
+          "anim": "dressup"
+        }
+      ],
+      "captionKey": "intro.3",
+      "sfx": "chest"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1400,
+      "cam": "pushIn",
+      "gleam": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "normal",
+          "anim": "talk"
+        }
+      ],
+      "captionKey": "intro.4"
+    },
+    {
+      "bg": "black",
+      "ms": 350,
+      "cam": "still"
+    },
+    {
+      "bg": "sparkle",
+      "ms": 2200,
+      "cam": "pullOut",
+      "prop": "boat_1",
+      "captionKey": "intro.5"
+    },
+    {
+      "bg": "marquee",
+      "ms": 2000,
+      "cam": "pushIn",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "happy",
+          "anim": "happy"
+        }
+      ],
+      "particles": "confetti",
+      "captionKey": "intro.6",
+      "sfx": "fanfare"
+    },
+    {
+      "bg": "table",
+      "ms": 2800,
+      "cam": "pushIn",
+      "polaroid": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "happy"
+        }
+      ],
+      "captionKey": "intro.photo"
+    }
+  ],
+  "legend": [
+    {
+      "bg": "deep",
+      "ms": 2000,
+      "cam": "pushIn",
+      "prop": "hook",
+      "motion": "sink",
+      "particles": "bubbles",
+      "fg": "kelp",
+      "propSize": 10
+    },
+    {
+      "bg": "black",
+      "ms": 300,
+      "cam": "still"
+    },
+    {
+      "bg": "night",
+      "ms": 1200,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "annoyed",
+          "anim": "reel"
+        }
+      ],
+      "focus": "eyes",
+      "bars": "eyes",
+      "sfx": "bite"
+    },
+    {
+      "bg": "deep",
+      "ms": 2400,
+      "cam": "still",
+      "species": "{legend}",
+      "motion": "pass",
+      "silhouette": true,
+      "particles": "bubbles",
+      "fg": "kelp",
+      "captionKey": "cut.legend.1"
+    },
+    {
+      "bg": "night",
+      "ms": 1400,
+      "cam": "shake",
       "figures": [
         {
           "who": "bert",
           "face": "shock",
           "anim": "shock"
         }
-      ],
-      "fx": [
-        "sweat"
-      ],
-      "captionKey": "cut.legend.1"
+      ]
     },
     {
       "bg": "speedlines",
-      "ms": 1100,
+      "ms": 900,
       "cam": "shake",
       "flash": true,
       "species": "{legend}",
+      "motion": "toCamera",
+      "particles": "shards",
       "sfx": "bite"
     },
     {
+      "bg": "white",
+      "ms": 300,
+      "cam": "still"
+    },
+    {
       "bg": "spotlight",
-      "ms": 1600,
+      "ms": 1500,
       "cam": "still",
       "panels": [
         {
@@ -48,7 +204,7 @@
     },
     {
       "bg": "marquee",
-      "ms": 2000,
+      "ms": 1900,
       "cam": "pushIn",
       "flash": true,
       "figures": [
@@ -58,26 +214,59 @@
           "anim": "happy"
         }
       ],
-      "fx": [
-        "sparkle",
-        "coins"
-      ],
+      "particles": "confetti",
       "caption": "{legendName}",
       "sfx": "fanfare"
+    },
+    {
+      "bg": "table",
+      "ms": 2800,
+      "cam": "pushIn",
+      "polaroid": true,
+      "figures": [
+        {
+          "who": "knut",
+          "face": "shock"
+        },
+        {
+          "who": "bert",
+          "face": "happy"
+        },
+        {
+          "who": "schulze",
+          "face": "happy"
+        }
+      ],
+      "caption": "Beweisfoto: {legendName}"
     }
   ],
   "bruno_deal": [
     {
       "bg": "spotlight",
-      "ms": 1300,
+      "ms": 1400,
       "cam": "pushIn",
+      "lightsOn": true,
       "figures": [
         {
           "who": "bruno",
           "face": "annoyed"
         }
       ],
-      "captionKey": "cut.deal.1"
+      "captionKey": "cut.deal.1",
+      "sfx": "tap"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 800,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "bruno",
+          "face": "annoyed"
+        }
+      ],
+      "focus": "eyes",
+      "bars": "eyes"
     },
     {
       "bg": "split",
@@ -115,15 +304,13 @@
           "anim": "happy"
         }
       ],
-      "fx": [
-        "sparkle"
-      ],
+      "particles": "confetti",
       "captionKey": "reaction.set",
       "sfx": "fanfare"
     },
     {
       "bg": "spotlight",
-      "ms": 1500,
+      "ms": 1600,
       "cam": "still",
       "figures": [
         {
@@ -137,6 +324,23 @@
         }
       ],
       "captionKey": "cut.set.2"
+    },
+    {
+      "bg": "table",
+      "ms": 2400,
+      "cam": "pushIn",
+      "polaroid": true,
+      "figures": [
+        {
+          "who": "hilde",
+          "face": "annoyed"
+        },
+        {
+          "who": "bert",
+          "face": "happy"
+        }
+      ],
+      "caption": "Set: {set}"
     }
   ],
   "gisela_steal": [
@@ -151,11 +355,12 @@
           "face": "happy"
         }
       ],
+      "particles": "shards",
       "captionKey": "cut.steal.1"
     },
     {
-      "bg": "spotlight",
-      "ms": 1500,
+      "bg": "night",
+      "ms": 1300,
       "cam": "pushIn",
       "figures": [
         {
@@ -163,15 +368,16 @@
           "face": "shock",
           "anim": "shock"
         }
-      ],
-      "fx": [
-        "sweat",
-        "tears"
       ]
     },
     {
+      "bg": "black",
+      "ms": 350,
+      "cam": "still"
+    },
+    {
       "bg": "spotlight",
-      "ms": 1200,
+      "ms": 1300,
       "cam": "still",
       "figures": [
         {
@@ -206,27 +412,40 @@
     },
     {
       "bg": "spotlight",
-      "ms": 1300,
+      "ms": 1500,
       "cam": "pushIn",
       "figures": [
         {
           "who": "bert",
-          "face": "shock",
+          "face": "normal",
           "anim": "busted"
         }
       ],
-      "fx": [
-        "sweat"
-      ],
       "captionKey": "cut.photo.2"
+    },
+    {
+      "bg": "table",
+      "ms": 2500,
+      "cam": "pushIn",
+      "polaroid": true,
+      "figures": [
+        {
+          "who": "schulze",
+          "face": "happy"
+        },
+        {
+          "who": "bert",
+          "face": "shock"
+        }
+      ],
+      "captionKey": "cut.photo.3"
     }
   ],
   "fight": [
     {
-      "bg": "speedlines",
-      "ms": 1400,
-      "cam": "shake",
-      "flash": true,
+      "bg": "night",
+      "ms": 700,
+      "cam": "still",
       "figures": [
         {
           "who": "bert",
@@ -234,81 +453,24 @@
           "anim": "reel"
         }
       ],
-      "captionKey": "fight.start",
+      "focus": "eyes",
+      "bars": "eyes",
       "sfx": "reel"
-    }
-  ],
-  "intro": [
-    {
-      "bg": "night",
-      "ms": 3800,
-      "cam": "pushIn",
-      "figures": [
-        {
-          "who": "bert",
-          "anim": "raw"
-        }
-      ],
-      "captionKey": "intro.1"
     },
     {
-      "bg": "night",
-      "ms": 3000,
-      "cam": "panLeft",
-      "prop": "fx_crate",
-      "captionKey": "intro.2",
-      "sfx": "bubble"
-    },
-    {
-      "bg": "spotlight",
-      "ms": 3200,
-      "cam": "still",
+      "bg": "speedlines",
+      "ms": 1100,
+      "cam": "shake",
       "flash": true,
+      "gleam": true,
       "figures": [
         {
           "who": "bert",
-          "anim": "dressup"
+          "face": "annoyed",
+          "anim": "reel"
         }
       ],
-      "captionKey": "intro.3",
-      "sfx": "chest"
-    },
-    {
-      "bg": "spotlight",
-      "ms": 2600,
-      "cam": "pushIn",
-      "figures": [
-        {
-          "who": "bert",
-          "anim": "talk"
-        }
-      ],
-      "captionKey": "intro.4"
-    },
-    {
-      "bg": "sparkle",
-      "ms": 2600,
-      "cam": "pullOut",
-      "flash": true,
-      "prop": "boat_1",
-      "captionKey": "intro.5"
-    },
-    {
-      "bg": "marquee",
-      "ms": 2600,
-      "cam": "pushIn",
-      "flash": true,
-      "figures": [
-        {
-          "who": "bert",
-          "anim": "happy"
-        }
-      ],
-      "fx": [
-        "sparkle"
-      ],
-      "captionKey": "intro.6",
-      "sfx": "fanfare"
+      "captionKey": "fight.start"
     }
   ]
 }

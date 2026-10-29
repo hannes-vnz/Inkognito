@@ -16,9 +16,7 @@ import {
 } from '../online/cloud';
 import { resetProgress, syncNow, type SyncResult } from '../online/sync';
 import { isEmail, normalizeFriendCode, normalizeLoginCode } from '../systems/sync';
-import creditsJson from '../../data/credits.json';
-
-const creditLines = creditsJson as string[];
+import { creditLines } from '../data';
 
 const errorText = (e: unknown): string => t('account.error', { message: e instanceof Error ? e.message : String(e) });
 

@@ -29,11 +29,12 @@ Jeder Push auf `main` baut das Spiel und veröffentlicht es auf GitHub Pages:
 3. Diese Adresse im Handy-Browser öffnen. Mit `?debug` hinten dran (`http://192.168.0.23:5173/?debug`) erscheint oben rechts die FPS-Anzeige.
 4. Für Vollbild: im Browser-Menü „Zum Home-Bildschirm“ wählen und von dort starten.
 
-Steuerung:
-- **Schwimmen:** Daumen in der unteren Hälfte (hochkant) bzw. linken Hälfte (quer) aufsetzen und ziehen. Desktop: WASD oder Pfeiltasten.
-- **Schießen (Blasenkanone):** Kurz tippen, Ziel ist die Tippstelle. Quer kann man rechts auch ziehen zum Zielen und loslassen zum Schießen. Desktop: Mausklick oder Leertaste.
-- **Riff:** Zu einer Figur, zum Haus, zur Seegras-Farm oder zur Muschelbank schwimmen, dann den gelben Knopf tippen (Desktop: E). Gefangene Fische schlafen im alten Haus und bekommen Jobs, Bruno der Hai kauft Fische. Der Ring rechts oben startet den Tauchgang.
-- Eine leichte Zielhilfe lenkt Schüsse auf Fische, die knapp daneben liegen. Gefangene Fische schweben in Blasen hinterher (max. 8).
+Spielen:
+- **Auswerfen**, dann den Daumen ziehen: Der Haken folgt waagerecht. Im Abstieg den Fischen **ausweichen** (Berührung = Biss, es geht wieder hoch), im Aufstieg möglichst viele **einsammeln**.
+- Fliegende Fische an Deck antippen gibt doppelten Wert.
+- Upgrades: Leine (Tiefe), Haken (Fische pro Wurf), Crew (Münzen pro Minute, auch offline).
+- Jede neue Art öffnet eine Fakt-Karte, alle Arten stehen im Fischbuch.
+- Desktop: Maus oder Pfeiltasten lenken, Leertaste wirft aus.
 
 ## Online (Supabase)
 

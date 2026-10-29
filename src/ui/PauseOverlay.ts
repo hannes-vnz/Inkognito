@@ -1,4 +1,4 @@
-import { el } from './Hud';
+import { el } from './dom';
 import { t } from '../i18n';
 
 export class PauseOverlay {

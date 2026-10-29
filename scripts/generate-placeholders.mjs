@@ -1,4 +1,5 @@
-// Erzeugt Platzhaltergrafiken in den finalen Größen und Dateinamen (siehe Asset-Regeln in INKOGNITO.md).
+// Erzeugt Platzhaltergrafiken in den finalen Größen und Dateinamen (siehe Asset-Regeln in INKOGNITO.md),
+// im Stil von ARTSTIL.md: 4-stufige Farbrampe, farbige Kontur, große Augen mit Glanzpunkt.
 // Echte Grafiken ersetzen diese Dateien später 1:1. Aufruf: npm run assets:placeholders
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -9,8 +10,8 @@ import { createRng } from '../src/systems/rng.ts';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const spritesDir = join(root, 'assets', 'sprites');
 const bgDir = join(root, 'assets', 'backgrounds');
-mkdirSync(spritesDir, { recursive: true });
-mkdirSync(bgDir, { recursive: true });
+const iconsDir = join(root, 'assets', 'icons');
+for (const d of [spritesDir, bgDir, iconsDir]) mkdirSync(d, { recursive: true });
 
 // ---------------------------------------------------------------- PNG
 
@@ -33,35 +34,31 @@ const chunk = (type, data) => {
   return Buffer.concat([len, td, crc]);
 };
 
-/** Image: RGBA mit Float-Kanälen 0..1 für sauberes Überblenden. */
+/** Bild mit Float-Kanälen 0..1 für sauberes Überblenden. */
 class Image {
-  constructor(width, height, wrap = false) {
+  constructor(width, height) {
     this.width = width;
     this.height = height;
-    this.wrap = wrap;
     this.px = new Float32Array(width * height * 4);
   }
-  /** Alpha-Blending „über“ das Vorhandene. */
   blend(x, y, [r, g, b], a) {
-    if (a <= 0) return;
-    if (this.wrap) {
-      x = ((x % this.width) + this.width) % this.width;
-      y = ((y % this.height) + this.height) % this.height;
-    } else if (x < 0 || y < 0 || x >= this.width || y >= this.height) return;
+    x = Math.round(x);
+    y = Math.round(y);
+    if (a <= 0 || x < 0 || y < 0 || x >= this.width || y >= this.height) return;
     const i = (y * this.width + x) * 4;
     const p = this.px;
     const da = p[i + 3];
     const oa = a + da * (1 - a);
-    if (oa <= 0) return;
     p[i] = (r * a + p[i] * da * (1 - a)) / oa;
     p[i + 1] = (g * a + p[i + 1] * da * (1 - a)) / oa;
     p[i + 2] = (b * a + p[i + 2] * da * (1 - a)) / oa;
     p[i + 3] = oa;
   }
   set(x, y, [r, g, b], a = 1) {
+    x = Math.round(x);
+    y = Math.round(y);
     if (x < 0 || y < 0 || x >= this.width || y >= this.height) return;
-    const i = (y * this.width + x) * 4;
-    this.px.set([r, g, b, a], i);
+    this.px.set([r, g, b, a], (y * this.width + x) * 4);
   }
   alphaAt(x, y) {
     if (x < 0 || y < 0 || x >= this.width || y >= this.height) return 0;
@@ -74,10 +71,7 @@ class Image {
     const prev = Buffer.alloc(stride);
     const rows = [];
     for (let y = 0; y < height; y++) {
-      for (let i = 0; i < stride; i++) {
-        raw[i] = Math.round(Math.min(1, Math.max(0, this.px[y * stride + i])) * 255);
-      }
-      // Filter „Up“ wenn günstiger: identische Zeilen (Verläufe) komprimieren dann fast auf null.
+      for (let i = 0; i < stride; i++) raw[i] = Math.round(Math.min(1, Math.max(0, this.px[y * stride + i])) * 255);
       const up = Buffer.alloc(stride);
       let sumNone = 0;
       let sumUp = 0;
@@ -92,8 +86,8 @@ class Image {
     const ihdr = Buffer.alloc(13);
     ihdr.writeUInt32BE(width, 0);
     ihdr.writeUInt32BE(height, 4);
-    ihdr[8] = 8; // Bit-Tiefe
-    ihdr[9] = 6; // RGBA
+    ihdr[8] = 8;
+    ihdr[9] = 6;
     return Buffer.concat([
       Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
       chunk('IHDR', ihdr),
@@ -106,172 +100,237 @@ class Image {
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const white = [1, 1, 1];
+const ink = hex('#0e1a2b');
 const save = (dir, name, img) => {
   writeFileSync(join(dir, name), img.toPng());
   console.log(`  ${join(dir, name).slice(root.length + 1)}  ${img.width}×${img.height}`);
 };
 
-// ---------------------------------------------------------------- Oktopus (32×32 je Frame)
+/** Farbige Kontur um alle deckenden Pixel eines Bereichs. */
+function outlineRegion(img, x0, y0, w, h, color) {
+  const solid = (x, y) => x >= x0 && y >= y0 && x < x0 + w && y < y0 + h && img.alphaAt(x, y) > 0.5;
+  const pts = [];
+  for (let y = y0; y < y0 + h; y++)
+    for (let x = x0; x < x0 + w; x++)
+      if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) pts.push([x, y]);
+  for (const [x, y] of pts) img.set(x, y, color);
+}
 
-const FRAME = 32;
-const ramp = {
-  outline: hex('#5a1846'),
-  shadow: hex('#b8346a'),
-  base: hex('#ec5a84'),
-  light: hex('#ff9fb6'),
-  suction: hex('#ffd2db'),
-};
-const white = [1, 1, 1];
-const pupil = hex('#1b1030');
+/** Vierstufige Farbrampe aus einer Grundfarbe. */
+const rampOf = (base) => ({
+  outline: mix(base, hex('#1b1030'), 0.7),
+  shadow: mix(base, hex('#1b1030'), 0.32),
+  base,
+  light: mix(base, white, 0.42),
+});
 
-/**
- * Zeichnet einen Frame. `opts`: headSquash, eyeShift (−3..3, + = nach rechts), arms(t) → Liste von Arm-Polylinien.
- */
-function drawOctopusFrame(img, ox, oy, opts) {
-  const mask = new Int8Array(FRAME * FRAME); // 0 leer, 1 Körper, 2 Arm
-  const cx = 15.5;
-  const cy = 11.5 + (opts.headBob ?? 0);
-  const rx = 8.5 * (1 + (opts.headSquash ?? 0));
-  const ry = 8 * (1 - (opts.headSquash ?? 0));
-
-  // Arme zuerst (liegen hinter dem Kopf), als dicke Linien.
-  for (const arm of opts.arms) {
-    for (let i = 0; i < arm.length; i++) {
-      const [x, y, w] = arm[i];
-      for (let dy = -2; dy <= 2; dy++)
-        for (let dx = -2; dx <= 2; dx++) {
-          if (dx * dx + dy * dy > w * w) continue;
-          const px = Math.round(x + dx);
-          const py = Math.round(y + dy);
-          if (px >= 1 && py >= 1 && px < FRAME - 1 && py < FRAME - 1) mask[py * FRAME + px] ||= 2;
-        }
-    }
-  }
-  for (let y = 0; y < FRAME; y++)
-    for (let x = 0; x < FRAME; x++) {
+/** Gefüllte Ellipse mit Licht von oben (Rampe). */
+function ellipse(img, ox, oy, cx, cy, rx, ry, ramp) {
+  for (let y = Math.floor(cy - ry); y <= cy + ry; y++)
+    for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
       const nx = (x + 0.5 - cx) / rx;
       const ny = (y + 0.5 - cy) / ry;
-      if (nx * nx + ny * ny <= 1 && x >= 1 && y >= 1 && x < FRAME - 1 && y < FRAME - 1) mask[y * FRAME + x] = 1;
+      if (nx * nx + ny * ny > 1) continue;
+      img.set(ox + x, oy + y, ny < -0.35 ? ramp.light : ny > 0.4 ? ramp.shadow : ramp.base);
     }
+}
 
-  // Füllen mit 4-stufiger Farbrampe (Licht von oben rechts).
-  for (let y = 0; y < FRAME; y++)
-    for (let x = 0; x < FRAME; x++) {
-      const m = mask[y * FRAME + x];
-      if (!m) continue;
-      let color = ramp.base;
-      if (m === 1) {
-        const nx = (x + 0.5 - cx) / rx;
-        const ny = (y + 0.5 - cy) / ry;
-        const lightness = nx * 0.45 - ny * 0.75;
-        if (lightness > 0.45) color = ramp.light;
-        else if (lightness < -0.45) color = ramp.shadow;
-      } else {
-        const below = mask[(y + 1) * FRAME + x];
-        if (!below) color = ramp.shadow;
-        else if ((x * 3 + y * 5) % 11 === 0 && y > cy + ry) color = ramp.suction;
+/** Großes Auge mit Glanzpunkt. */
+function eye(img, x, y, r = 2, look = 1, color = white) {
+  for (let dy = -r; dy < r; dy++) for (let dx = -r; dx < r; dx++) img.set(x + dx, y + dy, color);
+  img.set(x + (look > 0 ? r - 1 : -r), y, hex('#1b1030'));
+  img.set(x + (look > 0 ? r - 1 : -r), y - 1, hex('#1b1030'));
+  img.set(x - r, y - r, white);
+}
+
+// ---------------------------------------------------------------- Bert, der verkleidete Oktopus (32×32)
+
+/**
+ * Reihen: idle (6), cast (4), cheer (4), sweat (4). Rosa Oktopus mit gelbem Fischerhut und
+ * viel zu großem braunem Fake-Bart, unten schauen die Arme heraus.
+ */
+function drawBert() {
+  const F = 32;
+  const img = new Image(F * 6, F * 4);
+  const skin = rampOf(hex('#ec5a84'));
+  const beard = rampOf(hex('#8a5a2b'));
+  const hat = rampOf(hex('#ffd23f'));
+  const rows = [
+    Array.from({ length: 6 }, (_, f) => ({ bob: f < 3 ? 0 : 1, arm: Math.sin((f / 6) * Math.PI * 2), blink: f === 4 })),
+    [0, 1, 2, 3].map((f) => ({ bob: 0, arm: 0, cast: f })),
+    [0, 1, 2, 3].map((f) => ({ bob: f % 2 ? -2 : 0, arm: f % 2 ? 1 : -1, cheer: true })),
+    [0, 1, 2, 3].map((f) => ({ bob: f % 2, arm: 0.3, sweat: f })),
+  ];
+  rows.forEach((frames, row) =>
+    frames.forEach((o, col) => {
+      const ox = col * F;
+      const oy = row * F;
+      const b = o.bob;
+      // Arme unten (schauen unter dem Bart hervor)
+      for (let k = 0; k < 5; k++) {
+        const ax = 9 + k * 3.5 + Math.round(Math.sin(k + (o.arm ?? 0) * 2) * 1);
+        for (let y = 24; y < 30; y++) img.set(ox + ax, oy + y + (y > 27 ? 0 : 0), y > 27 ? skin.shadow : skin.base);
       }
-      img.set(ox + x, oy + y, color);
-    }
-
-  // Farbige Outline um alles herum.
-  for (let y = 0; y < FRAME; y++)
-    for (let x = 0; x < FRAME; x++) {
-      if (mask[y * FRAME + x]) continue;
-      const n =
-        (x > 0 && mask[y * FRAME + x - 1]) ||
-        (x < FRAME - 1 && mask[y * FRAME + x + 1]) ||
-        (y > 0 && mask[(y - 1) * FRAME + x]) ||
-        (y < FRAME - 1 && mask[(y + 1) * FRAME + x]);
-      if (n) img.set(ox + x, oy + y, ramp.outline);
-    }
-
-  // Große Augen mit Glanzpunkt.
-  const eyeY = Math.round(cy + 1);
-  const shift = opts.eyeShift ?? 2;
-  for (const ex of [Math.round(cx - 3.5 + shift), Math.round(cx + 2.5 + shift)]) {
-    for (let dy = -2; dy <= 1; dy++)
-      for (let dx = -1; dx <= 1; dx++) img.set(ox + ex + dx, oy + eyeY + dy, white);
-    const lookX = shift > 0 ? 1 : shift < 0 ? -1 : 0;
-    img.set(ox + ex + lookX, oy + eyeY, pupil);
-    img.set(ox + ex + lookX, oy + eyeY - 1, pupil);
-    img.set(ox + ex + lookX - (lookX || 1), oy + eyeY - 1, pupil);
-    img.set(ox + ex + lookX - (lookX || 1), oy + eyeY, pupil);
-    img.set(ox + ex - 1, oy + eyeY - 2, white); // Glanzpunkt
-    if (opts.blink) for (let dx = -1; dx <= 1; dx++) for (let dy = -2; dy <= 1; dy++) img.set(ox + ex + dx, oy + eyeY + dy, ramp.base);
-    if (opts.blink) for (let dx = -1; dx <= 1; dx++) img.set(ox + ex + dx, oy + eyeY, ramp.outline);
-  }
-  return mask;
+      // Kopf
+      ellipse(img, ox, oy, 16, 13 + b, 9, 8.5, skin);
+      // Hut: Krempe und Kappe
+      for (let x = 5; x < 27; x++) img.set(ox + x, oy + 7 + b, hat.shadow);
+      ellipse(img, ox, oy, 16, 5.5 + b, 7, 3.6, hat);
+      // Bart: große Wolke über Mund und Kinn
+      for (const [bx, by, r] of [[11, 19, 4.2], [16, 21, 5.2], [21, 19, 4.2], [13, 23, 3.4], [19, 23, 3.4], [16, 25, 3]]) ellipse(img, ox, oy, bx, by + b, r, r, beard);
+      // Arm mit Angel beim Auswerfen / Jubeln
+      if (o.cast !== undefined) {
+        const ang = [-2.2, -1.4, -0.4, 0.2][o.cast];
+        for (let i = 0; i < 12; i++) img.set(ox + 24 + Math.cos(ang) * i, oy + 18 + Math.sin(ang) * i, hex('#6b4a2b'));
+      }
+      if (o.cheer) for (const side of [-1, 1]) for (let i = 0; i < 6; i++) img.set(ox + 16 + side * (9 + i * 0.4), oy + 15 + b - i, skin.base);
+      outlineRegion(img, ox, oy, F, F, skin.outline);
+      // Augen über dem Bart
+      if (o.blink) for (const ex of [12, 19]) for (let x = -1; x <= 1; x++) img.set(ox + ex + x, oy + 13 + b, skin.outline);
+      else {
+        eye(img, ox + 13, oy + 13 + b, 2, 1);
+        eye(img, ox + 20, oy + 13 + b, 2, 1);
+      }
+      if (o.sweat !== undefined) for (let i = 0; i < 3; i++) img.set(ox + 26, oy + 9 + b + i + (o.sweat % 2), hex('#9ff0ff'));
+    }),
+  );
+  return img;
 }
 
-/** Arme als Polylinien: hängen vom Kopf, Welle über `phase`, Neigung `sweep` (− = nach hinten links). */
-function armSet({ phase, amp, sweep = 0, reach = 0, length = 12 }) {
-  const roots = [9.5, 13.5, 17.5, 21.5];
-  return roots.map((rx, k) => {
-    const pts = [];
-    for (let s = 0; s <= length; s++) {
-      const t = s / length;
-      const wave = Math.sin(phase + k * 1.3 + t * 3.2) * amp * t;
-      const x = rx + wave + sweep * t * t * 10 + reach * t * 12;
-      const y = 17 + s * (1 - Math.abs(sweep) * 0.35 - Math.abs(reach) * 0.4);
-      pts.push([x, y, t < 0.5 ? 1.6 : t < 0.85 ? 1.1 : 0.6]);
-    }
-    return pts;
-  });
-}
+console.log('Figuren:');
+save(spritesDir, 'player_octopus.png', drawBert());
 
-const sheet = new Image(FRAME * 6, FRAME * 4);
-const normal = new Image(FRAME * 6, FRAME * 4);
-const rows = [
-  // idle: sanftes Wabern, einmal blinzeln
-  Array.from({ length: 6 }, (_, f) => ({
-    arms: armSet({ phase: (f / 6) * Math.PI * 2, amp: 1.4 }),
-    headBob: f < 3 ? 0 : 0.5,
-    blink: f === 4,
-  })),
-  // swim: Arme schlagen nach hinten, Kopf staucht im Takt
-  Array.from({ length: 6 }, (_, f) => ({
-    arms: armSet({ phase: (f / 6) * Math.PI * 2, amp: 2.4, sweep: -0.5 + Math.sin((f / 6) * Math.PI * 2) * 0.15 }),
-    headSquash: Math.sin((f / 6) * Math.PI * 2) * 0.08,
-  })),
-  // turn: von frontal zur neuen Blickrichtung
-  Array.from({ length: 4 }, (_, f) => ({
-    arms: armSet({ phase: f, amp: 1, sweep: 0.15 - f * 0.05 }),
-    eyeShift: -1 + f,
-    headSquash: 0.1 - f * 0.03,
-  })),
-  // catch: Arme greifen nach vorn
-  Array.from({ length: 4 }, (_, f) => ({
-    arms: armSet({ phase: f, amp: 0.8, reach: [0.2, 0.5, 0.7, 0.35][f] }),
-    eyeShift: 3,
-  })),
-];
-rows.forEach((frames, row) =>
-  frames.forEach((opts, col) => {
-    const mask = drawOctopusFrame(sheet, col * FRAME, row * FRAME, opts);
-    // Normal Map: Kopf als Halbkugel, Arme leicht gewölbt; Leerraum flach.
-    for (let y = 0; y < FRAME; y++)
-      for (let x = 0; x < FRAME; x++) {
-        const m = mask[y * FRAME + x];
-        const a = sheet.alphaAt(col * FRAME + x, row * FRAME + y);
-        let n = [0, 0, 1];
-        if (m === 1) {
-          const nx = (x + 0.5 - 15.5) / 9;
-          const ny = (y + 0.5 - 11.5) / 8;
-          const nz = Math.sqrt(Math.max(0.05, 1 - nx * nx - ny * ny));
-          const l = Math.hypot(nx, ny, nz);
-          n = [nx / l, -ny / l, nz / l];
+// ---------------------------------------------------------------- Arten aus data/fish.json
+
+/**
+ * Spritesheet je Art: Reihen idle, swim, turn, catch mit je 4 Frames, schaut nach rechts.
+ * Platzhalter mit den typischen Merkmalen der echten Art.
+ */
+function drawSpecies(def) {
+  const fw = def.frame.width;
+  const fh = def.frame.height;
+  const ramp = rampOf(hex(def.placeholderColor));
+  const img = new Image(fw * 4, fh * 4);
+  const glow = hex('#7dfff0');
+  for (let row = 0; row < 4; row++)
+    for (let col = 0; col < 4; col++) {
+      const ox = col * fw;
+      const oy = row * fh;
+      const wag = [0, 1, 0, -1][col] * (row === 1 ? 1.5 : 0.7);
+      const squash = row === 2 ? [0.45, 0.7, 0.9, 1][col] : 1;
+      const cx = fw * 0.56;
+      const cy = fh / 2;
+      const tail = (len, half) => {
+        const tx = Math.round(cx - (fw * 0.36) * squash);
+        for (let i = 0; i < len; i++) {
+          const h = Math.round((i / len) * half) + 1;
+          for (let y = -h; y <= h; y++) img.set(ox + tx - i, oy + cy + y + Math.round(wag * (i / len)), ramp.shadow);
         }
-        normal.set(col * FRAME + x, row * FRAME + y, n.map((v) => v * 0.5 + 0.5), a > 0 ? 1 : 0);
+      };
+      switch (def.id) {
+        case 'sunfish': {
+          ellipse(img, ox, oy, cx, cy, (fw * 0.38) * squash, fh * 0.36, ramp);
+          for (let i = 0; i < 7; i++) {
+            img.set(ox + cx - 1, oy + 2 + i * 0.6 - wag, ramp.shadow);
+            img.set(ox + cx - 1, oy + fh - 3 - i * 0.6 + wag, ramp.shadow);
+          }
+          for (let y = -4; y <= 4; y++) img.set(ox + cx - fw * 0.38 * squash, oy + cy + y, ramp.light);
+          break;
+        }
+        case 'gulper': {
+          for (let i = 0; i < fw * 0.6; i++) {
+            const y = cy + Math.sin(i * 0.5 + col) * 1.5;
+            img.set(ox + fw * 0.6 - i, oy + y, ramp.base);
+            img.set(ox + fw * 0.6 - i, oy + y + 1, ramp.shadow);
+          }
+          ellipse(img, ox, oy, fw * 0.74, cy, fw * 0.16 * squash, fh * 0.42, ramp);
+          for (let x = 0; x < fw * 0.12; x++) img.set(ox + fw * 0.8 + x, oy + cy, hex('#1b1030'));
+          break;
+        }
+        case 'dumbo': {
+          ellipse(img, ox, oy, fw / 2, fh * 0.42, fw * 0.3 * squash, fh * 0.32, ramp);
+          for (const side of [-1, 1]) ellipse(img, ox, oy, fw / 2 + side * fw * 0.3, fh * 0.3 + wag * 0.5, 2.5, 3.5, ramp);
+          for (let k = 0; k < 4; k++) for (let y = 0; y < 4; y++) img.set(ox + fw * 0.3 + k * 3, oy + fh * 0.7 + y, ramp.shadow);
+          break;
+        }
+        case 'sea_pig': {
+          ellipse(img, ox, oy, fw / 2, fh * 0.5, fw * 0.42 * squash, fh * 0.3, ramp);
+          for (let k = 0; k < 5; k++) for (let y = 0; y < 3; y++) img.set(ox + 4 + k * 3, oy + fh * 0.76 + y + (k % 2 === col % 2 ? 0 : -1), ramp.shadow);
+          for (let k = 0; k < 3; k++) img.set(ox + 5 + k * 2, oy + fh * 0.2, ramp.light);
+          break;
+        }
+        case 'amphipod': {
+          for (let k = 0; k < 4; k++) ellipse(img, ox, oy, 4 + k * 3, cy, 2.3, fh * 0.32, ramp);
+          for (let k = 0; k < 4; k++) for (let y = 0; y < 3; y++) img.set(ox + 3 + k * 3 + (col % 2), oy + cy + 3 + y, ramp.shadow);
+          for (let i = 0; i < 4; i++) img.set(ox + 14 + i * 0.4, oy + cy - 2 - i, ramp.shadow);
+          break;
+        }
+        default: {
+          tail(Math.max(3, Math.round(fw * 0.2)), fh * 0.34);
+          ellipse(img, ox, oy, cx, cy, (fw * 0.36) * squash, fh * 0.4, ramp);
+          for (let i = 0; i < fw * 0.25; i++) if (i % 3 !== 2) img.set(ox + cx - fw * 0.1 + i, oy + cy - fh * 0.4 - 1, ramp.shadow);
+        }
       }
-  }),
-);
+      outlineRegion(img, ox, oy, fw, fh, ramp.outline);
+      // Augen und Merkmale
+      const ex = Math.round(ox + (def.id === 'dumbo' || def.id === 'sea_pig' ? fw * 0.6 : def.id === 'amphipod' ? 14 : cx + fw * 0.24 * squash));
+      const ey = Math.round(oy + (def.id === 'dumbo' ? fh * 0.42 : cy - 1));
+      if (def.id === 'barreleye') {
+        // durchsichtige Kuppel mit grünen Augen darin
+        for (let x = -3; x <= 3; x++) for (let y = -4; y <= 0; y++) if (x * x + y * y * 0.6 < 10) img.blend(ex + x - 1, ey + y - 1, hex('#e8fff8'), 0.55);
+        eye(img, ex - 1, ey - 2, 1.5, 1, hex('#8cff5a'));
+      } else eye(img, ex, ey, fh >= 12 ? 2 : 1.5, 1);
+      if (def.id === 'viperfish') for (let i = 0; i < 3; i++) img.set(ex + 2 + i, ey + 3 + (i % 2), white);
+      if (def.id === 'anglerfish') {
+        const top = Math.max(oy + 2, ey - 7);
+        for (let y = ey - 3; y > top; y--) img.set(ex + 1 + (ey - 3 - y) * 0.5, y, ramp.outline);
+        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) img.set(Math.min(ox + fw - 2, ex + 3) + dx, top + dy, glow);
+        for (let i = 0; i < 4; i++) img.set(ex + 2 + i, oy + cy + 3, white);
+      }
+      if (def.glow && def.id !== 'anglerfish') for (let k = 0; k < 4; k++) img.set(ox + cx - fw * 0.2 + k * 3, oy + cy + fh * 0.32, glow);
+    }
+  return img;
+}
 
-console.log('Sprites:');
-save(spritesDir, 'player_octopus.png', sheet);
-save(spritesDir, 'player_octopus_n.png', normal);
+const fishDefs = JSON.parse(readFileSync(join(root, 'data', 'fish.json'), 'utf8'));
+console.log('Arten:');
+for (const def of fishDefs) save(spritesDir, `${def.sprite}.png`, drawSpecies(def));
 
-// Blase für Schwimm-Effekt (8×8)
+// ---------------------------------------------------------------- Boot, Haken, Effekte
+
+/** Kleiner Fischkutter 64×32: Rumpf, Kajüte, Mast. Anker unten mittig. */
+function drawBoat() {
+  const img = new Image(64, 32);
+  const hull = rampOf(hex('#d9573b'));
+  const cabin = rampOf(hex('#f2ead8'));
+  for (let y = 20; y < 30; y++) {
+    const inset = Math.round((y - 20) * 0.9);
+    for (let x = 2 + inset; x < 62 - inset * 0.6; x++) img.set(x, y, y < 22 ? hull.light : y > 26 ? hull.shadow : hull.base);
+  }
+  for (let x = 2; x < 62; x++) img.set(x, 20, cabin.light);
+  for (let y = 10; y < 20; y++) for (let x = 30; x < 50; x++) img.set(x, y, y < 12 ? cabin.light : cabin.base);
+  for (let y = 12; y < 16; y++) for (let x = 34; x < 46; x++) img.set(x, y, (x - 34) % 6 < 4 ? hex('#5ce1e6') : cabin.base);
+  for (let y = 2; y < 20; y++) img.set(22, y, hex('#6b4a2b'));
+  for (let x = 2; x < 60; x += 6) img.set(x, 24, hex('#fff6e0'));
+  outlineRegion(img, 0, 0, 64, 32, ink);
+  return img;
+}
+
+function drawHook() {
+  const img = new Image(8, 12);
+  const steel = hex('#cfd8e3');
+  for (let y = 0; y < 8; y++) img.set(5, y, steel);
+  for (const [x, y] of [[5, 8], [4, 9], [3, 9], [2, 8], [1, 7], [1, 6]]) img.set(x, y, steel);
+  img.set(2, 6, steel);
+  outlineRegion(img, 0, 0, 8, 12, ink);
+  return img;
+}
+
+console.log('Boot und Haken:');
+save(spritesDir, 'boat_1.png', drawBoat());
+save(spritesDir, 'hook.png', drawHook());
+
 const bubble = new Image(8, 8);
 for (let y = 0; y < 8; y++)
   for (let x = 0; x < 8; x++) {
@@ -282,475 +341,78 @@ for (let y = 0; y < 8; y++)
 bubble.set(2, 2, white, 1);
 save(spritesDir, 'fx_bubble.png', bubble);
 
-// ---------------------------------------------------------------- Fische (Größe und Farbe aus data/fish.json)
-
-/**
- * Fisch als Spritesheet: Reihen idle, swim, turn, catch mit je 4 Frames, schaut nach rechts.
- * Platzhalter: Körper-Ellipse, Schwanzflosse, Rückenflosse, großes Auge mit Glanzpunkt.
- */
-function drawFishSheet(def) {
-  const fw = def.frame.width;
-  const fh = def.frame.height;
-  const base = hex(def.placeholderColor);
-  const fishRamp = {
-    outline: mix(base, hex('#1b1030'), 0.65),
-    shadow: mix(base, hex('#1b1030'), 0.3),
-    base,
-    light: mix(base, [1, 1, 1], 0.45),
-  };
-  const sheetImg = new Image(fw * 4, fh * 4);
-  const frameOpts = [
-    [0, 1, 2, 1].map((t) => ({ tail: t * 0.5, squash: 1 })),
-    [0, 1, 2, 1].map((t) => ({ tail: t - 1, squash: 1 })),
-    [0.35, 0.6, 0.85, 1].map((sq) => ({ tail: 0, squash: sq })),
-    [0, 1, 0, -1].map((t) => ({ tail: t, squash: 1, wide: true })),
-  ];
-  frameOpts.forEach((row, r) =>
-    row.forEach((o, c) => {
-      const ox = c * fw;
-      const oy = r * fh;
-      const mask = new Int8Array(fw * fh);
-      const bodyW = (fw - 2) * 0.72 * o.squash;
-      const bodyH = (fh - 2) * 0.78;
-      const cx = fw * 0.58;
-      const cy = fh / 2;
-      // Körper
-      for (let y = 0; y < fh; y++)
-        for (let x = 0; x < fw; x++) {
-          const nx = (x + 0.5 - cx) / (bodyW / 2);
-          const ny = (y + 0.5 - cy) / (bodyH / 2);
-          if (nx * nx + ny * ny <= 1) mask[y * fw + x] = 1;
-        }
-      // Schwanzflosse (Dreieck links), wedelt über o.tail
-      const tailX0 = Math.round(cx - bodyW / 2) + 1;
-      const tailLen = Math.max(3, Math.round(fw * 0.22));
-      for (let i = 0; i < tailLen; i++) {
-        const x = tailX0 - i;
-        const half = Math.round((i / tailLen) * fh * 0.36) + 1;
-        const shift = Math.round(o.tail * (i / tailLen));
-        for (let y = Math.round(cy) - half + shift; y <= Math.round(cy) + half - 1 + shift; y++)
-          if (x >= 1 && y >= 1 && y < fh - 1) mask[y * fw + x] = 2;
-      }
-      // Rückenflosse
-      for (let i = 0; i < Math.round(bodyW * 0.35); i++) {
-        const x = Math.round(cx - bodyW * 0.15 + i);
-        const y = Math.round(cy - bodyH / 2) - 1;
-        if (y >= 1 && i % 3 !== 2) mask[y * fw + x] = 2;
-      }
-      for (let y = 0; y < fh; y++)
-        for (let x = 0; x < fw; x++) {
-          const m = mask[y * fw + x];
-          if (!m) continue;
-          let color = fishRamp.base;
-          if (m === 2) color = fishRamp.shadow;
-          else if (y < cy - bodyH * 0.2) color = fishRamp.light;
-          else if (y > cy + bodyH * 0.22) color = fishRamp.shadow;
-          sheetImg.set(ox + x, oy + y, color);
-        }
-      for (let y = 0; y < fh; y++)
-        for (let x = 0; x < fw; x++) {
-          if (mask[y * fw + x]) continue;
-          const n =
-            (x > 0 && mask[y * fw + x - 1]) || (x < fw - 1 && mask[y * fw + x + 1]) ||
-            (y > 0 && mask[(y - 1) * fw + x]) || (y < fh - 1 && mask[(y + 1) * fw + x]);
-          if (n) sheetImg.set(ox + x, oy + y, fishRamp.outline);
-        }
-      // Auge vorne, groß mit Glanzpunkt
-      const ex = Math.round(cx + bodyW * 0.22);
-      const ey = Math.round(cy - 1);
-      const eyeR = o.wide ? 2 : fh >= 12 ? 2 : 1;
-      for (let dy = -eyeR; dy < eyeR; dy++) for (let dx = -eyeR; dx < eyeR; dx++) sheetImg.set(ox + ex + dx, oy + ey + dy, white);
-      sheetImg.set(ox + ex, oy + ey, pupil);
-      if (eyeR > 1) sheetImg.set(ox + ex, oy + ey - 1, pupil);
-      sheetImg.set(ox + ex - eyeR, oy + ey - eyeR, white);
-    }),
-  );
-  return sheetImg;
-}
-
-const fishDefs = JSON.parse(readFileSync(join(root, 'data', 'fish.json'), 'utf8'));
-for (const def of fishDefs) save(spritesDir, `${def.sprite}.png`, drawFishSheet(def));
-// Räuber vorerst in derselben Platzhalterform, nur größer und in eigener Farbe.
-const predatorDefs = JSON.parse(readFileSync(join(root, 'data', 'predators.json'), 'utf8'));
-for (const def of predatorDefs) save(spritesDir, `${def.sprite}.png`, drawFishSheet(def));
-
-// Fangblase (32×32): umschließt einen gefangenen Fisch.
-const catchBubble = new Image(32, 32);
-for (let y = 0; y < 32; y++)
-  for (let x = 0; x < 32; x++) {
-    const d = Math.hypot(x + 0.5 - 16, y + 0.5 - 16);
-    if (d <= 15 && d > 13.6) catchBubble.set(x, y, hex('#e4fdff'), 0.95);
-    else if (d <= 13.6) catchBubble.set(x, y, hex('#a8f2ff'), 0.16 + (d / 13.6) * 0.14);
-  }
-for (const [x, y] of [[9, 7], [10, 7], [8, 8], [8, 9], [9, 8], [7, 10]]) catchBubble.set(x, y, white, 1);
-save(spritesDir, 'fx_catch_bubble.png', catchBubble);
-
-// ---------------------------------------------------------------- Hintergründe Kelpwald (1920×1080)
-
-const W = 1920;
-const H = 1080;
-const rng = createRng('placeholder-kelp');
-console.log('Hintergründe:');
-
-// Ebene 0: Wasserverlauf mit Sonnenstrahlen, deckend, fest zur Kamera.
-{
-  const img = new Image(W, H);
-  const top = hex('#7fe8e0');
-  const mid = hex('#2fb7c4');
-  const bottom = hex('#167f9e');
-  for (let y = 0; y < H; y++) {
-    const t = y / (H - 1);
-    const c = t < 0.5 ? mix(top, mid, t / 0.5) : mix(mid, bottom, (t - 0.5) / 0.5);
-    for (let x = 0; x < W; x++) img.set(x, y, c);
-  }
-  const rays = Array.from({ length: 9 }, () => ({
-    x: rng.range(0, W),
-    width: rng.range(40, 140),
-    slant: rng.range(0.25, 0.45),
-    alpha: rng.range(0.06, 0.14),
-  }));
-  const sun = hex('#fff6d0');
-  for (const r of rays)
-    for (let y = 0; y < H; y++) {
-      const fade = Math.pow(1 - y / H, 1.6);
-      const center = r.x + y * r.slant;
-      const w = r.width * (1 + y / H);
-      for (let x = Math.floor(center - w); x <= center + w; x++) {
-        const edge = 1 - Math.abs(x - center) / w;
-        if (edge > 0 && x >= 0 && x < W) img.blend(x, y, sun, r.alpha * fade * edge * edge);
-      }
-    }
-  save(bgDir, 'bg_kelp_0.png', img);
-}
-
-/**
- * Kelp-Ebene, nahtlos in beide Richtungen kachelbar: Stängel laufen über die volle Höhe,
- * ihre Welle hat eine ganzzahlige Periode pro Bildhöhe.
- */
-function kelpLayer(file, { count, width, color, lightColor, alpha, bladeEvery, bladeSize, sway }) {
-  const img = new Image(W, H, true);
-  const stalks = Array.from({ length: count }, () => ({
-    x: rng.range(0, W),
-    w: rng.range(width[0], width[1]),
-    k: rng.int(1, 2),
-    phase: rng.range(0, Math.PI * 2),
-    amp: rng.range(sway * 0.5, sway),
-  }));
-  const centerAt = (s, y) => s.x + Math.sin((y / H) * Math.PI * 2 * s.k + s.phase) * s.amp;
-
-  for (const s of stalks) {
-    for (let y = 0; y < H; y++) {
-      const cx = centerAt(s, y);
-      for (let x = Math.floor(cx - s.w - 1); x <= Math.ceil(cx + s.w + 1); x++) {
-        const d = Math.abs(x + 0.5 - cx);
-        const cover = clamp01(s.w - d + 0.5);
-        if (cover <= 0) continue;
-        const side = clamp01(0.5 - (x + 0.5 - cx) / (2 * s.w)); // links heller (Licht)
-        img.blend(x, y, mix(color, lightColor, side * 0.7), alpha * cover);
-      }
-    }
-    // Blätter: schräge Ellipsen abwechselnd links/rechts, Abstand teilt die Bildhöhe glatt.
-    const n = Math.max(1, Math.round(H / bladeEvery));
-    for (let i = 0; i < n; i++) {
-      const by = (i + rng.range(0, 0.6)) * (H / n);
-      const dir = i % 2 === 0 ? 1 : -1;
-      const len = rng.range(bladeSize[0], bladeSize[1]);
-      const thick = len * 0.22;
-      const angle = dir * rng.range(0.5, 0.9) - Math.PI / 2;
-      const cx = centerAt(s, by) + Math.cos(angle) * len * 0.5 * dir * -1;
-      const cy = by + Math.sin(angle) * len * 0.5;
-      const ca = Math.cos(angle);
-      const sa = Math.sin(angle);
-      const r = Math.ceil(len);
-      for (let y = Math.floor(cy - r); y <= cy + r; y++)
-        for (let x = Math.floor(cx - r); x <= cx + r; x++) {
-          const dx = x + 0.5 - cx;
-          const dy = y + 0.5 - cy;
-          const u = (dx * ca + dy * sa) / (len * 0.5);
-          const v = (-dx * sa + dy * ca) / thick;
-          const d = u * u + v * v;
-          if (d > 1.15) continue;
-          const cover = clamp01((1 - d) * thick * 0.5 + 0.5);
-          img.blend(x, y, mix(color, lightColor, clamp01(0.4 - v * 0.4)), alpha * cover);
-        }
-    }
-  }
-  save(bgDir, file, img);
-}
-
-kelpLayer('bg_kelp_1.png', {
-  count: 14, width: [5, 9], color: hex('#3a9e9a'), lightColor: hex('#6cc7b8'),
-  alpha: 0.35, bladeEvery: 140, bladeSize: [40, 70], sway: 18,
-});
-kelpLayer('bg_kelp_2.png', {
-  count: 8, width: [8, 13], color: hex('#2e7f68'), lightColor: hex('#5fae7c'),
-  alpha: 0.6, bladeEvery: 160, bladeSize: [60, 100], sway: 26,
-});
-kelpLayer('bg_kelp_3.png', {
-  count: 4, width: [12, 18], color: hex('#245f3f'), lightColor: hex('#4f9a55'),
-  alpha: 0.8, bladeEvery: 180, bladeSize: [80, 130], sway: 34,
-});
-
-// ---------------------------------------------------------------- App-Icons (PWA)
-
-const iconsDir = join(root, 'assets', 'icons');
-mkdirSync(iconsDir, { recursive: true });
-console.log('Icons:');
-for (const size of [192, 512]) {
-  const icon = new Image(size, size);
-  const bgTop = hex('#3fd3d0');
-  const bgBottom = hex('#0f4f7a');
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) icon.set(x, y, mix(bgTop, bgBottom, y / size));
-  const scale = Math.floor((size * 0.8) / FRAME);
-  const off = Math.floor((size - FRAME * scale) / 2);
-  for (let y = 0; y < FRAME * scale; y++)
-    for (let x = 0; x < FRAME * scale; x++) {
-      const i = (Math.floor(y / scale) * sheet.width + Math.floor(x / scale)) * 4;
-      const a = sheet.px[i + 3];
-      if (a > 0) icon.blend(off + x, off + y, [sheet.px[i], sheet.px[i + 1], sheet.px[i + 2]], a);
-    }
-  save(iconsDir, `icon-${size}.png`, icon);
-}
-
-// ---------------------------------------------------------------- Riff: Höhlen, Makler, Hintergründe
-
-/** Umriss in Farbe um alle deckenden Pixel eines Bereichs. */
-function outlineRegion(img, x0, y0, w, h, color) {
-  const solid = (x, y) => x >= x0 && y >= y0 && x < x0 + w && y < y0 + h && img.alphaAt(x, y) > 0;
-  const pts = [];
-  for (let y = y0; y < y0 + h; y++)
-    for (let x = x0; x < x0 + w; x++)
-      if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) pts.push([x, y]);
-  for (const [x, y] of pts) img.set(x, y, color);
-}
-
-/** Altes Haus 96×80, Anker unten mittig: versunkene Villa mit Spitzdach, Fenstern und Tür. */
-function drawHouse() {
-  const img = new Image(96, 80);
-  const wall = hex('#8a7a9e'), wallLight = hex('#a999bd'), wallDark = hex('#655777');
-  const roof = hex('#5d4a6e'), roofLight = hex('#7a6590');
-  const win = hex('#ffe9a0'), dark = hex('#1b1030'), moss = hex('#4f9a55');
-  for (let y = 30; y < 79; y++) for (let x = 10; x < 86; x++) img.set(x, y, x < 20 ? wallLight : x > 76 ? wallDark : wall);
-  for (let y = 4; y < 31; y++) { const half = Math.round(((y - 4) / 26) * 44); for (let x = 48 - half; x <= 48 + half; x++) img.set(x, y, x < 48 ? roofLight : roof); }
-  for (let y = 10; y < 20; y++) for (let x = 64; x < 70; x++) img.set(x, y, wallDark); // Schornstein
-  for (const [wx, wy] of [[18, 40], [66, 40], [18, 58], [66, 58], [43, 16]]) for (let y = wy; y < wy + 10; y++) for (let x = wx; x < wx + 10; x++) img.set(x, y, (x + y) % 7 === 0 ? wallLight : win);
-  for (let y = 52; y < 79; y++) for (let x = 40; x < 56; x++) img.set(x, y, y < 55 ? wallDark : dark); // Tür
-  for (let x = 10; x < 86; x += 3) { const len = 2 + ((x * 7) % 5); for (let y = 0; y < len; y++) img.set(x, 30 + y, moss); }
-  for (let x = 2; x < 94; x++) for (let y = 76; y < 80; y++) img.set(x, y, wallDark); // Sockel
-  outlineRegion(img, 0, 0, 96, 80, hex('#2e2440'));
-  return img;
-}
-
-/** Seegras-Farm 64×32: Beete mit Seegras-Halmen. */
-function drawFarm() {
-  const img = new Image(64, 32);
-  const soil = hex('#6b5638'), soilLight = hex('#8c7450'), grass = hex('#3f9a55'), grassLight = hex('#7fd17a');
-  for (let y = 24; y < 32; y++) for (let x = 2; x < 62; x++) img.set(x, y, y < 26 ? soilLight : soil);
-  for (let bx = 5; bx < 60; bx += 5) {
-    const h = 12 + ((bx * 13) % 9);
-    for (let i = 0; i < h; i++) img.set(bx + Math.round(Math.sin(i * 0.5 + bx) * 1.2), 23 - i, i > h - 4 ? grassLight : grass);
-  }
-  outlineRegion(img, 0, 0, 64, 32, hex('#22401f'));
-  return img;
-}
-
-/** Muschelbank 48×24: Sandhügel mit Muscheln. */
-function drawShellBed() {
-  const img = new Image(48, 24);
-  const sand = hex('#e2cf8f'), sandDark = hex('#c2aa6d'), shell = hex('#ffd1dc'), shellDark = hex('#d98aa0');
-  for (let x = 1; x < 47; x++) { const h = Math.round(8 + Math.sin((x / 47) * Math.PI) * 8); for (let y = 24 - h; y < 24; y++) img.set(x, y, y > 20 ? sandDark : sand); }
-  for (const [sx, sy] of [[10, 14], [22, 10], [33, 13], [16, 18], [29, 18]]) for (let y = 0; y < 4; y++) for (let x = -y; x <= y; x++) img.set(sx + x, sy + y, y === 3 ? shellDark : shell);
-  outlineRegion(img, 0, 0, 48, 24, hex('#7a6436'));
-  return img;
-}
-
-/** Podest 64×16: Felsvorsprung, auf dem eine Figur steht. */
-function drawPodest() {
-  const img = new Image(64, 16);
-  const rock = hex('#7a6a8c'), light = hex('#a493b8'), dark = hex('#4e4260');
-  for (let y = 0; y < 16; y++) { const inset = Math.round(y * 0.9); for (let x = 2 + inset; x < 62 - inset; x++) img.set(x, y, y < 3 ? light : y > 10 ? dark : rock); }
-  outlineRegion(img, 0, 0, 64, 16, hex('#2e2440'));
-  return img;
-}
-
-console.log('Riff-Gebäude:');
-save(spritesDir, 'building_house.png', drawHouse());
-save(spritesDir, 'building_seaweed_farm.png', drawFarm());
-save(spritesDir, 'building_shell_bed.png', drawShellBed());
-save(spritesDir, 'prop_podest.png', drawPodest());
-
-/** Kalle: Einsiedlerkrebs im Schneckenhaus, 32×32, Reihe idle mit 4 Frames. */
-function drawKalle(def) {
-  const img = new Image(32 * 4, 32);
-  const shell = hex('#e9d6b0');
-  const shellDark = hex('#b89a6a');
-  const body = hex(def.placeholderColor);
-  const outlineC = hex('#5a2a12');
-  for (let f = 0; f < 4; f++) {
-    const ox = f * 32;
-    const bob = f === 1 || f === 2 ? 1 : 0;
-    const mask = new Int8Array(32 * 32);
-    for (let y = 0; y < 32; y++)
-      for (let x = 0; x < 32; x++) {
-        const d = Math.hypot(x + 0.5 - 13, y + 0.5 - (15 + bob));
-        if (d <= 10) mask[y * 32 + x] = d % 4 < 1.4 ? 2 : 1;
-      }
-    for (let y = 18 + bob; y < 27 + bob; y++) for (let x = 17; x < 27; x++) mask[y * 32 + x] ||= 3;
-    for (let y = 16 + bob; y < 21 + bob; y++) for (let x = 25 + (f === 3 ? 1 : 0); x < 30; x++) mask[y * 32 + x] = 3;
-    for (const lx of [18, 21, 24]) for (let y = 27 + bob; y < 31; y++) mask[y * 32 + lx] = 4;
-    for (let y = 0; y < 32; y++)
-      for (let x = 0; x < 32; x++) {
-        const m = mask[y * 32 + x];
-        if (m) img.set(ox + x, y, m === 1 ? shell : m === 2 ? shellDark : body);
-      }
-    outlineRegion(img, ox, 0, 32, 32, outlineC);
-    for (const ex of [21, 25]) {
-      for (let y = 13 + bob; y < 18 + bob; y++) img.set(ox + ex, y, outlineC);
-      img.set(ox + ex, 12 + bob, white); img.set(ox + ex + 1, 12 + bob, white); img.set(ox + ex, 11 + bob, white); img.set(ox + ex + 1, 11 + bob, pupil);
-    }
-  }
-  return img;
-}
-
-/** Gisela: Seegurke, liegend, mit Brille und Warzen, 32×32. */
-function drawGisela(def) {
-  const img = new Image(32 * 4, 32);
-  const body = hex(def.placeholderColor), light = mix(body, [1, 1, 1], 0.35), dark = mix(body, hex('#1b1030'), 0.35);
-  for (let f = 0; f < 4; f++) {
-    const ox = f * 32;
-    const stretch = [0, 1, 2, 1][f];
-    for (let y = 0; y < 32; y++)
-      for (let x = 0; x < 32; x++) {
-        const nx = (x + 0.5 - 16) / (13 + stretch * 0.5);
-        const ny = (y + 0.5 - 24) / (6 - stretch * 0.3);
-        if (nx * nx + ny * ny <= 1) img.set(ox + x, y, ny < -0.3 ? light : ny > 0.4 ? dark : body);
-      }
-    for (const wx of [8, 13, 18, 23]) img.set(ox + wx, 20, light);
-    outlineRegion(img, ox, 0, 32, 32, hex('#3a1846'));
-    // Brille und Augen vorne rechts
-    for (const ex of [22, 26]) { for (let y = 19; y < 22; y++) for (let x = ex - 1; x <= ex + 1; x++) img.set(ox + x, y, white); img.set(ox + ex, 20, pupil); }
-    for (let x = 23; x < 26; x++) img.set(ox + x, 19, hex('#1b1030'));
-  }
-  return img;
-}
-
-/** Bruno: abgehalfterter Hai mit Augenklappe, 48×32. */
-function drawBruno(def) {
-  const img = new Image(48 * 4, 32);
-  const body = hex(def.placeholderColor), belly = hex('#d9dee5'), dark = mix(body, hex('#1b1030'), 0.35);
-  for (let f = 0; f < 4; f++) {
-    const ox = f * 48;
-    const tail = [0, 1, 2, 1][f];
-    for (let y = 0; y < 32; y++)
-      for (let x = 0; x < 48; x++) {
-        const nx = (x + 0.5 - 26) / 18;
-        const ny = (y + 0.5 - 20) / 8;
-        if (nx * nx + ny * ny <= 1) img.set(ox + x, y, ny > 0.35 ? belly : ny < -0.4 ? mix(body, [1, 1, 1], 0.2) : body);
-      }
-    for (let i = 0; i < 8; i++) for (let y = 12 - i; y < 13; y++) img.set(ox + 26 + Math.round(i * 0.3), y, dark); // Rückenflosse
-    for (let i = 0; i < 8; i++) { const h = 1 + i; for (let y = 20 - h + tail; y <= 20 + Math.round(h * 0.6) + tail; y++) img.set(ox + 8 - i, y, dark); } // Schwanz
-    outlineRegion(img, ox, 0, 48, 32, hex('#2a3038'));
-    for (let x = 33; x < 38; x++) img.set(ox + x, 17, hex('#1b1030')); // Augenklappe Band
-    for (let y = 16; y < 20; y++) for (let x = 37; x < 40; x++) img.set(ox + x, y, hex('#1b1030'));
-    for (let x = 30; x < 42; x += 2) img.set(ox + x, 23, white); // Zähne
-  }
-  return img;
-}
-
-const npcDefs = JSON.parse(readFileSync(join(root, 'data', 'npcs.json'), 'utf8'));
-const npcDrawers = { kalle: drawKalle, gisela: drawGisela, bruno: drawBruno };
-console.log('Figuren:');
-for (const def of npcDefs) save(spritesDir, `${def.sprite}.png`, npcDrawers[def.id](def));
-
-// Riff-Hintergründe: wärmer und heller als der Kelpwald, Korallen statt Kelp.
-{
-  const img = new Image(W, H);
-  const top = hex('#9af0e4');
-  const bottom = hex('#2a9fb5');
-  for (let y = 0; y < H; y++) { const c = mix(top, bottom, y / (H - 1)); for (let x = 0; x < W; x++) img.set(x, y, c); }
-  const sun = hex('#fff6d0');
-  for (let i = 0; i < 7; i++) {
-    const rx = rng.range(0, W); const width = rng.range(60, 160); const slant = rng.range(0.2, 0.4); const alpha = rng.range(0.08, 0.15);
-    for (let y = 0; y < H; y++) { const c = rx + y * slant; const w = width * (1 + y / H); for (let x = Math.floor(c - w); x <= c + w; x++) { const e = 1 - Math.abs(x - c) / w; if (e > 0 && x >= 0 && x < W) img.blend(x, y, sun, alpha * e * e * Math.pow(1 - y / H, 1.4)); } }
-  }
-  save(bgDir, 'bg_reef_0.png', img);
-}
-function coralLayer(file, { count, colors, alpha, minR, maxR }) {
-  const img = new Image(W, H, true);
-  for (let i = 0; i < count; i++) {
-    const cx = rng.range(0, W);
-    const cy = rng.range(H * 0.45, H);
-    const color = hex(rng.pick(colors));
-    const blobs = rng.int(3, 7);
-    for (let b = 0; b < blobs; b++) {
-      const bx = cx + rng.range(-maxR, maxR);
-      const by = cy + rng.range(-maxR * 0.8, 0);
-      const r = rng.range(minR, maxR);
-      for (let y = Math.floor(by - r - 1); y <= by + r + 1; y++)
-        for (let x = Math.floor(bx - r - 1); x <= bx + r + 1; x++) {
-          const d = Math.hypot(x + 0.5 - bx, y + 0.5 - by);
-          const cover = clamp01(r - d + 0.5);
-          if (cover > 0) img.blend(x, y, mix(color, [1, 1, 1], clamp01((by - y) / r) * 0.25), alpha * cover);
-        }
-    }
-  }
-  save(bgDir, file, img);
-}
-coralLayer('bg_reef_1.png', { count: 26, colors: ['#5fb7b0', '#7aa6c9', '#8fb9a8'], alpha: 0.35, minR: 20, maxR: 60 });
-coralLayer('bg_reef_2.png', { count: 16, colors: ['#e88aa0', '#f2a65a', '#b48be0', '#6cc4a1'], alpha: 0.6, minR: 18, maxR: 46 });
-
-// Ruinen-Ebene: Säulen und Bögen im Dunst, zwischen Korallen hinten und vorne.
-{
-  const img = new Image(W, H, true);
-  const stone = hex('#6f8fa3');
-  for (let i = 0; i < 6; i++) {
-    const bx = rng.range(0, W);
-    const baseY = H - rng.range(0, 120);
-    const cols = rng.int(2, 4);
-    const gap = rng.range(70, 110);
-    const colH = rng.range(220, 420);
-    for (let c = 0; c < cols; c++) {
-      const cx = bx + c * gap;
-      const broken = rng.next() < 0.35 ? rng.range(0.4, 0.8) : 1;
-      for (let y = Math.floor(baseY - colH * broken); y < baseY; y++) for (let x = Math.floor(cx - 14); x < cx + 14; x++) img.blend(x, y, mix(stone, [1, 1, 1], x < cx - 6 ? 0.15 : 0), 0.45);
-      if (c < cols - 1 && broken === 1) {
-        for (let a = 0; a <= 40; a++) {
-          const t = a / 40;
-          const ax = cx + t * gap;
-          const ay = baseY - colH - Math.sin(t * Math.PI) * gap * 0.45;
-          for (let y = Math.floor(ay - 10); y < ay + 4; y++) for (let x = Math.floor(ax - 3); x < ax + 3; x++) img.blend(x, y, stone, 0.4);
-        }
-      }
-    }
-  }
-  save(bgDir, 'bg_reef_3.png', img);
-}
-
-// ---------------------------------------------------------------- UI-Icons (16×16, 2× in der UI)
+// ---------------------------------------------------------------- Icons (16×16)
 
 function icon(draw) {
   const img = new Image(16, 16);
   draw(img);
-  outlineRegion(img, 0, 0, 16, 16, hex('#0e1a2b'));
+  outlineRegion(img, 0, 0, 16, 16, ink);
   return img;
 }
 console.log('Icons:');
-save(spritesDir, 'icon_shell.png', icon((img) => {
-  const light = hex('#ffd1dc'), mid = hex('#f29bb2'), dark = hex('#c9678a');
-  for (let y = 2; y < 14; y++) for (let x = 2; x < 14; x++) {
-    const nx = (x + 0.5 - 8) / 6, ny = (y + 0.5 - 9) / 5.5;
-    if (nx * nx + ny * ny <= 1 && y < 13) img.set(x, y, (x % 3 === 0) ? dark : y < 7 ? light : mid);
-  }
-  for (let x = 6; x < 10; x++) img.set(x, 13, dark);
-}));
-save(spritesDir, 'icon_food.png', icon((img) => {
-  const g = hex('#3f9a55'), l = hex('#7fd17a');
-  for (const bx of [5, 8, 11]) for (let i = 0; i < 11; i++) img.set(bx + Math.round(Math.sin(i * 0.6 + bx) * 1), 13 - i, i > 7 ? l : g);
-  for (let x = 3; x < 13; x++) img.set(x, 14, hex('#6b5638'));
+save(spritesDir, 'icon_coin.png', icon((img) => {
+  const r = rampOf(hex('#ffd23f'));
+  ellipse(img, 0, 0, 8, 8, 6, 6, r);
+  for (let y = 5; y < 11; y++) img.set(8, y, r.shadow);
 }));
 save(spritesDir, 'icon_fish.png', icon((img) => {
-  const o = hex('#ff7a1a'), l = hex('#ffb070');
-  for (let y = 4; y < 12; y++) for (let x = 4; x < 14; x++) { const nx = (x + 0.5 - 9) / 5, ny = (y + 0.5 - 8) / 3.6; if (nx * nx + ny * ny <= 1) img.set(x, y, y < 7 ? l : o); }
-  for (let i = 0; i < 4; i++) for (let y = 8 - i - 1; y <= 8 + i; y++) img.set(4 - i + 1, y, o);
-  img.set(11, 7, white); img.set(11, 8, pupil);
+  const r = rampOf(hex('#ff7a1a'));
+  ellipse(img, 0, 0, 9, 8, 5, 3.6, r);
+  for (let i = 0; i < 4; i++) for (let y = 8 - i - 1; y <= 8 + i; y++) img.set(4 - i + 1, y, r.shadow);
+  eye(img, 11, 8, 1, 1);
 }));
+save(spritesDir, 'icon_book.png', icon((img) => {
+  const r = rampOf(hex('#5ce1e6'));
+  for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) img.set(x, y, x < 5 ? r.shadow : y < 5 ? r.light : r.base);
+  for (let y = 4; y < 12; y++) img.set(8, y, r.outline);
+}));
+
+// ---------------------------------------------------------------- Hintergründe (1920×1080)
+
+const W = 1920;
+const H = 1080;
+const rng = createRng('placeholder-sea');
+console.log('Hintergründe:');
+{
+  // Himmel mit Wolkenbändern wie im Vorbild
+  const img = new Image(W, H);
+  const top = hex('#2fb6b8');
+  const bottom = hex('#bff0e8');
+  for (let y = 0; y < H; y++) {
+    const c = mix(top, bottom, y / H);
+    for (let x = 0; x < W; x++) img.set(x, y, c);
+  }
+  const cloud = hex('#f2fbf8');
+  for (let i = 0; i < 18; i++) {
+    const cx = rng.range(0, W);
+    const cy = rng.range(80, H * 0.6);
+    for (let b = 0; b < 6; b++) {
+      const bx = cx + rng.range(-120, 120);
+      const by = cy + rng.range(-20, 20);
+      const r = rng.range(30, 70);
+      for (let y = Math.floor(by - r); y < by + r; y++)
+        for (let x = Math.floor(bx - r); x < bx + r; x++) {
+          const d = Math.hypot(x - bx, y - by);
+          if (d < r && y < by + r * 0.3) img.blend(x, y, mix(cloud, top, clamp01((y - by) / r) * 0.25), 0.85);
+        }
+    }
+  }
+  save(bgDir, 'bg_sea_0.png', img);
+}
+{
+  // Felsinseln am Horizont (unten verankert)
+  const img = new Image(W, H);
+  const rock = hex('#5f8f8a');
+  const green = hex('#6fae4f');
+  for (let i = 0; i < 9; i++) {
+    const cx = rng.range(0, W);
+    const w = rng.range(60, 180);
+    const h = rng.range(160, 420);
+    for (let y = Math.floor(H - h); y < H; y++) {
+      const t = (y - (H - h)) / h;
+      const half = w * (0.35 + 0.65 * Math.sqrt(t)) * (0.85 + 0.15 * Math.sin(y * 0.05 + i));
+      for (let x = Math.floor(cx - half); x < cx + half; x++) img.set(((x % W) + W) % W, y, t < 0.12 ? green : x < cx - half * 0.4 ? mix(rock, white, 0.15) : rock);
+    }
+  }
+  save(bgDir, 'bg_sea_1.png', img);
+}

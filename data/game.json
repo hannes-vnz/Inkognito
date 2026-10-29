@@ -1,136 +1,18 @@
 {
   "fixedStepHz": 60,
-  "camera": {
-    "followRate": 6,
-    "lookAhead": {
-      "portrait": {
-        "x": 0.25,
-        "y": 0.75
-      },
-      "landscape": {
-        "x": 0.6,
-        "y": 0.35
-      }
-    },
-    "maxLookAheadFraction": 0.28,
-    "lookAheadRate": 2.5
-  },
-  "joystick": {
-    "radius": 56,
-    "deadzone": 0.12,
-    "followFactor": 1,
-    "restMargin": 96,
-    "tap": {
-      "maxMs": 220,
-      "maxMove": 12
-    }
-  },
-  "juice": {
-    "bubbles": {
-      "maxCount": 40,
-      "perSecondAtMaxSpeed": 18,
-      "riseSpeed": 70,
-      "lifeSeconds": 1.6
-    },
-    "marineSnow": {
-      "count": 70,
-      "parallax": 0.8,
-      "driftSpeed": 8
-    }
-  },
-  "ui": {
-    "margin": 16,
-    "fontFamily": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-  },
-  "spriteScale": 3,
-  "fish": {
-    "baseSpeed": 95,
-    "acceleration": 3.5,
-    "turnThreshold": 10,
-    "animations": [
-      {
-        "key": "idle",
-        "row": 0,
-        "frames": 4,
-        "fps": 6,
-        "repeat": -1
-      },
-      {
-        "key": "swim",
-        "row": 1,
-        "frames": 4,
-        "fps": 10,
-        "repeat": -1
-      },
-      {
-        "key": "turn",
-        "row": 2,
-        "frames": 4,
-        "fps": 10,
-        "repeat": 0
-      },
-      {
-        "key": "catch",
-        "row": 3,
-        "frames": 4,
-        "fps": 10,
-        "repeat": -1
-      }
-    ],
-    "behaviors": {
-      "curious": {
-        "senseRadius": 340,
-        "fleeRadius": 150,
-        "startleSpeed": 230,
-        "approachDistance": 140,
-        "fleeSpeed": 2.2,
-        "fleeSeconds": 0.8,
-        "wanderTurn": 1.4,
-        "leashRadius": 420,
-        "neighborRadius": 0,
-        "cohesion": 0,
-        "alignment": 0,
-        "separation": 0,
-        "restSeconds": 0
-      },
-      "schooling": {
-        "senseRadius": 0,
-        "fleeRadius": 230,
-        "startleSpeed": 0,
-        "approachDistance": 0,
-        "fleeSpeed": 2.4,
-        "fleeSeconds": 1.0,
-        "wanderTurn": 0.7,
-        "leashRadius": 700,
-        "neighborRadius": 170,
-        "cohesion": 0.8,
-        "alignment": 0.6,
-        "separation": 46,
-        "restSeconds": 0
-      },
-      "skittish": {
-        "senseRadius": 0,
-        "fleeRadius": 260,
-        "startleSpeed": 0,
-        "approachDistance": 0,
-        "fleeSpeed": 3.6,
-        "fleeSeconds": 0.55,
-        "wanderTurn": 2.4,
-        "leashRadius": 260,
-        "neighborRadius": 0,
-        "cohesion": 0,
-        "alignment": 0,
-        "separation": 0,
-        "restSeconds": 1.4
-      }
-    }
-  },
-  "catching": {
-    "hitStopMs": 70,
-    "vibrateMs": 25,
-    "vibration": true,
-    "respawnSeconds": 15,
-    "respawnMinDistance": 700,
-    "gerdMissChance": 0.45
+  "fishing": {
+    "unitsPerZone": 2600,
+    "surfaceY": 260,
+    "fallSpeed": 560,
+    "riseSpeed": 950,
+    "steerSpeed": 1100,
+    "hookRadius": 22,
+    "fishPerThousandUnits": 7,
+    "spawnStartBelowSurface": 160,
+    "knowledgeBonus": 0.25,
+    "comboMultiplier": 2,
+    "maxOfflineHours": 8,
+    "spriteScale": 3,
+    "flightSeconds": 1.4
   }
 }

@@ -1,4 +1,4 @@
-import { el } from './Hud';
+import { el } from './dom';
 import { setRichText, typeRichText } from './rich';
 
 export interface SheetInput {

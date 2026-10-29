@@ -1,4 +1,4 @@
-import { el } from './Hud';
+import { el } from './dom';
 import { setRichText } from './rich';
 
 /** Einzeiler oben mittig, blendet sich selbst aus. */

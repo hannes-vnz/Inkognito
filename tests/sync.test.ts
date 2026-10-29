@@ -3,7 +3,7 @@ import { decideSync, isEmail, isFresh, normalizeFriendCode, normalizeLoginCode }
 import { newSave, type Save } from '../src/systems/save';
 
 const T = 1_800_000_000_000;
-const played = (updatedAt: number): Save => ({ ...newSave(T), shells: 10, diveCount: 2, updatedAt });
+const played = (updatedAt: number): Save => ({ ...newSave(T), coins: 10, stats: { casts: 2, deepestMeters: 80 }, updatedAt });
 
 describe('Abgleich', () => {
   it('neuer Stand gilt als unberührt', () => {

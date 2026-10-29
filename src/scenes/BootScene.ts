@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { buildings, fish, game, npcs, player, predators, reef, zones } from '../data';
-import { createSheetAnimations } from '../entities/Octopus';
+import { player, species } from '../data';
+import { createSheetAnimations, FISH_ANIMATIONS } from '../entities/Octopus';
 
 /** Lädt alle Grafiken aus /assets (Dateinamen laut Asset-Regeln) und legt Animationen an. */
 export class BootScene extends Phaser.Scene {
@@ -9,28 +9,16 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.spritesheet(player.sprite, `sprites/${player.sprite}.png`, {
-      frameWidth: player.frameWidth,
-      frameHeight: player.frameHeight,
-    });
-    for (const f of [...fish, ...predators]) {
-      this.load.spritesheet(f.sprite, `sprites/${f.sprite}.png`, { frameWidth: f.frame.width, frameHeight: f.frame.height });
-    }
-    this.load.image('fx_bubble', 'sprites/fx_bubble.png');
-    this.load.image('fx_catch_bubble', 'sprites/fx_catch_bubble.png');
-    for (const layer of [...zones.flatMap((z) => z.background), ...reef.background]) {
-      this.load.image(layer.key, `backgrounds/${layer.key}.png`);
-    }
-    for (const b of buildings) this.load.image(b.sprite, `sprites/${b.sprite}.png`);
-    this.load.image(reef.podestSprite, `sprites/${reef.podestSprite}.png`);
-    for (const n of npcs) this.load.spritesheet(n.sprite, `sprites/${n.sprite}.png`, { frameWidth: n.frame.width, frameHeight: n.frame.height });
+    this.load.spritesheet(player.sprite, `sprites/${player.sprite}.png`, { frameWidth: player.frameWidth, frameHeight: player.frameHeight });
+    for (const s of species) this.load.spritesheet(s.sprite, `sprites/${s.sprite}.png`, { frameWidth: s.frame.width, frameHeight: s.frame.height });
+    for (const name of ['boat_1', 'hook', 'fx_bubble']) this.load.image(name, `sprites/${name}.png`);
+    for (const name of ['bg_sea_0', 'bg_sea_1']) this.load.image(name, `backgrounds/${name}.png`);
   }
 
   create(): void {
     createSheetAnimations(this, player.sprite, player.frameWidth, player.id, player.animations);
-    for (const f of [...fish, ...predators]) createSheetAnimations(this, f.sprite, f.frame.width, f.sprite, game.fish.animations);
-    for (const n of npcs) createSheetAnimations(this, n.sprite, n.frame.width, n.sprite, [{ key: 'idle', row: 0, frames: 4, fps: 4, repeat: -1 }]);
+    for (const s of species) createSheetAnimations(this, s.sprite, s.frame.width, s.sprite, FISH_ANIMATIONS);
     document.getElementById('loading')?.remove();
-    this.scene.start('Riff', {});
+    this.scene.start('Fishing');
   }
 }

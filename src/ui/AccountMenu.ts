@@ -1,4 +1,4 @@
-import { el } from './Hud';
+import { el } from './dom';
 import type { Sheet } from './Sheet';
 import { t } from '../i18n';
 import {

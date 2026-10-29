@@ -4,14 +4,7 @@ export type SyncDecision = 'push' | 'pull' | 'none';
 
 /** Ein unberührter Stand (neues Gerät) darf nie einen echten Online-Stand überschreiben. */
 export function isFresh(s: Save): boolean {
-  return (
-    s.diveCount === 0 &&
-    s.shells === 0 &&
-    s.fish.length === 0 &&
-    s.waiting.length === 0 &&
-    s.quests.active.length === 0 &&
-    s.quests.done.length === 0
-  );
+  return s.stats.casts === 0 && s.coins === 0 && Object.keys(s.fishbook).length === 0;
 }
 
 /** Konfliktregel aus dem Konzept: der neuere Stand gewinnt, Zeitstempel = letzte Änderung im Spiel. */

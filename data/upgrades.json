@@ -1,0 +1,73 @@
+[
+  {
+    "id": "line",
+    "nameKey": "upgrade.line.name",
+    "effectKey": "upgrade.line.effect",
+    "costBase": 12,
+    "costGrowth": 1.55,
+    "values": [
+      60,
+      100,
+      150,
+      200,
+      300,
+      450,
+      650,
+      1000,
+      1400,
+      2000,
+      2800,
+      4000,
+      5000,
+      6200,
+      7500,
+      8800,
+      10000,
+      10900
+    ]
+  },
+  {
+    "id": "hook",
+    "nameKey": "upgrade.hook.name",
+    "effectKey": "upgrade.hook.effect",
+    "costBase": 15,
+    "costGrowth": 1.6,
+    "values": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12,
+      15,
+      18,
+      22,
+      26,
+      30
+    ]
+  },
+  {
+    "id": "crew",
+    "nameKey": "upgrade.crew.name",
+    "effectKey": "upgrade.crew.effect",
+    "costBase": 25,
+    "costGrowth": 1.7,
+    "values": [
+      0,
+      4,
+      10,
+      18,
+      30,
+      48,
+      75,
+      110,
+      160,
+      230,
+      320,
+      450,
+      620
+    ]
+  }
+]

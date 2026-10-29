@@ -1,8 +1,7 @@
 import Phaser from 'phaser';
 import './style.css';
 import { BootScene } from './scenes/BootScene';
-import { DiveScene } from './scenes/DiveScene';
-import { RiffScene } from './scenes/RiffScene';
+import { FishingScene } from './scenes/FishingScene';
 import { t } from './i18n';
 import { pushOnHide } from './online/sync';
 
@@ -23,7 +22,7 @@ const game = new Phaser.Game({
   input: {
     activePointers: 3,
   },
-  scene: [BootScene, RiffScene, DiveScene],
+  scene: [BootScene, FishingScene],
 });
 
 // iOS meldet die neue Größe nach dem Drehen verspätet: mehrfach nachmessen und Scroll-Versatz zurücksetzen.

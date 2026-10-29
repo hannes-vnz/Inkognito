@@ -1,51 +1,21 @@
 {
-  "coin": [
-    { "wave": "square", "freq": 988, "start": 0, "dur": 0.06, "gain": 0.12 },
-    { "wave": "square", "freq": 1319, "start": 0.06, "dur": 0.12, "gain": 0.12 }
-  ],
-  "bite": [
-    { "wave": "sine", "freq": 220, "to": 90, "start": 0, "dur": 0.18, "gain": 0.4 },
-    { "wave": "noise", "start": 0, "dur": 0.12, "gain": 0.15, "filter": 900 }
-  ],
-  "catch": [
-    { "wave": "triangle", "freq": 520, "to": 1040, "start": 0, "dur": 0.09, "gain": 0.25 }
-  ],
-  "full": [
-    { "wave": "triangle", "freq": 660, "start": 0, "dur": 0.08, "gain": 0.2 },
-    { "wave": "triangle", "freq": 880, "start": 0.08, "dur": 0.08, "gain": 0.2 },
-    { "wave": "triangle", "freq": 1320, "start": 0.16, "dur": 0.16, "gain": 0.2 }
-  ],
-  "splash": [
-    { "wave": "noise", "start": 0, "dur": 0.35, "gain": 0.25, "filter": 1400 },
-    { "wave": "sine", "freq": 400, "to": 160, "start": 0, "dur": 0.2, "gain": 0.15 }
-  ],
-  "upgrade": [
-    { "wave": "square", "freq": 523, "start": 0, "dur": 0.08, "gain": 0.1 },
-    { "wave": "square", "freq": 659, "start": 0.07, "dur": 0.08, "gain": 0.1 },
-    { "wave": "square", "freq": 784, "start": 0.14, "dur": 0.08, "gain": 0.1 },
-    { "wave": "square", "freq": 1047, "start": 0.21, "dur": 0.22, "gain": 0.1 }
-  ],
-  "fanfare": [
-    { "wave": "square", "freq": 523, "start": 0, "dur": 0.1, "gain": 0.1 },
-    { "wave": "square", "freq": 523, "start": 0.12, "dur": 0.1, "gain": 0.1 },
-    { "wave": "square", "freq": 784, "start": 0.24, "dur": 0.1, "gain": 0.1 },
-    { "wave": "square", "freq": 1047, "start": 0.36, "dur": 0.4, "gain": 0.12 },
-    { "wave": "triangle", "freq": 262, "start": 0.36, "dur": 0.4, "gain": 0.2 }
-  ],
-  "wrong": [
-    { "wave": "square", "freq": 330, "start": 0, "dur": 0.14, "gain": 0.1 },
-    { "wave": "square", "freq": 247, "start": 0.15, "dur": 0.3, "gain": 0.1 }
-  ],
-  "newSpecies": [
-    { "wave": "triangle", "freq": 784, "start": 0, "dur": 0.1, "gain": 0.2 },
-    { "wave": "triangle", "freq": 988, "start": 0.1, "dur": 0.1, "gain": 0.2 },
-    { "wave": "triangle", "freq": 1175, "start": 0.2, "dur": 0.1, "gain": 0.2 },
-    { "wave": "triangle", "freq": 1568, "start": 0.3, "dur": 0.35, "gain": 0.2 }
-  ],
-  "tap": [
-    { "wave": "sine", "freq": 660, "start": 0, "dur": 0.04, "gain": 0.12 }
-  ],
-  "talk": [
-    { "wave": "square", "freq": 300, "to": 380, "start": 0, "dur": 0.05, "gain": 0.05 }
-  ]
+  "cast": { "file": "sfx/cast.mp3", "gain": 0.8 },
+  "bite": { "file": "sfx/bite.mp3", "gain": 0.9 },
+  "reel": { "file": "sfx/reel.mp3", "gain": 0.6 },
+  "catch": { "file": "sfx/catch.mp3", "gain": 0.7 },
+  "full": { "file": "sfx/full.mp3", "gain": 0.8 },
+  "splash": { "file": "sfx/splash.mp3", "gain": 0.8 },
+  "coin": { "file": "sfx/coin.mp3", "gain": 0.45 },
+  "upgrade": { "file": "sfx/upgrade.mp3", "gain": 0.8 },
+  "fanfare": { "file": "sfx/fanfare.mp3", "gain": 0.8 },
+  "wrong": { "file": "sfx/wrong.mp3", "gain": 0.8 },
+  "newSpecies": { "file": "sfx/new_species.mp3", "gain": 0.8 },
+  "tap": { "file": "sfx/tap.mp3", "gain": 0.7 },
+  "talk": { "file": "sfx/talk.mp3", "gain": 0.6 },
+  "levelUp": { "file": "sfx/level_up.mp3", "gain": 0.8 },
+  "newDay": { "file": "sfx/new_day.mp3", "gain": 0.8 },
+  "night": { "file": "sfx/night.mp3", "gain": 0.6 },
+  "error": { "file": "sfx/error.mp3", "gain": 0.7 },
+  "chest": { "file": "sfx/chest.mp3", "gain": 0.8 },
+  "bubble": { "file": "sfx/bubble.mp3", "gain": 0.6 }
 }

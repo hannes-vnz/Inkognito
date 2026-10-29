@@ -573,5 +573,6 @@
   "fight.start": "KAMPF! Folge ihr!",
   "fight.won": "GEFANGEN!",
   "fight.reel": "Einholen",
-  "fight.tension": "Spannung"
+  "fight.tension": "Spannung",
+  "credits.title": "Mitwirkende"
 }

@@ -16,6 +16,9 @@ import {
 } from '../online/cloud';
 import { syncNow, type SyncResult } from '../online/sync';
 import { isEmail, normalizeFriendCode, normalizeLoginCode } from '../systems/sync';
+import creditsJson from '../../data/credits.json';
+
+const creditLines = creditsJson as string[];
 
 const errorText = (e: unknown): string => t('account.error', { message: e instanceof Error ? e.message : String(e) });
 
@@ -61,6 +64,7 @@ export class AccountMenu {
   }
 
   private close = { label: t('riff.close'), onSelect: () => this.sheet.close() };
+  private credits = { label: t('credits.title'), onSelect: () => this.sheet.show(t('credits.title'), creditLines.join(' · '), [this.close]) };
 
   private showLogin(): void {
     this.sheet.show(
@@ -82,6 +86,7 @@ export class AccountMenu {
             }
           },
         },
+        this.credits,
         this.close,
       ],
       { id: 'account-email', type: 'email', inputMode: 'email', autocomplete: 'email', placeholder: t('account.emailPlaceholder') },
@@ -142,6 +147,7 @@ export class AccountMenu {
         },
         { label: t('account.friends'), onSelect: () => void this.showFriends() },
         { label: t('account.rename'), onSelect: () => this.showRename(user, profile?.name ?? '') },
+        this.credits,
         {
           label: t('account.logout'),
           onSelect: async () => {

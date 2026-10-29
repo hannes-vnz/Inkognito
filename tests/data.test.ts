@@ -89,3 +89,12 @@ describe('Daten und Assets', () => {
     for (const f of readdirSync(dir)) expect(readFileSync(join(dir, f), 'utf8'), f).not.toMatch(/from ['"]phaser['"]/);
   });
 });
+
+describe('Ton und Credits', () => {
+  it('jeder Sound hat eine Datei, fremde Assets stehen in den Credits', async () => {
+    const sounds = (await import('../data/sounds.json')).default as Record<string, { file: string }>;
+    for (const [id, s] of Object.entries(sounds)) expect(existsSync(join(root, 'assets', s.file)), id).toBe(true);
+    const credits = readFileSync(join(root, 'CREDITS.md'), 'utf8');
+    for (const name of ['ansimuz', 'CraftPix', 'Bramble & Byte']) expect(credits).toContain(name);
+  });
+});

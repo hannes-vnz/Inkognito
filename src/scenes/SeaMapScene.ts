@@ -215,6 +215,7 @@ export class SeaMapScene extends Phaser.Scene {
     this.spawnFlotsam();
     this.refresh();
     if (unlocked) {
+      play('levelUp');
       const b = this.buoys.get(unlocked.id)!;
       this.tweens.add({ targets: b.icon, scale: 5, duration: 220, yoyo: true, ease: 'Back.Out' });
       this.cameras.main.flash(200, 255, 230, 120);
@@ -224,7 +225,7 @@ export class SeaMapScene extends Phaser.Scene {
 
   private readBottle(letter: string, coins: number): void {
     this.target = null;
-    play('newSpecies');
+    play('chest');
     let portrait: string | undefined;
     try {
       portrait = this.textures.getBase64('portrait_bert_shock');

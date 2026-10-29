@@ -76,6 +76,9 @@ export class FishingScene extends Phaser.Scene {
   private whale!: Phaser.GameObjects.Graphics;
   private rays!: Phaser.GameObjects.Graphics;
   private worldTime = 0;
+  /** Parallax-Ebenen der Tiefe (Diving Pack): ferner Hintergrund und Felsbögen. */
+  private deepFar!: Phaser.GameObjects.TileSprite;
+  private deepRocks!: Phaser.GameObjects.TileSprite;
   /** Legende in dieser Runde (uid), ob sie schon gesichtet wurde, und welche Art. */
   private legendUid = -1;
   private legendSeen = false;
@@ -138,7 +141,10 @@ export class FishingScene extends Phaser.Scene {
     const story = () => {
       if (this.spot.harbor) this.harbor.playNext(intro);
       else if (!data.toast) this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
-      if (data.toast) this.ui.say(data.toast, 3);
+      if (data.toast) {
+        this.ui.say(data.toast, 3);
+        play(isNight(this.save.stats.casts, timeParams) ? 'night' : 'newDay');
+      }
     };
     const daily = () => this.showDaily(story);
     this.time.delayedCall(400, () => (idle.coins >= 1 ? this.showOffline(idle.coins, daily) : daily()));
@@ -231,6 +237,11 @@ export class FishingScene extends Phaser.Scene {
     // Wasseroberfläche
     // Wasseroberfläche: wird jeden Frame neu gezeichnet und wogt
     this.wave = this.add.graphics().setDepth(5);
+    // Tiefe: Hintergrund mit Lichtstrahlen und Felsbögen, blenden mit der Tiefe ein (Kamera-fest, eigene Parallaxe)
+    const sh = this.scale.height;
+    this.deepFar = this.add.tileSprite(0, 0, width / 2, sh / 2, 'bg_deep_far').setOrigin(0).setScale(2).setScrollFactor(0).setDepth(-9.8).setAlpha(0);
+    this.deepRocks = this.add.tileSprite(0, 0, width, sh, 'bg_deep_rocks').setOrigin(0).setScrollFactor(0).setDepth(-9.7).setAlpha(0);
+    this.buildSeabed(width);
     // Ferner Wal-Schatten zieht langsam durch die oberen Zonen (Parallaxe)
     this.whale = this.add.graphics().setDepth(-9.6).setScrollFactor(1, 0.55).setAlpha(0.16);
     this.whale.fillStyle(0x0b1e45, 1);
@@ -342,7 +353,7 @@ export class FishingScene extends Phaser.Scene {
       writeSave(this.save);
       this.refresh();
     }
-    play('splash');
+    play('cast');
     this.round.hookX = this.rodTip().x;
     this.steerX = null;
     this.zoneShown = -1;
@@ -372,6 +383,7 @@ export class FishingScene extends Phaser.Scene {
         case 'bite':
           this.cameras.main.shake(120, 0.006);
           play('bite');
+          play('reel');
           if (this.snapIfTooWeak(e.uid)) break;
           if (e.uid === this.legendUid) this.startFight();
           this.celebrateRare(e.uid);
@@ -699,7 +711,7 @@ export class FishingScene extends Phaser.Scene {
     const crew = upgradeValue(upgradeById('crew'), this.save.upgrades.crew);
     const rewards = dailyParams.base.map((_, i) => dailyReward(i + 1, crew, dailyParams));
     const reset = this.save.daily.streak > 0 && streak === 1;
-    play('newSpecies');
+    play('chest');
     showDailyCard(this.uiRoot, streak, rewards, reset, (x, y) => {
       const r = claimDaily(this.save, today, crew, dailyParams);
       if (r) {
@@ -737,6 +749,23 @@ export class FishingScene extends Phaser.Scene {
     );
   }
 
+  /** Meeresboden am tiefsten Punkt des Platzes: Fels mit Korallen, Seetang und Ruinen. */
+  private buildSeabed(width: number): void {
+    const y = metersToY(this.spot.maxMeters, this.depth);
+    const bed = this.add.tileSprite(0, y, width / 2, 68, 'seabed').setOrigin(0, 0).setScale(2).setDepth(-8);
+    const dark = this.add.graphics().setDepth(-8.1);
+    dark.fillStyle(0x0b1a1e, 1).fillRect(0, y + 120, width, 2000);
+    const rng = createRng(`seabed-${this.spot.id}`);
+    const big = rng.pick(['decor_ruins', 'decor_totem', 'decor_arch']);
+    this.add.image(rng.range(width * 0.2, width * 0.8), y + 24, big).setOrigin(0.5, 1).setScale(1).setDepth(-8.2).setTint(0xb0c8d0);
+    for (let x = 10; x < width; x += rng.range(40, 90)) {
+      const key = rng.pick(['decor_coral_pink', 'decor_coral_yellow', 'decor_seaweed', 'decor_seaweed', 'decor_log']);
+      const img = this.add.image(x, y + 30, key).setOrigin(0.5, 1).setScale(key === 'decor_log' ? 1 : 2).setDepth(-7.9);
+      if (key === 'decor_seaweed') this.tweens.add({ targets: img, angle: { from: -4, to: 4 }, duration: rng.range(1600, 2600), yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    }
+    bed.setTint(0xd8e8e0);
+  }
+
   /** Wolken ziehen, Wellen wogen, Lichtstrahlen flackern, der Wal zieht vorbei. */
   private animateWorld(dt: number): void {
     this.worldTime += dt;
@@ -750,6 +779,16 @@ export class FishingScene extends Phaser.Scene {
     this.wave.fillStyle(0xffffff, 0.5);
     for (let x = 0; x < width; x += 48) this.wave.fillRect(x + ((time * 20) % 48), surface + 2 + Math.round(Math.sin(x + time * 3)), 6, 2);
     this.rays.setAlpha(0.75 + Math.sin(time * 1.3) * 0.25);
+    // Tiefen-Ebenen: ab der zweiten Zone sichtbar, eigene langsame Parallaxe, tiefer dunkler
+    const cam = this.cameras.main;
+    const zoneTop = metersToY(this.depth.zones[1]?.depthMeters[0] ?? Infinity, this.depth);
+    const k = Phaser.Math.Clamp((cam.scrollY + cam.height - zoneTop) / 1400, 0, 1);
+    const deep = Phaser.Math.Clamp((cam.scrollY - zoneTop) / (this.depth.unitsPerZone * 3), 0, 1);
+    const shade = Phaser.Display.Color.GetColor(255 - deep * 150, 255 - deep * 140, 255 - deep * 90);
+    this.deepFar.setAlpha(k * 0.45).setTint(shade);
+    this.deepFar.tilePositionY = cam.scrollY * 0.12;
+    this.deepRocks.setAlpha(k * 0.6).setTint(shade);
+    this.deepRocks.tilePositionY = cam.scrollY * 0.45;
     this.whale.x += dt * 18;
     if (this.whale.x > width + 260) this.whale.x = -260;
   }

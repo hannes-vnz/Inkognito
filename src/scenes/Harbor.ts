@@ -50,13 +50,19 @@ export class Harbor {
     this.scene.add.image(0, surface + 4, 'bg_harbor_0').setOrigin(0, 1).setScale(1 / 3).setDepth(-18);
     this.gagIndex = this.host.save.stats.casts;
     const g = this.scene.add.graphics().setDepth(2);
-    // Steg links mit Planken und Pfählen
-    g.fillStyle(0x6b4a2b, 1);
-    g.fillRect(0, surface - 6, 92, 8);
-    g.fillStyle(0x8a6a3b, 1);
-    for (let x = 0; x < 92; x += 10) g.fillRect(x, surface - 6, 8, 2);
-    g.fillStyle(0x4a321d, 1);
-    for (const x of [6, 46, 84]) g.fillRect(x, surface, 6, 40);
+    if (wide) {
+      // Quer ist Platz für die Fischerhütte auf Stelzen (CraftPix, siehe CREDITS.md); ihr Steg liegt auf Höhe der Figuren
+      this.scene.add.image(0, surface - 6 - 62 * 1.5, 'harbor_hut').setOrigin(0, 0).setScale(1.5).setDepth(-17);
+      this.scene.add.image(150, surface - 6, 'harbor_barrel').setOrigin(0.5, 1).setScale(2).setDepth(2.5);
+    } else {
+      // Hochkant: schmaler Steg mit Planken und Pfählen
+      g.fillStyle(0x6b4a2b, 1);
+      g.fillRect(0, surface - 6, 92, 8);
+      g.fillStyle(0x8a6a3b, 1);
+      for (let x = 0; x < 92; x += 10) g.fillRect(x, surface - 6, 8, 2);
+      g.fillStyle(0x4a321d, 1);
+      for (const x of [6, 46, 84]) g.fillRect(x, surface, 6, 40);
+    }
     // Fischstand rechts: Markise und Theke
     const sx = wide ? width - 150 : width - 46;
     g.fillStyle(0x8a5a2b, 1);
@@ -83,7 +89,7 @@ export class Harbor {
       s.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => this.host.canTalk() && this.talk(n, 'start'));
       if (n.place === 'water') this.scene.tweens.add({ targets: s, y: '-=10', duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       const m = this.scene.add
-        .text(p.x, p.y - n.frame.height * SCALE - 6, '', { fontFamily: '"Baloo 2", sans-serif', fontSize: '26px', color: '#ffd23f', stroke: '#1b1030', strokeThickness: 6 })
+        .text(p.x + (n.place === 'stall' ? 30 : 0), p.y - n.frame.height * SCALE - 6 + (n.place === 'stall' ? 24 : 0), '', { fontFamily: '"Baloo 2", sans-serif', fontSize: '26px', color: '#ffd23f', stroke: '#1b1030', strokeThickness: 6 })
         .setOrigin(0.5, 1)
         .setDepth(11);
       this.scene.tweens.add({ targets: m, y: '-=6', duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
@@ -197,7 +203,7 @@ export class Harbor {
   private gag(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
     const key = gags[this.gagIndex++ % gags.length]!;
     this.anim(npc, 'react');
-    play('bite', 1.6);
+    play('talk', 0.7);
     this.sheet.show(t(npc.nameKey), t(key), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
   }
 
@@ -243,7 +249,7 @@ export class Harbor {
           onSelect: () => {
             const bought = buyBait(this.host.save, b);
             if (!bought) {
-              play('wrong');
+              play('error');
               this.host.say(t('bait.poor'));
               return;
             }

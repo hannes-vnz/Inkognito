@@ -7,6 +7,9 @@ export class Hud {
   private readonly fps: HTMLDivElement | null;
   private readonly hint: HTMLDivElement;
   private readonly carry: HTMLDivElement;
+  private readonly oxygen: HTMLDivElement;
+  private readonly oxygenFill: HTMLDivElement;
+  private lastOxygen = -1;
   private readonly toast: HTMLDivElement;
   private toastTimer = 0;
   private lastDepth = -1;
@@ -23,7 +26,11 @@ export class Hud {
     this.depthValue = el('div', 'value');
     this.carry = el('div', 'carry');
     this.carry.setAttribute('aria-label', t('hud.carry'));
-    depth.append(this.depthLabel, this.depthValue, this.carry);
+    this.oxygen = el('div', 'oxygen');
+    this.oxygen.setAttribute('aria-label', t('hud.oxygen'));
+    this.oxygenFill = el('div', '');
+    this.oxygen.append(this.oxygenFill);
+    depth.append(this.depthLabel, this.depthValue, this.oxygen, this.carry);
     root.append(depth);
 
     this.toast = el('div', 'card toast hidden');
@@ -41,6 +48,15 @@ export class Hud {
     if (rounded === this.lastDepth) return;
     this.lastDepth = rounded;
     this.depthValue.textContent = t('hud.depth', { depth: rounded });
+  }
+
+  /** Luftbalken, `ratio` in 0..1; blinkt orange, wenn es knapp wird. */
+  setOxygen(ratio: number, low: boolean): void {
+    const r = Math.round(ratio * 200) / 200;
+    if (r === this.lastOxygen) return;
+    this.lastOxygen = r;
+    this.oxygenFill.style.transform = `scaleX(${r})`;
+    this.oxygen.classList.toggle('low', low);
   }
 
   /** Blasen-Leiste unter der Tiefe: ein Punkt pro Platz, gefüllt in der Farbe des Fangs. */

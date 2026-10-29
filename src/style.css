@@ -204,3 +204,79 @@ body {
 .toast.hidden {
   opacity: 0;
 }
+
+.hud-depth .oxygen {
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: rgba(228, 253, 255, 0.2);
+  overflow: hidden;
+}
+
+.hud-depth .oxygen > div {
+  height: 100%;
+  width: 100%;
+  border-radius: 3px;
+  background: #8ff3ff;
+  transform-origin: left center;
+}
+
+.hud-depth .oxygen.low > div {
+  background: #ffb35c;
+  animation: blink 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes blink {
+  to {
+    opacity: 0.45;
+  }
+}
+
+.result .card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(320px, calc(100vw - 32px));
+}
+
+.result-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.result-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.result-list .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--fish);
+}
+
+.button {
+  margin-top: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  background: #8ff3ff;
+  color: #06283d;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.button:focus-visible {
+  outline: 3px solid #fff3b0;
+  outline-offset: 2px;
+}

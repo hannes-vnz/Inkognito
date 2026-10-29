@@ -6,6 +6,8 @@ import gameJson from '../data/game.json';
 import armsJson from '../data/arms.json';
 import fishJson from '../data/fish.json';
 import zonesJson from '../data/zones.json';
+import predatorsJson from '../data/predators.json';
+import type { PredatorDef } from '../src/systems/predator';
 
 const zone = zonesJson[0]!;
 const dt = 1 / 60;
@@ -27,6 +29,11 @@ function config(overrides: Partial<DiveConfig> = {}): DiveConfig {
     spriteScale: gameJson.spriteScale,
     respawnSeconds: gameJson.catching.respawnSeconds,
     respawnMinDistance: gameJson.catching.respawnMinDistance,
+    oxygen: playerJson.oxygen,
+    exit: zone.exit,
+    current: { ...zone.current, strength: 0 },
+    predatorDefs: predatorsJson as PredatorDef[],
+    predatorSpawns: [],
     ...overrides,
   };
 }

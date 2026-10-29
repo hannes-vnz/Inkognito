@@ -370,6 +370,9 @@ function drawFishSheet(def) {
 
 const fishDefs = JSON.parse(readFileSync(join(root, 'data', 'fish.json'), 'utf8'));
 for (const def of fishDefs) save(spritesDir, `${def.sprite}.png`, drawFishSheet(def));
+// Räuber vorerst in derselben Platzhalterform, nur größer und in eigener Farbe.
+const predatorDefs = JSON.parse(readFileSync(join(root, 'data', 'predators.json'), 'utf8'));
+for (const def of predatorDefs) save(spritesDir, `${def.sprite}.png`, drawFishSheet(def));
 
 // Fangblase (32×32): umschließt einen gefangenen Fisch.
 const catchBubble = new Image(32, 32);

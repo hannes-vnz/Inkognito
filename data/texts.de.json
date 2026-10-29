@@ -29,5 +29,19 @@
   "hud.carry": "Gefangen",
   "ui.hint.aim.portrait": "Kurz tippen zum Schießen",
   "ui.hint.aim.landscape": "Tippen schießt · rechts ziehen zielt genauer",
-  "ui.hint.aim.keys": "Klick oder Leertaste schießt"
+  "ui.hint.aim.keys": "Klick oder Leertaste schießt",
+  "zone.kelp.exit": "Zum Riff",
+  "predator.sea_otter.name": "Seeotter",
+  "hud.oxygen": "Luft",
+  "ui.lowOxygen": "Luft wird knapp, zurück zum Riff!",
+  "ui.otterSteal": "Ein Otter hat sich {fish} geschnappt!",
+  "ui.otterStun": "Otter betäubt.",
+  "result.surfaced.title": "Zurück im Riff",
+  "result.outOfAir.title": "Luft alle",
+  "result.outOfAir.sub": "Die Fische sind dir entwischt.",
+  "result.caught": "{count} Fische mitgebracht",
+  "result.none": "Diesmal nichts gefangen.",
+  "result.again": "Nochmal tauchen",
+  "arm.gerd.otter": "Gerd: „Der Otter schuldet uns was.“",
+  "result.caughtOne": "1 Fisch mitgebracht"
 }

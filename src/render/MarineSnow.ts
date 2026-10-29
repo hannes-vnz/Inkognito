@@ -14,6 +14,7 @@ export class MarineSnow {
   private readonly g: Phaser.GameObjects.Graphics;
   private readonly flakes: Flake[];
   private time = 0;
+  private drift = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -32,14 +33,16 @@ export class MarineSnow {
     }));
   }
 
-  update(camera: Phaser.Cameras.Scene2D.Camera, dt: number): void {
+  /** `current`: Strömung in Pixel pro Sekunde, treibt die Teilchen seitlich. */
+  update(camera: Phaser.Cameras.Scene2D.Camera, dt: number, current = 0): void {
     this.time += dt;
+    this.drift += current * 0.6 * dt;
     const w = camera.width;
     const h = camera.height;
     const g = this.g;
     g.clear();
     for (const f of this.flakes) {
-      const x = mod(f.x - camera.scrollX * this.parallax + Math.sin(this.time * 0.5 + f.y) * 6, w);
+      const x = mod(f.x - camera.scrollX * this.parallax + this.drift * f.drift + Math.sin(this.time * 0.5 + f.y) * 6, w);
       const y = mod(f.y - camera.scrollY * this.parallax + this.time * this.driftSpeed * f.drift, h);
       g.fillStyle(0xeafcff, f.alpha);
       g.fillRect(Math.round(x), Math.round(y), f.size, f.size);

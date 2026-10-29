@@ -1,4 +1,4 @@
-import { armById, fish, game, player, type ZoneDef } from './data';
+import { armById, fish, game, player, predators, type ZoneDef } from './data';
 import type { DiveConfig } from './systems/dive';
 
 /** Baut aus den JSON-Daten die Konfiguration für einen Tauchgang in einer Zone. */
@@ -22,5 +22,10 @@ export function diveConfigFor(zone: ZoneDef): DiveConfig {
     spriteScale: game.spriteScale,
     respawnSeconds: game.catching.respawnSeconds,
     respawnMinDistance: game.catching.respawnMinDistance,
+    oxygen: player.oxygen,
+    exit: zone.exit,
+    current: zone.current,
+    predatorDefs: predators,
+    predatorSpawns: zone.predators,
   };
 }

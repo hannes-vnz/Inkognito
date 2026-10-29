@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { fish, game, player, zones } from '../data';
+import { fish, game, player, predators, zones } from '../data';
 import { createSheetAnimations } from '../entities/Octopus';
 
 /** Lädt alle Grafiken aus /assets (Dateinamen laut Asset-Regeln) und legt Animationen an. */
@@ -13,7 +13,7 @@ export class BootScene extends Phaser.Scene {
       frameWidth: player.frameWidth,
       frameHeight: player.frameHeight,
     });
-    for (const f of fish) {
+    for (const f of [...fish, ...predators]) {
       this.load.spritesheet(f.sprite, `sprites/${f.sprite}.png`, { frameWidth: f.frame.width, frameHeight: f.frame.height });
     }
     this.load.image('fx_bubble', 'sprites/fx_bubble.png');
@@ -25,7 +25,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     createSheetAnimations(this, player.sprite, player.frameWidth, player.id, player.animations);
-    for (const f of fish) createSheetAnimations(this, f.sprite, f.frame.width, f.sprite, game.fish.animations);
+    for (const f of [...fish, ...predators]) createSheetAnimations(this, f.sprite, f.frame.width, f.sprite, game.fish.animations);
     document.getElementById('loading')?.remove();
     this.scene.start('Dive', { zoneId: 'kelp' });
   }

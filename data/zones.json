@@ -84,6 +84,28 @@
         ],
         "spread": 40
       }
+    ],
+    "exit": {
+      "x": 1920,
+      "y": 230,
+      "radius": 110,
+      "labelKey": "zone.kelp.exit"
+    },
+    "current": {
+      "strength": 70,
+      "bandMeters": 35,
+      "periodSeconds": 14,
+      "fishFactor": 0.4
+    },
+    "predators": [
+      {
+        "predator": "sea_otter",
+        "count": 2,
+        "depthMeters": [
+          0,
+          90
+        ]
+      }
     ]
   }
 ]

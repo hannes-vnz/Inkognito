@@ -3,6 +3,9 @@ import { createSwimmer, stepSwimmer, type Bounds, type MovementParams, type Swim
 import { createFish, startle, stepFish, type FishDef, type FishState, type FishTuning } from './fish';
 import { aimDirection, findHit, fireShot, stepShot, type CannonDef, type Shot } from './bubbles';
 import { stepCarry, type Carried, type CarryParams } from './carry';
+import { createPredator, stepPredator, stunPredator, type PredatorDef, type PredatorState } from './predator';
+import { drainOxygen, oxygenRatio, type OxygenParams } from './oxygen';
+import { currentAt, type CurrentParams } from './current';
 import type { Vec2 } from './vector';
 
 export interface SpawnDef {
@@ -12,6 +15,12 @@ export interface SpawnDef {
   depthMeters: [number, number];
   /** Streuung der Gruppenmitglieder um die Gruppenmitte. */
   spread: number;
+}
+
+export interface PredatorSpawnDef {
+  predator: string;
+  count: number;
+  depthMeters: [number, number];
 }
 
 export interface DiveConfig {
@@ -32,7 +41,15 @@ export interface DiveConfig {
   spriteScale: number;
   respawnSeconds: number;
   respawnMinDistance: number;
+  oxygen: OxygenParams;
+  /** Ausgang zurück zum Riff. */
+  exit: { x: number; y: number; radius: number };
+  current: CurrentParams;
+  predatorDefs: readonly PredatorDef[];
+  predatorSpawns: readonly PredatorSpawnDef[];
 }
+
+export type DiveStatus = 'diving' | 'surfaced' | 'outOfAir';
 
 export interface DiveInput {
   move: Vec2;
@@ -45,7 +62,11 @@ export type DiveEvent =
   | { type: 'caught'; uid: number; fishId: string; x: number; y: number }
   | { type: 'missed'; x: number; y: number }
   | { type: 'full'; x: number; y: number }
-  | { type: 'spawned'; uid: number };
+  | { type: 'spawned'; uid: number }
+  | { type: 'stolen'; fishId: string; x: number; y: number }
+  | { type: 'stunned'; uid: number; x: number; y: number }
+  | { type: 'lowOxygen' }
+  | { type: 'ended'; status: Exclude<DiveStatus, 'diving'>; fish: string[] };
 
 interface Respawn {
   spawnIndex: number;
@@ -66,13 +87,29 @@ export interface DiveState {
   respawns: Respawn[];
   /** Für Auswertung und Tests: Zeitpunkt des letzten Schusses. */
   lastFireTime: number;
+  status: DiveStatus;
+  /** Restluft in Sekunden. */
+  oxygen: number;
+  lowOxygenWarned: boolean;
+  /** Der Ausgang zählt erst, wenn man ihn einmal verlassen hat. */
+  exitArmed: boolean;
+  predators: PredatorState[];
 }
+
+export const metersAtY = (y: number, cfg: DiveConfig): number =>
+  Math.max(0, cfg.surfaceMeters + (y - cfg.surfaceY) / cfg.pixelsPerMeter);
 
 const yForMeters = (m: number, cfg: DiveConfig): number => cfg.surfaceY + (m - cfg.surfaceMeters) * cfg.pixelsPerMeter;
 
 /** Trefferradius eines Fisches in Welt-Pixeln (etwas großzügig für Touch). */
 export const fishRadius = (def: FishDef, spriteScale: number): number =>
   (Math.max(def.frame.width, def.frame.height) * spriteScale) / 2 * 0.85;
+
+function predatorOf(cfg: DiveConfig, id: string): PredatorDef {
+  const def = cfg.predatorDefs.find((d) => d.id === id);
+  if (!def) throw new Error(`Räuber "${id}" fehlt in data/predators.json`);
+  return def;
+}
 
 function defOf(cfg: DiveConfig, id: string): FishDef {
   const def = cfg.fishDefs.find((d) => d.id === id);
@@ -121,10 +158,29 @@ export function createDive(cfg: DiveConfig, seed: number | string): DiveState {
     nextUid: 1,
     respawns: [],
     lastFireTime: -1,
+    status: 'diving',
+    oxygen: cfg.oxygen.maxSeconds,
+    lowOxygenWarned: false,
+    exitArmed: false,
+    predators: [],
   };
   cfg.spawns.forEach((sp, i) => {
     for (let g = 0; g < sp.groups; g++) spawnGroup(s, cfg, i, sp.perGroup, null);
   });
+  for (const ps of cfg.predatorSpawns) {
+    const def = predatorOf(cfg, ps.predator);
+    const minY = yForMeters(ps.depthMeters[0], cfg);
+    const maxY = yForMeters(ps.depthMeters[1], cfg);
+    for (let i = 0; i < ps.count; i++) {
+      // Räuber starten weit weg vom Einstieg.
+      let x = 0;
+      for (let attempt = 0; attempt < 12; attempt++) {
+        x = s.rng.range(cfg.fishBounds.minX, cfg.fishBounds.maxX);
+        if (Math.abs(x - cfg.spawn.x) > cfg.respawnMinDistance) break;
+      }
+      s.predators.push(createPredator(s.nextUid++, def, x, s.rng.range(minY, maxY), minY, maxY, s.rng));
+    }
+  }
   return s;
 }
 
@@ -134,9 +190,14 @@ export function createDive(cfg: DiveConfig, seed: number | string): DiveState {
  */
 export function stepDive(s: DiveState, input: DiveInput, cfg: DiveConfig, dt: number): DiveEvent[] {
   const events: DiveEvent[] = [];
+  if (s.status !== 'diving') return events;
   s.time += dt;
   s.prevPlayer = s.player;
-  s.player = stepSwimmer(s.player, input.move, cfg.movement, cfg.bounds, dt);
+  const moved = stepSwimmer(s.player, input.move, cfg.movement, cfg.bounds, dt);
+  const meters = metersAtY(moved.y, cfg);
+  const drift = currentAt(meters, s.time, cfg.current);
+  moved.x = Math.min(cfg.bounds.maxX, Math.max(cfg.bounds.minX, moved.x + drift * dt));
+  s.player = moved;
   const pl = s.player;
 
   // Schießen
@@ -160,13 +221,41 @@ export function stepDive(s: DiveState, input: DiveInput, cfg: DiveConfig, dt: nu
   }
   const fb = cfg.fishBounds;
   const world = { minX: fb.minX, maxX: fb.maxX, minY: fb.minY, maxY: fb.maxY };
-  for (const f of s.fish) stepFish(f, pl, schools.get(f.schoolId) ?? [], cfg.fishTuning, world, s.rng, dt);
+  for (const f of s.fish) {
+    stepFish(f, pl, schools.get(f.schoolId) ?? [], cfg.fishTuning, world, s.rng, dt);
+    f.x = Math.min(world.maxX, Math.max(world.minX, f.x + currentAt(metersAtY(f.y, cfg), s.time, cfg.current) * cfg.current.fishFactor * dt));
+  }
+
+  // Räuber: schnappen sich den zuletzt gefangenen Fisch und stoßen den Oktopus weg.
+  for (const r of s.predators) {
+    const def = predatorOf(cfg, r.predatorId);
+    if (stepPredator(r, def, pl, s.carried.length, world, s.rng, dt)) {
+      const lost = s.carried.pop();
+      if (lost) {
+        events.push({ type: 'stolen', fishId: lost.fishId, x: lost.x, y: lost.y });
+        s.respawns.push({ spawnIndex: cfg.spawns.findIndex((sp) => sp.fish === lost.fishId), at: s.time + cfg.respawnSeconds });
+      }
+      const d = Math.max(1, Math.hypot(pl.x - r.x, pl.y - r.y));
+      s.player = { ...pl, vx: ((pl.x - r.x) / d) * def.knockback, vy: ((pl.y - r.y) / d) * def.knockback };
+    }
+  }
 
   // Blasen und Treffer
   const proj = cfg.cannon.projectile;
   const targets = s.fish.map((f) => ({ x: f.x, y: f.y, radius: fishRadius(defOf(cfg, f.fishId), cfg.spriteScale) }));
+  const predatorTargets = () =>
+    s.predators.map((r) => ({ x: r.x, y: r.y, radius: predatorOf(cfg, r.predatorId).hitRadius * 0.6 }));
   s.shots = s.shots.filter((shot) => {
     const alive = stepShot(shot, proj, dt);
+    const ph = findHit(shot, predatorTargets(), proj.radius);
+    if (ph >= 0) {
+      const r = s.predators[ph]!;
+      if (r.mode !== 'stunned') {
+        stunPredator(r, predatorOf(cfg, r.predatorId));
+        events.push({ type: 'stunned', uid: r.uid, x: r.x, y: r.y });
+        return false;
+      }
+    }
     const hit = findHit(shot, targets, proj.radius);
     if (hit >= 0) {
       const f = s.fish[hit]!;
@@ -186,7 +275,7 @@ export function stepDive(s: DiveState, input: DiveInput, cfg: DiveConfig, dt: nu
     return alive;
   });
 
-  stepCarry(s.carried, pl, cfg.carry, dt);
+  stepCarry(s.carried, s.player, cfg.carry, dt);
 
   // Nachschub: gefangene Fische tauchen später weit weg vom Spieler wieder auf.
   s.respawns = s.respawns.filter((r) => {
@@ -194,6 +283,23 @@ export function stepDive(s: DiveState, input: DiveInput, cfg: DiveConfig, dt: nu
     for (const uid of spawnGroup(s, cfg, r.spawnIndex, 1, pl)) events.push({ type: 'spawned', uid });
     return false;
   });
+
+  // Luft und Rückkehr zum Riff
+  s.oxygen = drainOxygen(s.oxygen, meters, cfg.oxygen, dt);
+  if (!s.lowOxygenWarned && oxygenRatio(s.oxygen, cfg.oxygen) <= cfg.oxygen.warnRatio) {
+    s.lowOxygenWarned = true;
+    events.push({ type: 'lowOxygen' });
+  }
+  const exitDist = Math.hypot(s.player.x - cfg.exit.x, s.player.y - cfg.exit.y);
+  if (exitDist > cfg.exit.radius * 1.5) s.exitArmed = true;
+  if (s.exitArmed && exitDist <= cfg.exit.radius) {
+    s.status = 'surfaced';
+    events.push({ type: 'ended', status: 'surfaced', fish: s.carried.map((c) => c.fishId) });
+  } else if (s.oxygen <= 0) {
+    s.status = 'outOfAir';
+    s.carried = [];
+    events.push({ type: 'ended', status: 'outOfAir', fish: [] });
+  }
 
   return events;
 }

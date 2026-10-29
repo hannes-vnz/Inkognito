@@ -61,5 +61,12 @@
       "x": -46,
       "y": -26
     }
+  },
+  "oxygen": {
+    "maxSeconds": 240,
+    "drainPerSecond": 1,
+    "depthDrainPer100m": 0.8,
+    "warnRatio": 0.25,
+    "refillOnSurface": true
   }
 }

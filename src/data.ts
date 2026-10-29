@@ -4,6 +4,7 @@ import gameJson from '../data/game.json';
 import textsJson from '../data/texts.de.json';
 import fishJson from '../data/fish.json';
 import armsJson from '../data/arms.json';
+import predatorsJson from '../data/predators.json';
 import type { MovementParams } from './systems/movement';
 import type { CameraParams } from './systems/camera';
 import type { JoystickParams, TapParams } from './systems/joystick';
@@ -11,7 +12,10 @@ import type { TextTable } from './systems/texts';
 import type { FishDef, FishTuning } from './systems/fish';
 import type { CannonDef } from './systems/bubbles';
 import type { CarryParams } from './systems/carry';
-import type { SpawnDef } from './systems/dive';
+import type { PredatorSpawnDef, SpawnDef } from './systems/dive';
+import type { PredatorDef } from './systems/predator';
+import type { OxygenParams } from './systems/oxygen';
+import type { CurrentParams } from './systems/current';
 
 export interface AnimationDef {
   key: string;
@@ -34,6 +38,7 @@ export interface PlayerDef {
   tilt: { maxDegrees: number; perSpeed: number };
   squash: { amount: number; perAcceleration: number; rate: number };
   carry: CarryParams;
+  oxygen: OxygenParams;
 }
 
 export interface BackgroundLayerDef {
@@ -54,6 +59,9 @@ export interface ZoneDef {
   floor: { sand: string; sandShadow: string; rock: string; rockLight: string };
   background: BackgroundLayerDef[];
   fishSpawns: SpawnDef[];
+  exit: { x: number; y: number; radius: number; labelKey: string };
+  current: CurrentParams;
+  predators: PredatorSpawnDef[];
   seed: string;
 }
 
@@ -92,6 +100,7 @@ export const game = gameJson as GameConfig;
 export const texts = textsJson as TextTable;
 export const fish = fishJson as FishDef[];
 export const arms = armsJson as ArmDef[];
+export const predators = predatorsJson as PredatorDef[];
 
 export function armById(id: string): ArmDef {
   const arm = arms.find((a) => a.id === id);

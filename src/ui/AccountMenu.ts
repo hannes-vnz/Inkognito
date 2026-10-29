@@ -14,7 +14,7 @@ import {
   verifyLoginCode,
   type CloudUser,
 } from '../online/cloud';
-import { syncNow, type SyncResult } from '../online/sync';
+import { resetProgress, syncNow, type SyncResult } from '../online/sync';
 import { isEmail, normalizeFriendCode, normalizeLoginCode } from '../systems/sync';
 import creditsJson from '../../data/credits.json';
 
@@ -64,6 +64,14 @@ export class AccountMenu {
   }
 
   private close = { label: t('riff.close'), onSelect: () => this.sheet.close() };
+  private reset = {
+    label: t('account.reset'),
+    onSelect: () =>
+      this.sheet.show(t('account.reset'), t('account.resetText'), [
+        { label: t('account.resetYes'), onSelect: () => void resetProgress() },
+        { label: t('account.resetNo'), onSelect: () => this.sheet.close() },
+      ]),
+  };
   private credits = { label: t('credits.title'), onSelect: () => this.sheet.show(t('credits.title'), creditLines.join(' · '), [this.close]) };
 
   private showLogin(): void {
@@ -87,6 +95,7 @@ export class AccountMenu {
           },
         },
         this.credits,
+        this.reset,
         this.close,
       ],
       { id: 'account-email', type: 'email', inputMode: 'email', autocomplete: 'email', placeholder: t('account.emailPlaceholder') },
@@ -148,6 +157,7 @@ export class AccountMenu {
         { label: t('account.friends'), onSelect: () => void this.showFriends() },
         { label: t('account.rename'), onSelect: () => this.showRename(user, profile?.name ?? '') },
         this.credits,
+        this.reset,
         {
           label: t('account.logout'),
           onSelect: async () => {

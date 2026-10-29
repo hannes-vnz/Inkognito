@@ -252,12 +252,17 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       img.set(31, 34, white);
       // Tentakel-Hand aus dem Ärmel, mit Saugnäpfen
       const wave = face === 'happy' ? -6 : face === 'shock' ? -10 : 0;
-      for (let k = 0; k < 14; k++) {
-        const x = 52 + Math.sin(k * 0.45) * 3;
-        const y = 62 - k + wave * (k / 14);
-        blob(img, 0, 0, x, y, 2.6 - k * 0.12, 1.4, P.octo);
-        if (k % 3 === 1) img.set(x - 1, y, hex('#ffd0b0'));
+      for (let k = 0; k < 20; k++) {
+        const x = 52 + Math.sin(k * 0.4) * 4;
+        const y = 64 - k * 1.1 + wave * (k / 20);
+        blob(img, 0, 0, x, y, 4.2 - k * 0.15, 2.2, P.octo);
+        if (k % 3 === 1) {
+          img.set(x - 2, y, hex('#ffd0b0'));
+          img.set(x - 1, y, hex('#ffd0b0'));
+        }
       }
+      // zweiter Tentakel lugt aus dem Kragen
+      for (let k = 0; k < 10; k++) blob(img, 0, 0, 14 - k * 0.6 + Math.sin(k * 0.6) * 1.5, 56 - k * 0.9, 3 - k * 0.2, 1.8, P.octo);
       if (face === 'shock') {
         blob(img, 0, 0, 51, 13, 2.2, 3, rampOf(hex('#9ff0ff')));
         img.set(50, 11, white);
@@ -595,13 +600,14 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
         }
         if (o.peek) for (let k = 0; k < 4; k++) frame.set(21 + k * 0.6, 25 - k, k === 3 ? hex('#ffd0b0') : P.octo.base);
         // Unter dem Mantelsaum ringeln sich Tentakel heraus und bewegen sich
-        for (const [bx, dir] of [[8, -1], [24, 1]]) {
-          const ph = col * 1.1 + (dir > 0 ? 1.5 : 0);
-          for (let k = 0; k < 6; k++) {
-            const x = bx + dir * (k * 0.7 + Math.sin(ph + k * 0.8) * 0.8);
-            const y = 26 + k * 0.7 - Math.max(0, k - 3) * 1.4 * Math.abs(Math.sin(ph));
-            frame.set(x, y, P.octo.base);
-            frame.set(x, y + 1, k === 5 ? hex('#ffd0b0') : P.octo.shadow);
+        for (const [bx, dir] of [[9, -1], [23, 1], [16, 1]]) {
+          const ph = col * 1.1 + (dir > 0 ? 1.5 : 0) + bx;
+          const len = bx === 16 ? 4 : 8;
+          for (let k = 0; k < len; k++) {
+            const x = bx + dir * (k * 0.8 + Math.sin(ph + k * 0.7) * 1.1);
+            const y = 25 + k * 0.6 - Math.max(0, k - 4) * 1.2 * Math.abs(Math.sin(ph));
+            rect(frame, 0, 0, x, y, 2, 2, P.octo.base);
+            frame.set(x, y + 2, k % 2 ? hex('#ffd0b0') : P.octo.shadow);
           }
         }
         // Ölmantel
@@ -610,7 +616,12 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
         poly(frame, 0, 0, [[14 + sx, 14 + b], [16 + sx, 17 + b], [18 + sx, 14 + b]], white);
         // Tentakel-Arme aus den Ärmeln
         const armL = o.cheer !== undefined ? -1 : 1;
-        for (let k = 0; k < 6; k++) frame.set(10 + sx - k * 0.3, 18 + b + k * armL * (o.cheer !== undefined ? 1.4 : 0.9) - (o.cheer ? 1 : 0), P.octo.base);
+        for (let k = 0; k < 9; k++) {
+          const ax = 10 + sx - k * 0.45 + Math.sin(col + k * 0.6) * 0.6;
+          const ay = 17 + b + k * armL * (o.cheer !== undefined ? 1.2 : 0.95) - (o.cheer ? 1 : 0);
+          rect(frame, 0, 0, ax - 1, ay, 2, 1, P.octo.base);
+          if (k % 3 === 1) frame.set(ax, ay, hex('#ffd0b0'));
+        }
         // Kopf
         blob(frame, 0, 0, 16 + sx, 9 + b, 6.5, 6.5, P.octo);
         frame.set(12 + sx, 6 + b, rampOf(hex('#d9734a')).base);
@@ -649,7 +660,8 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
         frame.set(hx, hy, hex('#ffd0b0'));
         // Jubelarme, Schweißtropfen
         if (o.cheer !== undefined)
-          for (const side of [-1, 1]) for (let i = 0; i < 7; i++) frame.set(16 + sx + side * (8 + i * 0.4), 15 + b - i - o.cheer, P.octo.base);
+          for (const side of [-1, 1])
+            for (let i = 0; i < 10; i++) rect(frame, 0, 0, 16 + sx + side * (8 + i * 0.5 + Math.sin(col + i) * 0.6), 15 + b - i - o.cheer, 2, 1, i % 3 === 1 ? hex('#ffd0b0') : P.octo.base);
         if (o.sweat !== undefined) {
           blob(frame, 0, 0, 24 + sx, 6 + b + (o.sweat % 2) * 2, 1.2, 1.8, rampOf(hex('#9ff0ff')));
           frame.set(24 + sx, 4 + b + (o.sweat % 2) * 2, white);

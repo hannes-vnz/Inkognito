@@ -1,7 +1,8 @@
 import { currentUser, fetchRemoteSave, pushSave } from './cloud';
 import { decideSync, type SyncDecision } from '../systems/sync';
 import type { Save } from '../systems/save';
-import { loadSave, writeSave } from '../storage';
+import { loadSave, writeFreshAndLock, writeSave } from '../storage';
+import { newSave } from '../systems/save';
 
 export interface SyncResult {
   decision: SyncDecision | 'offline' | 'loggedOut';
@@ -28,6 +29,18 @@ export async function syncNow(): Promise<SyncResult> {
   } catch {
     return { decision: 'offline', save: local };
   }
+}
+
+/**
+ * Ganz von vorn: frischer Stand lokal und, falls eingeloggt, auch online (sonst käme der alte
+ * Stand beim nächsten Abgleich zurück). Danach lädt die Seite neu.
+ */
+export async function resetProgress(): Promise<void> {
+  const fresh = newSave(Date.now());
+  writeFreshAndLock(fresh);
+  const user = await currentUser().catch(() => null);
+  if (user) await pushSave(user.id, fresh).catch(() => undefined);
+  window.location.reload();
 }
 
 /** Beim Schließen oder in den Hintergrund: lokalen Stand hochladen (ohne zu warten). */

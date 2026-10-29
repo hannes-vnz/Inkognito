@@ -47,3 +47,12 @@ describe('Acting-Animationen', () => {
       for (const s of shots) for (const f of s.figures ?? []) if (f.anim) expect(anims).toHaveProperty([`${f.who}_${f.anim}`]);
   });
 });
+
+describe('Requisiten', () => {
+  it('Requisiten in Szenen gibt es als Grafik', async () => {
+    const { existsSync } = await import('node:fs');
+    for (const shots of Object.values(scenes))
+      for (const s of shots as (Shot & { prop?: string })[])
+        if (s.prop) expect(existsSync(`assets/sprites/${s.prop}.png`), s.prop).toBe(true);
+  });
+});

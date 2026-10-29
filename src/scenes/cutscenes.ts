@@ -20,6 +20,7 @@ export function cutsceneArt(scene: Phaser.Scene): CutsceneArt {
     },
     text: (key) => t(key),
     anim: (key) => anims[key],
+    texture: (key) => base64(key),
   };
 }
 

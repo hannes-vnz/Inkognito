@@ -33,6 +33,8 @@ export interface Shot {
   panels?: ShotFigure[];
   /** Großes Bild einer Art (z. B. die gefangene Legende). */
   species?: string;
+  /** Großes Requisit aus den Grafiken (z. B. Kiste, Kutter). */
+  prop?: string;
   captionKey?: string;
   /** Schon übersetzter Text (statt captionKey). */
   caption?: string;
@@ -44,6 +46,7 @@ export interface Shot {
 export interface CutsceneArt {
   portrait(who: string, face: string): string | undefined;
   speciesImage(id: string): string | undefined;
+  texture(key: string): string | undefined;
   anim(key: string): ActingAnim | undefined;
   text(key: string): string;
 }
@@ -298,13 +301,20 @@ export function playCutscene(root: HTMLElement, shots: readonly Shot[], art: Cut
       fish.alt = '';
       frame.append(fish);
     }
+    if (s.prop) {
+      const prop = el('img', 'cut-species cut-prop');
+      prop.src = art.texture(s.prop) ?? '';
+      prop.alt = '';
+      frame.append(prop);
+    }
     const figs = s.figures ?? [];
     if (figs.length === 1) frame.append(figure(art, figs[0]!, 'solo'));
     if (figs.length >= 2) frame.append(figure(art, figs[0]!, 'left'), figure(art, figs[1]!, 'right'));
     if (s.fx?.length) frame.append(fxLayer(s.fx));
     const caption = s.caption ?? (s.captionKey ? art.text(s.captionKey) : '');
     if (caption) {
-      const text = el('div', 'cut-caption');
+      // Lange Texte wie Untertitel unten, kurze groß oben
+      const text = el('div', caption.length > 40 ? 'cut-caption long' : 'cut-caption');
       setRichText(text, caption);
       frame.append(text);
     }

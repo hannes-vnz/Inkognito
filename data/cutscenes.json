@@ -237,5 +237,78 @@
       "captionKey": "fight.start",
       "sfx": "reel"
     }
+  ],
+  "intro": [
+    {
+      "bg": "night",
+      "ms": 3800,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "anim": "raw"
+        }
+      ],
+      "captionKey": "intro.1"
+    },
+    {
+      "bg": "night",
+      "ms": 3000,
+      "cam": "panLeft",
+      "prop": "fx_crate",
+      "captionKey": "intro.2",
+      "sfx": "bubble"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 3200,
+      "cam": "still",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "anim": "dressup"
+        }
+      ],
+      "captionKey": "intro.3",
+      "sfx": "chest"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 2600,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "anim": "talk"
+        }
+      ],
+      "captionKey": "intro.4"
+    },
+    {
+      "bg": "sparkle",
+      "ms": 2600,
+      "cam": "pullOut",
+      "flash": true,
+      "prop": "boat_1",
+      "captionKey": "intro.5"
+    },
+    {
+      "bg": "marquee",
+      "ms": 2600,
+      "cam": "pushIn",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "anim": "happy"
+        }
+      ],
+      "fx": [
+        "sparkle"
+      ],
+      "captionKey": "intro.6",
+      "sfx": "fanfare"
+    }
   ]
 }

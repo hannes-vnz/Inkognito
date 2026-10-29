@@ -13,10 +13,20 @@ export function loadSave(now = Date.now()): Save {
   return deserialize(text, now);
 }
 
+/** Nach dem Zurücksetzen darf bis zum Neuladen nichts den alten Stand zurückschreiben. */
+let locked = false;
+
 export function writeSave(save: Save): void {
+  if (locked) return;
   try {
     window.localStorage.setItem(KEY, serialize(save));
   } catch {
     // Kein Speicher (privater Modus): Spiel läuft weiter, nur ohne Fortschritt.
   }
+}
+
+/** Frischen Stand schreiben und weitere Schreibzugriffe sperren (danach wird neu geladen). */
+export function writeFreshAndLock(save: Save): void {
+  writeSave(save);
+  locked = true;
 }

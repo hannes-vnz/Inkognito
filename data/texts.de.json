@@ -648,5 +648,15 @@
   "cut.set.2": "Hilde: „Hm. Nicht schlecht … für einen *Menschen*.“",
   "cut.steal.1": "KRAAA!",
   "cut.steal.3": "Hilde: „Gute Möwe.“",
-  "cut.photo.2": "*Klick.* Beweisfoto."
+  "cut.photo.2": "*Klick.* Beweisfoto.",
+  "intro.1": "Tief im Atlantik lebte ein ganz normaler *Oktopus*. Ein Meister der Tarnung: Oktopusse ändern in Sekundenbruchteilen *Farbe und Hautstruktur*.",
+  "intro.2": "Eines Nachts sank eine Kiste herab. Aufschrift: *Faschingsbedarf*.",
+  "intro.3": "Hut. Brille. Nase. Bart. *Mantel*.",
+  "intro.4": "„Perfekt. Niemand wird es merken.“",
+  "intro.5": "Im Hafen lag ein Kutter. Schild: *zu verschenken*.",
+  "intro.6": "Und so wurde aus einem Oktopus … *Kapitän Bert*!",
+  "account.reset": "Neu anfangen",
+  "account.resetText": "Wirklich ganz von vorn? Münzen, Upgrades, Fischbuch und Story sind dann weg, auch im Online-Spielstand. Das Intro läuft noch einmal.",
+  "account.resetYes": "Ja, alles zurücksetzen",
+  "account.resetNo": "Lieber nicht"
 }

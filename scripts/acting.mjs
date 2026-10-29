@@ -24,17 +24,17 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
   };
 
   /** Tentakel als Kette aus Kreisen: Basis, Startwinkel, Länge, Krümmung, Welle; Saugnäpfe auf der Innenseite. */
-  function tentacle(img, x, y, angle, len, r0, curl, wave, phase) {
+  function tentacle(img, x, y, angle, len, r0, curl, wave, phase, ramp = C.octo) {
     let a = angle;
     const pts = [];
     for (let i = 0; i < len; i++) {
       const t = i / len;
       pts.push([x, y, Math.max(1.2, r0 * (1 - t * 0.8)), a]);
-      a += curl * (0.5 + t) + Math.sin(phase + i * 0.35) * wave * 0.08;
+      a += curl * (0.25 + t) * 0.55 + Math.sin(phase + i * 0.35) * wave * 0.05;
       x += Math.cos(a) * 1.6;
       y += Math.sin(a) * 1.6;
     }
-    for (const [px, py, r] of pts) blob(img, 0, 0, px, py, r, r, C.octo);
+    for (const [px, py, r] of pts) blob(img, 0, 0, px, py, r, r, ramp);
     pts.forEach(([px, py, r, pa], i) => {
       if (i % 3 !== 1 || r < 2) return;
       const sx = px + Math.cos(pa + Math.PI / 2) * (r - 1);
@@ -46,6 +46,7 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
 
   /** Berts Oberkörper mit allen Stellschrauben einer Pose. */
   function bust(img, p) {
+    const skin = p.skin ? rampOf(hex(p.skin)) : C.octo;
     const dy = p.dy ?? 0;
     const lx = p.lean ?? 0;
     const hx = 48 + lx;
@@ -59,17 +60,19 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
       }
     }
     // Hintere Tentakel (aus dem Mantelsaum und Kragen)
-    for (const tt of p.back ?? []) tentacle(img, tt[0], tt[1] + dy, tt[2], tt[3], 4.4, tt[4], tt[5] ?? 6, tt[6] ?? 0);
-    // Ölmantel mit Kragen und Matrosenhemd
+    for (const tt of p.back ?? []) tentacle(img, tt[0], tt[1] + dy, tt[2], tt[3], tt[7] ?? 6, tt[4], tt[5] ?? 6, tt[6] ?? 0, skin);
+    // Ölmantel mit Kragen und Matrosenhemd (fehlt beim echten Oktopus)
+    if (!p.noCoat) {
     blob(img, 0, 0, 48 + lx * 0.4, 104 + dy, 44, 30, C.coat);
     poly(img, 0, 0, [[40 + lx * 0.5, 74 + dy], [48 + lx * 0.5, 90 + dy], [56 + lx * 0.5, 74 + dy]], (x, y) => ((y - dy) % 4 < 2 ? hex('#3a6ac8') : white));
     poly(img, 0, 0, [[22, 80 + dy], [40 + lx * 0.5, 72 + dy], [46, 96], [26, 96]], C.coat.light);
     poly(img, 0, 0, [[74, 80 + dy], [56 + lx * 0.5, 72 + dy], [50, 96], [70, 96]], C.coat.shadow);
     for (const y of [84, 92]) rect(img, 0, 0, 52 + lx * 0.4, y + dy, 3, 3, hex('#7a5a2a'));
+    }
     // Kopf: Oktopus-Mantel, oben etwas länger (unter dem Hut versteckt)
-    blob(img, 0, 0, hx, hy, 22, 25, C.octo);
-    blob(img, 0, 0, hx, hy - 14, 17, 14, C.octo);
-    for (const [x, y, r] of [[-14, -10, 2.4], [15, -14, 2], [17, 6, 1.8], [-16, 8, 1.8], [4, -20, 1.6]]) blob(img, 0, 0, hx + x, hy + y, r, r, C.spot);
+    blob(img, 0, 0, hx, hy, 22, 25, skin);
+    blob(img, 0, 0, hx, hy - 14, 17, 14, skin);
+    for (const [x, y, r] of [[-14, -10, 2.4], [15, -14, 2], [17, 6, 1.8], [-16, 8, 1.8], [4, -20, 1.6]]) blob(img, 0, 0, hx + x, hy + y, r, r, rampOf(skin.shadow));
     // Augen hinter runder Brille: waagerechte Balken-Pupillen
     const eyes = p.eyes ?? 'open';
     for (const ex of [-10, 10]) {
@@ -88,20 +91,24 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
         if (eyes === 'half') rect(img, 0, 0, x - 6, y - h, 13, 2, C.octo.shadow);
       }
     }
-    for (const ex of [-10, 10])
-      for (let a = 0; a < 48; a++) img.set(hx + ex + Math.round(Math.cos((a / 48) * Math.PI * 2) * 9), hy - 2 + Math.round(Math.sin((a / 48) * Math.PI * 2) * 8), C.frame);
-    line(img, 0, 0, hx - 1, hy - 4, hx + 1, hy - 4, C.frame);
+    if (!p.noGlasses) {
+      for (const ex of [-10, 10])
+        for (let a = 0; a < 48; a++) img.set(hx + ex + Math.round(Math.cos((a / 48) * Math.PI * 2) * 9), hy - 2 + Math.round(Math.sin((a / 48) * Math.PI * 2) * 8), C.frame);
+      line(img, 0, 0, hx - 1, hy - 4, hx + 1, hy - 4, C.frame);
+    }
     // Brauen: Höhe und Winkel tragen die Laune
     const bu = p.brow ?? 0;
     const ba = p.browAngle ?? 0;
-    for (const s of [-1, 1]) {
+    for (const s of p.noGlasses ? [] : [-1, 1]) {
       const bx = hx + s * 10;
       const by = hy - 14 - bu;
       for (let k = -7; k <= 7; k++) blob(img, 0, 0, bx + k, by + k * s * ba * 0.25, 1.6, 1.8, C.stache);
     }
     // Gummiband
-    line(img, 0, 0, hx - 23, hy - 2, hx - 19, hy - 3, hex('#e8e0d0'));
-    line(img, 0, 0, hx + 19, hy - 3, hx + 23, hy - 2, hex('#e8e0d0'));
+    if (!p.noBeard) {
+      line(img, 0, 0, hx - 23, hy - 2, hx - 19, hy - 3, hex('#e8e0d0'));
+      line(img, 0, 0, hx + 19, hy - 3, hx + 23, hy - 2, hex('#e8e0d0'));
+    }
     // Mund (hinter dem Bart sichtbar)
     const mx = hx;
     const my = hy + 16;
@@ -117,33 +124,37 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
     } else line(img, 0, 0, mx - 5, my + 1, mx + 5, my + (mouth === 'smile' ? 0 : 1), C.mouth);
     // Fake-Bart (kann verrutschen)
     const bd = p.beard ?? [0, 0];
-    for (let k = 0; k < 16; k++) {
+    for (let k = 0; k < (p.noBeard ? 0 : 16); k++) {
       const a = Math.PI * 0.08 + (k / 15) * Math.PI * 0.84;
       blob(img, 0, 0, hx + bd[0] + Math.cos(a) * 17, hy + 24 + bd[1] + Math.sin(a) * 9, 4.4, 4.4, C.stache);
     }
-    blob(img, 0, 0, hx + bd[0], hy + 28 + bd[1], 14, 7, C.stache);
+    if (!p.noBeard) blob(img, 0, 0, hx + bd[0], hy + 28 + bd[1], 14, 7, C.stache);
     // Schnurrbart und Knollennase (die Nase kann verrutschen)
     const nd = p.noseDy ?? 0;
-    for (const s of [-1, 1]) {
+    for (const s of p.noBeard ? [] : [-1, 1]) {
       blob(img, 0, 0, hx + s * 8, hy + 12 + nd * 0.5, 8, 3.2, C.stache);
       blob(img, 0, 0, hx + s * 16, hy + 10 - (mouth === 'grin' ? 3 : 0) + nd * 0.5, 3.4, 2.4, C.stache);
     }
-    blob(img, 0, 0, hx, hy + 6 + nd, 6, 5.4, C.nose);
-    img.set(hx - 2, hy + 3 + nd, white);
-    img.set(hx - 1, hy + 3 + nd, white);
+    if (!p.noNose) {
+      blob(img, 0, 0, hx, hy + 6 + nd, 6, 5.4, C.nose);
+      img.set(hx - 2, hy + 3 + nd, white);
+      img.set(hx - 1, hy + 3 + nd, white);
+    }
     // Südwester (kann abheben)
     const hd = p.hatDy ?? 0;
     const ht = p.hatTilt ?? 0;
+    if (!p.noHat) {
     blob(img, 0, 0, hx + ht, hy - 26 - hd, 34, 6, C.sou);
     blob(img, 0, 0, hx + ht * 0.6 - 1, hy - 34 - hd, 20, 10, C.sou);
     line(img, 0, 0, hx - 32 + ht, hy - 24 - hd + ht * 0.3, hx + 32 + ht, hy - 26 - hd - ht * 0.3, C.sou.shadow);
+    }
     // Angel
     if (p.rod) {
       const [rx, ry, ra, bend] = p.rod;
       for (let i = 0; i < 70; i++) img.set(rx + Math.cos(ra) * i, ry + Math.sin(ra) * i + (i * i * bend) / 400, C.rod);
     }
     // Vordere Tentakel (Arme aus den Ärmeln)
-    for (const tt of p.front ?? []) tentacle(img, tt[0], tt[1] + dy, tt[2], tt[3], 5.2, tt[4], tt[5] ?? 6, tt[6] ?? 0);
+    for (const tt of p.front ?? []) tentacle(img, tt[0], tt[1] + dy, tt[2], tt[3], 7, tt[4], tt[5] ?? 6, tt[6] ?? 0, skin);
     // Schweißtropfen
     if (p.sweat !== undefined) {
       blob(img, 0, 0, hx + 26, hy - 14 + p.sweat, 2.6, 3.6, C.sweat);
@@ -152,8 +163,8 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
   }
 
   /** Arm-Tentakel aus dem linken/rechten Ärmel: [x, y, Winkel, Länge, Krümmung, Welle, Phase]. */
-  const armL = (angle, curl, phase = 0) => [16, 84, angle, 24, curl, 8, phase];
-  const armR = (angle, curl, phase = 0) => [80, 84, angle, 24, curl, 8, phase];
+  const armL = (angle, curl, phase = 0) => [16, 84, angle, 30, curl, 8, phase];
+  const armR = (angle, curl, phase = 0) => [80, 84, angle, 30, curl, 8, phase];
 
   const anims = {
     talk: Array.from({ length: 8 }, (_, f) => ({
@@ -226,6 +237,31 @@ export function makeActing({ Image, hex, mix, rampOf, outlineRegion, white }) {
       };
     }),
   };
+
+  /** Echter Oktopus: acht Arme rundherum, wechselt zur Tarnung die Farbe. */
+  const camo = ['#f2955e', '#e8b35a', '#c98a5a', '#9a7a6a', '#d9605a', '#f2955e', '#e8b35a', '#f2955e'];
+  const allArms = (f) =>
+    Array.from({ length: 8 }, (_, k) => {
+      const a = Math.PI * (-0.12 + (k / 7) * 1.24);
+      return [48 + Math.cos(a) * 14, 58 + Math.sin(a) * 6, a + Math.sin(f * 0.8 + k) * 0.25, 30, (k < 4 ? 1 : -1) * 0.025, 3, f + k, 4.2];
+    });
+  const raw = { noCoat: true, noHat: true, noGlasses: true, noNose: true, noBeard: true, mouth: 'closed' };
+  anims.raw = Array.from({ length: 8 }, (_, f) => ({ ...raw, skin: camo[f], dy: (f % 4 < 2 ? 0 : -2) - 8, eyes: f === 6 ? 'closed' : 'open', look: f < 4 ? -2 : 2, back: allArms(f) }));
+  /** Verkleiden, Teil für Teil: Hut, Brille, Nase, Bart, Mantel. */
+  anims.dressup = Array.from({ length: 12 }, (_, f) => ({
+    noHat: f < 2,
+    hatDy: f === 2 ? 10 : f === 3 ? 3 : 0,
+    noGlasses: f < 4,
+    noNose: f < 6,
+    noBeard: f < 8,
+    noCoat: f < 10,
+    eyes: f === 11 ? 'happy' : 'open',
+    mouth: f >= 10 ? 'smile' : 'closed',
+    brow: f >= 10 ? 3 : 0,
+    look: f % 2 ? 1 : -1,
+    back: f < 10 ? allArms(f) : [],
+    front: f >= 10 ? [armL(-1.0, -0.03, f), armR(-2.0, -0.05, f)] : [],
+  }));
 
   /** Animation als waagerechter Streifen aus 96×96-Bildern. */
   function strip(name) {

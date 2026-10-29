@@ -3,12 +3,13 @@ export interface DialogOption {
   next: string | null;
 }
 
-export type DialogAction = { type: 'startQuest'; quest: string } | { type: 'openShop' };
+/** Was nach dem Text passiert: Brunos Wunschfisch zeigen oder Professorin Qualles Quiz starten. */
+export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' };
 
-/** Weiterleitung abhängig vom Auftragsstand; die erste passende gewinnt. */
+/** Weiterleitung abhängig von gesehenen Story-Momenten; die erste passende gewinnt. */
 export interface DialogRedirect {
-  questDone?: string;
-  questActive?: string;
+  seen?: string;
+  notSeen?: string;
   to: string;
 }
 
@@ -23,48 +24,43 @@ export interface DialogNode {
 
 export type Dialog = Record<string, DialogNode>;
 
+export type NpcPlace = 'pier' | 'stall' | 'water';
+
 export interface NpcDef {
   id: string;
   nameKey: string;
   sprite: string;
   frame: { width: number; height: number };
+  animations: { key: string; row: number; frames: number; fps: number; repeat: number }[];
   placeholderColor: string;
-  /** Leer = von Anfang an da, sonst nach erledigtem Auftrag. */
-  unlock: { questDone?: string };
+  place: NpcPlace;
   dialog: Dialog;
 }
 
-export interface QuestState {
-  active: readonly string[];
-  done: readonly string[];
-}
+const BYE: DialogOption = { textKey: 'npc.bye', next: null };
 
-const BYE: DialogOption = { textKey: 'riff.close', next: null };
-
-function matches(r: DialogRedirect, q: QuestState): boolean {
-  if (r.questDone !== undefined && !q.done.includes(r.questDone)) return false;
-  if (r.questActive !== undefined && !q.active.includes(r.questActive)) return false;
+function matches(r: DialogRedirect, seen: readonly string[]): boolean {
+  if (r.seen !== undefined && !seen.includes(r.seen)) return false;
+  if (r.notSeen !== undefined && seen.includes(r.notSeen)) return false;
   return true;
 }
 
 /**
- * Knoten mit mindestens einer Antwort (sonst „Schließen“), Weiterleitungen nach Auftragsstand aufgelöst.
- * Knoten mit `openShop` brauchen keine Antworten.
+ * Knoten mit mindestens einer Antwort (sonst „Tschüss“), Weiterleitungen aufgelöst.
+ * Knoten mit Aktion brauchen keine Antworten, die Aktion übernimmt.
  */
-export function dialogNode(dialog: Dialog, id: string, quests: QuestState = { active: [], done: [] }): DialogNode & { id: string; options: DialogOption[] } {
+export function dialogNode(dialog: Dialog, id: string, seen: readonly string[] = []): DialogNode & { id: string; options: DialogOption[] } {
   let node = dialog[id];
   for (let hops = 0; node?.redirect && hops < 8; hops++) {
-    const hit = node.redirect.find((r) => matches(r, quests));
+    const hit = node.redirect.find((r) => matches(r, seen));
     if (!hit) break;
     id = hit.to;
     node = dialog[id];
   }
   if (!node) throw new Error(`Dialog-Knoten "${id}" fehlt`);
-  return { ...node, id, options: node.options && node.options.length > 0 ? node.options : [BYE] };
+  const options = node.options && node.options.length > 0 ? node.options : node.action ? [] : [BYE];
+  return { ...node, id, options };
 }
-
-export const npcUnlocked = (npc: NpcDef, quests: QuestState): boolean =>
-  npc.unlock.questDone === undefined || quests.done.includes(npc.unlock.questDone);
 
 /** Prüft, dass alle Verweise im Dialog auf existierende Knoten zeigen. */
 export function validateDialog(dialog: Dialog): string[] {
@@ -75,4 +71,9 @@ export function validateDialog(dialog: Dialog): string[] {
     for (const r of node.redirect ?? []) if (!dialog[r.to]) errors.push(`${id} ⇒ ${r.to}`);
   }
   return errors;
+}
+
+/** Alle Textschlüssel eines Dialogs (für die Datenprüfung). */
+export function dialogTextKeys(dialog: Dialog): string[] {
+  return Object.values(dialog).flatMap((n) => [n.textKey, ...(n.options ?? []).map((o) => o.textKey)]);
 }

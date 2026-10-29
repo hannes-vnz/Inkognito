@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type UpgradeId = 'line' | 'hook' | 'crew';
 
@@ -25,11 +25,25 @@ export interface SaveV3 {
   idleCarry: number;
 }
 
-export type Save = SaveV3;
+/** Brunos Wunschfisch: diese Art bringt beim Landen die Prämie extra. */
+export interface FishRequest {
+  speciesId: string;
+  reward: number;
+}
+
+export interface SaveV4 extends Omit<SaveV3, 'version'> {
+  version: 4;
+  /** Gesehene Story-Momente (ids aus data/story.json). */
+  story: { seen: string[] };
+  request: FishRequest | null;
+  quiz: { nextAtCast: number; correct: number; asked: number };
+}
+
+export type Save = SaveV4;
 
 export function newSave(now: number): Save {
   return {
-    version: 3,
+    version: 4,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -38,6 +52,9 @@ export function newSave(now: number): Save {
     stats: { casts: 0, deepestMeters: 0 },
     lastTick: now,
     idleCarry: 0,
+    story: { seen: [] },
+    request: null,
+    quiz: { nextAtCast: 0, correct: 0, asked: 0 },
   };
 }
 
@@ -56,6 +73,13 @@ const migrations: Record<number, Migration> = {
     createdAt: num(old.createdAt, now),
     updatedAt: num(old.updatedAt, now),
     coins: Math.floor(num(old.shells)),
+  }),
+  // v3 → v4: Hafen-Figuren; Story, Wunschfisch und Quiz starten frisch.
+  3: (old) => ({
+    ...old,
+    story: { seen: [] },
+    request: null,
+    quiz: { nextAtCast: 0, correct: 0, asked: 0 },
   }),
 };
 

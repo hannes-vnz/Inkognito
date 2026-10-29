@@ -14,5 +14,19 @@
     "maxOfflineHours": 8,
     "spriteScale": 3,
     "flightSeconds": 1.4
+  },
+  "harbor": {
+    "quizEveryCasts": 3,
+    "quizMinKnown": 2,
+    "quizReward": {
+      "base": 15,
+      "perValue": 2
+    },
+    "requestReward": {
+      "base": 20,
+      "perValue": 5
+    },
+    "requestRequires": "bruno_intro",
+    "quizRequires": "qualle_intro"
   }
 }

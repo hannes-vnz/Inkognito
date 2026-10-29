@@ -1,0 +1,303 @@
+[
+  {
+    "id": "hilde",
+    "nameKey": "npc.hilde.name",
+    "sprite": "npc_hilde",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#3f6fa8",
+    "place": "pier",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.hilde.intro",
+        "options": [
+          {
+            "textKey": "npc.hilde.intro.opt",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.hilde.intro2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "upgrades": {
+        "textKey": "npc.hilde.upgrades",
+        "options": [
+          {
+            "textKey": "npc.thanks",
+            "next": null
+          }
+        ]
+      },
+      "arms": {
+        "textKey": "npc.hilde.arms",
+        "reaction": {
+          "background": "waves",
+          "mood": "shock"
+        },
+        "options": [
+          {
+            "textKey": "npc.hilde.arms.opt1",
+            "next": "arms2"
+          },
+          {
+            "textKey": "npc.hilde.arms.opt2",
+            "next": "arms2"
+          }
+        ]
+      },
+      "arms2": {
+        "textKey": "npc.hilde.arms2",
+        "options": [
+          {
+            "textKey": "npc.hilde.arms2.opt",
+            "next": null
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.hilde.hub",
+        "options": [
+          {
+            "textKey": "npc.hilde.hub.opt",
+            "next": "tip"
+          },
+          {
+            "textKey": "npc.bye",
+            "next": null
+          }
+        ]
+      },
+      "tip": {
+        "textKey": "npc.hilde.tip",
+        "options": [
+          {
+            "textKey": "npc.thanks",
+            "next": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "bruno",
+    "nameKey": "npc.bruno.name",
+    "sprite": "npc_bruno",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#6f7f8f",
+    "place": "stall",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.bruno.intro",
+        "reaction": {
+          "background": "burst",
+          "mood": "smug"
+        },
+        "options": [
+          {
+            "textKey": "npc.bruno.intro.opt1",
+            "next": "shark"
+          },
+          {
+            "textKey": "npc.bruno.intro.opt2",
+            "next": "intro2"
+          }
+        ]
+      },
+      "shark": {
+        "textKey": "npc.bruno.shark",
+        "options": [
+          {
+            "textKey": "npc.bruno.shark.opt",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.bruno.intro2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.bruno.hub",
+        "options": [
+          {
+            "textKey": "npc.bruno.hub.opt",
+            "next": "request"
+          },
+          {
+            "textKey": "npc.bye",
+            "next": null
+          }
+        ]
+      },
+      "request": {
+        "textKey": "npc.bruno.request",
+        "action": {
+          "type": "showRequest"
+        }
+      },
+      "dumbo": {
+        "textKey": "npc.bruno.dumbo",
+        "reaction": {
+          "background": "burst",
+          "mood": "shock"
+        },
+        "options": [
+          {
+            "textKey": "npc.bruno.dumbo.opt1",
+            "next": "dumbo2"
+          },
+          {
+            "textKey": "npc.bruno.dumbo.opt2",
+            "next": "dumbo2"
+          }
+        ]
+      },
+      "dumbo2": {
+        "textKey": "npc.bruno.dumbo2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "qualle",
+    "nameKey": "npc.qualle.name",
+    "sprite": "npc_qualle",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#c78cff",
+    "place": "water",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.qualle.intro",
+        "reaction": {
+          "background": "sparkle",
+          "mood": "joy"
+        },
+        "options": [
+          {
+            "textKey": "npc.qualle.intro.opt",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.qualle.intro2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "twilight": {
+        "textKey": "npc.qualle.twilight",
+        "options": [
+          {
+            "textKey": "npc.wow",
+            "next": null
+          }
+        ]
+      },
+      "midnight": {
+        "textKey": "npc.qualle.midnight",
+        "options": [
+          {
+            "textKey": "npc.wow",
+            "next": null
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.qualle.hub",
+        "options": [
+          {
+            "textKey": "npc.qualle.hub.opt",
+            "next": "quiz"
+          },
+          {
+            "textKey": "npc.later",
+            "next": null
+          }
+        ]
+      },
+      "quiz": {
+        "textKey": "npc.qualle.quiz",
+        "action": {
+          "type": "startQuiz"
+        }
+      }
+    }
+  }
+]

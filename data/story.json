@@ -1,0 +1,76 @@
+[
+  {
+    "id": "hilde_intro",
+    "npc": "hilde",
+    "node": "intro",
+    "trigger": {
+      "type": "start"
+    }
+  },
+  {
+    "id": "hilde_upgrades",
+    "npc": "hilde",
+    "node": "upgrades",
+    "trigger": {
+      "type": "casts",
+      "value": 1
+    }
+  },
+  {
+    "id": "bruno_intro",
+    "npc": "bruno",
+    "node": "intro",
+    "trigger": {
+      "type": "species",
+      "value": 3
+    }
+  },
+  {
+    "id": "qualle_intro",
+    "npc": "qualle",
+    "node": "intro",
+    "trigger": {
+      "type": "species",
+      "value": 4
+    }
+  },
+  {
+    "id": "qualle_twilight",
+    "npc": "qualle",
+    "node": "twilight",
+    "trigger": {
+      "type": "deepest",
+      "value": 200
+    },
+    "requires": "qualle_intro"
+  },
+  {
+    "id": "hilde_arms",
+    "npc": "hilde",
+    "node": "arms",
+    "trigger": {
+      "type": "casts",
+      "value": 6
+    }
+  },
+  {
+    "id": "qualle_midnight",
+    "npc": "qualle",
+    "node": "midnight",
+    "trigger": {
+      "type": "deepest",
+      "value": 1000
+    },
+    "requires": "qualle_intro"
+  },
+  {
+    "id": "bruno_dumbo",
+    "npc": "bruno",
+    "node": "dumbo",
+    "trigger": {
+      "type": "caught",
+      "value": "dumbo"
+    },
+    "requires": "bruno_intro"
+  }
+]

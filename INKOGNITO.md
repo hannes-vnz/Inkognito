@@ -63,7 +63,7 @@ Die Tiefenangaben der Arten sind ihre echten Lebensbereiche, deshalb tauchen man
 - Erstfang: Fakt-Karte mit Kommentar des Oktopus.
 - **Wissen zahlt sich aus:** Bekannte Arten bringen mehr Münzen.
 - **Sammel-Sets:** zum Beispiel „Leuchtende Tiere“ oder „Zähne!“, geben dauerhafte Boni.
-- **Mini-Quiz an Deck (später):** Gelegentlich fragt eine Figur nach einem Fakt aus dem Fischbuch. Richtige Antwort gibt Extra-Münzen.
+- **Mini-Quiz an Deck:** Gelegentlich fragt eine Figur nach einem Fakt aus dem Fischbuch. Richtige Antwort gibt Extra-Münzen.
 
 ## Figuren im Hafen
 
@@ -117,7 +117,7 @@ Phaser 3, TypeScript, Vite, Supabase. Spiellogik in `src/systems/` ohne Phaser, 
 
 1. ✅ **Prototyp Angel-Runde:** Auswerfen, Abstieg, Aufstieg, Finale, drei Upgrades, Offline-Einnahmen, Fakt-Karte beim Erstfang, Fischbuch-Liste. Fertig, wenn eine Runde am Handy Spaß macht und die ersten 10 Minuten ein Upgrade nach dem anderen ermöglichen.
 2. ✅ **Inhalt Startmeer:** 15–20 echte Arten mit geprüften Fakten, Sammel-Sets, Wissens-Bonus. (21 Arten, 5 Sets, Fakten am 29.10.2026 geprüft, Quelle je Art in data/fish.json)
-3. **Hafen & Figuren:** Hilde, Bruno, Professorin Qualle mit Dialogen, Reaktions-Szenen, Mini-Quiz.
+3. ✅ **Hafen & Figuren:** Hilde, Bruno, Professorin Qualle mit Dialogen, Reaktions-Szenen, Mini-Quiz. (8 Story-Momente, Brunos Wunschfisch, 21 Quizfragen; Inhalte in data/npcs.json, story.json, quiz.json)
 4. **Grafik & Juice:** Stil nach ARTSTIL.md, echte Sprites, Animationen.
 5. **Online:** Login und Cloud-Spielstand (vorhanden), Freunde und Bestenlisten.
 6. **Prestige:** weitere Meere.

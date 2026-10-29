@@ -201,6 +201,106 @@ function drawBert() {
 console.log('Figuren:');
 save(spritesDir, 'player_octopus.png', drawBert());
 
+// ---------------------------------------------------------------- Hafen-Figuren (32×32)
+
+/** Reihen: idle (4), talk (4). Frame 0 dient als Porträt im Dialog. */
+function drawNpc(def) {
+  const F = 32;
+  const img = new Image(F * 4, F * 2);
+  for (let row = 0; row < 2; row++)
+    for (let f = 0; f < 4; f++) {
+      const ox = f * F;
+      const oy = row * F;
+      const b = f === 1 || f === 2 ? 1 : 0;
+      const talk = row === 1 && f % 2 === 1;
+      ({ hilde: drawHilde, bruno: drawBruno, qualle: drawQualle })[def.id](img, ox, oy, b, talk, f);
+    }
+  return img;
+}
+
+function mouth(img, x, y, w, open) {
+  for (let i = 0; i < w; i++) img.set(x + i, y, ink);
+  if (open) for (let i = 1; i < w - 1; i++) img.set(x + i, y + 1, hex('#8a2030'));
+}
+
+/** Hafenmeisterin: blaue Jacke, Kapitänsmütze, zusammengekniffene Augen (misstrauisch). */
+function drawHilde(img, ox, oy, b, talk, f) {
+  const skin = rampOf(hex('#f2c09a'));
+  const coat = rampOf(hex('#3f6fa8'));
+  const cap = rampOf(hex('#f4f1e8'));
+  const hair = rampOf(hex('#b8b8c8'));
+  ellipse(img, ox, oy, 16, 27, 10, 6, coat);
+  for (let y = 23; y < 32; y++) img.set(ox + 16, oy + y, coat.shadow);
+  for (const bx of [14, 18]) img.set(ox + bx, oy + 26, hex('#ffd23f'));
+  ellipse(img, ox, oy, 9, 14 + b, 3, 5, hair);
+  ellipse(img, ox, oy, 23, 14 + b, 3, 5, hair);
+  ellipse(img, ox, oy, 16, 14 + b, 7.5, 7.5, skin);
+  ellipse(img, ox, oy, 16, 6 + b, 8, 3.2, cap);
+  for (let x = 8; x < 25; x++) img.set(ox + x, oy + 8 + b, hex('#1b2a4a'));
+  img.set(ox + 16, oy + 5 + b, hex('#ffd23f'));
+  outlineRegion(img, ox, oy, 32, 32, coat.outline);
+  // Misstrauischer Blick: schmale Augen, eine Braue hoch
+  const look = f === 3 ? -1 : 1;
+  for (const ex of [12, 19]) for (let x = 0; x < 3; x++) img.set(ox + ex + x, oy + 13 + b, ink);
+  img.set(ox + (look > 0 ? 14 : 12), oy + 13 + b, white);
+  img.set(ox + (look > 0 ? 21 : 19), oy + 13 + b, white);
+  for (let x = 11; x < 15; x++) img.set(ox + x, oy + 11 + b, hair.outline);
+  for (let x = 18; x < 22; x++) img.set(ox + x, oy + 10 + b - (x > 19 ? 1 : 0), hair.outline);
+  mouth(img, ox + 14, oy + 18 + b, 4, talk);
+}
+
+/** Bruno: grauer Hai im beigen Trenchcoat mit Hut, Rückenflosse schaut hinten heraus. */
+function drawBruno(img, ox, oy, b, talk) {
+  const shark = rampOf(hex('#7f93a6'));
+  const coat = rampOf(hex('#b8925a'));
+  const hat = rampOf(hex('#4a3a30'));
+  // Rückenflosse durch den Mantel
+  for (let y = 0; y < 7; y++) for (let x = 0; x <= 6 - y; x++) img.set(ox + 25 + x, oy + 15 + y + b, shark.base);
+  ellipse(img, ox, oy, 16, 27, 11, 6, coat);
+  for (let y = 22; y < 32; y++) img.set(ox + 15 + (y % 3 === 0 ? 1 : 0), oy + y, coat.shadow);
+  for (let x = 11; x < 21; x++) img.set(ox + x, oy + 24, coat.light);
+  ellipse(img, ox, oy, 16, 15 + b, 10, 7, shark);
+  ellipse(img, ox, oy, 16, 18 + b, 7, 3, rampOf(hex('#e8edf2')));
+  ellipse(img, ox, oy, 16, 7 + b, 6.5, 3, hat);
+  for (let x = 6; x < 27; x++) img.set(ox + x, oy + 9 + b, hat.shadow);
+  for (let x = 10; x < 23; x++) img.set(ox + x, oy + 8 + b, hex('#c23b3b'));
+  outlineRegion(img, ox, oy, 32, 32, shark.outline);
+  eye(img, ox + 11, oy + 13 + b, 1.5, -1);
+  eye(img, ox + 21, oy + 13 + b, 1.5, 1);
+  // Zahnreihe, offen beim Reden
+  for (let x = 11; x < 22; x++) img.set(ox + x, oy + 18 + b, ink);
+  for (let x = 11; x < 22; x += 2) img.set(ox + x, oy + 19 + b, white);
+  if (talk) for (let x = 12; x < 21; x++) img.set(ox + x, oy + 20 + b, hex('#8a2030'));
+}
+
+/** Professorin Qualle: lila Glocke mit runder Brille und Tentakeln, schwebt. */
+function drawQualle(img, ox, oy, b, talk, f) {
+  const bell = rampOf(hex('#c78cff'));
+  const bb = f % 2 ? 1 : 0;
+  for (let k = 0; k < 5; k++) {
+    const tx = 9 + k * 3.5;
+    for (let y = 18; y < 31; y++) img.set(ox + Math.round(tx + Math.sin(y * 0.6 + f + k) * 1.2), oy + y + bb, y % 4 === 0 ? bell.light : bell.base);
+  }
+  ellipse(img, ox, oy, 16, 12 + bb, 11, 9, bell);
+  for (let x = 6; x < 27; x++) img.set(ox + x, oy + 18 + bb, bell.shadow);
+  outlineRegion(img, ox, oy, 32, 32, bell.outline);
+  // Brille
+  const glass = hex('#1b1030');
+  for (const cx of [12, 20]) {
+    for (let a = 0; a < 16; a++) img.set(ox + Math.round(cx + Math.cos((a / 16) * Math.PI * 2) * 3), oy + Math.round(12 + bb + Math.sin((a / 16) * Math.PI * 2) * 3), glass);
+    eye(img, ox + cx + 1, oy + 12 + bb, 1.5, 1);
+  }
+  img.set(ox + 16, oy + 11 + bb, glass);
+  img.set(ox + 15, oy + 11 + bb, glass);
+  mouth(img, ox + 14, oy + 16 + bb, 4, talk);
+  // Glitzer (Biolumineszenz)
+  img.set(ox + 9, oy + 7 + bb, white);
+  if (f === 2) img.set(ox + 23, oy + 6 + bb, hex('#9ff0ff'));
+}
+
+const npcDefs = JSON.parse(readFileSync(join(root, 'data', 'npcs.json'), 'utf8'));
+for (const def of npcDefs) save(spritesDir, `${def.sprite}.png`, drawNpc(def));
+
 // ---------------------------------------------------------------- Arten aus data/fish.json
 
 /**

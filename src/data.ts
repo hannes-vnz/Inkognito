@@ -3,6 +3,9 @@ import fishJson from '../data/fish.json';
 import zonesJson from '../data/zones.json';
 import upgradesJson from '../data/upgrades.json';
 import setsJson from '../data/sets.json';
+import npcsJson from '../data/npcs.json';
+import storyJson from '../data/story.json';
+import quizJson from '../data/quiz.json';
 import gameJson from '../data/game.json';
 import textsJson from '../data/texts.de.json';
 import type { TextTable } from './systems/texts';
@@ -10,6 +13,10 @@ import type { FishingParams, SpeciesDef } from './systems/fishing';
 import type { EconomyParams, UpgradeDef } from './systems/economy';
 import type { DepthMap } from './systems/depthMap';
 import type { SetDef } from './systems/sets';
+import type { NpcDef } from './systems/dialog';
+import type { StoryBeat } from './systems/story';
+import type { QuizParams, QuizQuestion } from './systems/quiz';
+import type { RewardParams } from './systems/requests';
 
 export interface AnimationDef {
   key: string;
@@ -53,6 +60,11 @@ export const upgrades = upgradesJson as UpgradeDef[];
 export const sets = setsJson as SetDef[];
 export const params = gameJson.fishing as GameParams;
 export const fixedStepHz = gameJson.fixedStepHz;
+export const npcs = npcsJson as unknown as NpcDef[];
+export const npcById = new Map(npcs.map((n) => [n.id, n]));
+export const story = storyJson as unknown as StoryBeat[];
+export const quiz = quizJson as QuizQuestion[];
+export const harbor = gameJson.harbor as QuizParams & { requestReward: RewardParams; requestRequires: string };
 export const texts = textsJson as TextTable;
 
 export const depthMap: DepthMap = { zones, unitsPerZone: params.unitsPerZone, surfaceY: params.surfaceY };

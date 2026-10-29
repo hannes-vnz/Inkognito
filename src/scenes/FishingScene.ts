@@ -20,6 +20,7 @@ import { showFactCard } from '../ui/FactCard';
 import { showFishbook } from '../ui/Fishbook';
 import { syncNow, type SyncResult } from '../online/sync';
 import { onAuthChange } from '../online/cloud';
+import { Harbor } from './Harbor';
 
 type Mode = 'deck' | 'round' | 'finale';
 
@@ -54,6 +55,7 @@ export class FishingScene extends Phaser.Scene {
   private zoneShown = -1;
   private idleTimer = 0;
   private uiRoot!: HTMLElement;
+  private harbor!: Harbor;
 
   constructor() {
     super('Fishing');
@@ -79,6 +81,19 @@ export class FishingScene extends Phaser.Scene {
     this.account = new AccountMenu(this.uiRoot, this.sheet, (r) => this.applySync(r), (text) => this.ui.say(text, 3));
 
     this.stepper = new FixedStepper(fixedStepHz);
+    const self = this;
+    this.harbor = new Harbor(this, this.uiRoot, this.sheet, {
+      get save() {
+        return self.save;
+      },
+      setSave: (s) => {
+        this.save = s;
+        writeSave(s);
+        this.refresh(true);
+      },
+      canTalk: () => this.mode === 'deck' && !this.overlayOpen(),
+      say: (text) => this.ui.say(text, 3.5),
+    });
     this.buildWorld();
     this.setupInput();
     this.refresh();
@@ -87,9 +102,9 @@ export class FishingScene extends Phaser.Scene {
     const idle = collectIdle(this.save, now, upgradeById('crew'), params, setBonus(this.save, sets, 'crew'));
     this.save = idle.save;
     writeSave(this.save);
-    if (idle.coins >= 1) this.time.delayedCall(400, () => this.showOffline(idle.coins));
-    else if (this.save.stats.casts === 0) this.ui.showHint(t('ui.hint.cast'));
     this.refresh();
+    const story = () => this.harbor.playNext(() => this.save.stats.casts === 0 && this.ui.showHint(t('ui.hint.cast')));
+    this.time.delayedCall(400, () => (idle.coins >= 1 ? this.showOffline(idle.coins, story) : story()));
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -168,6 +183,7 @@ export class FishingScene extends Phaser.Scene {
     this.boat = this.add.image(width / 2, surface + 18, 'boat_1').setOrigin(0.5, 1).setScale(3).setDepth(4);
     this.bert = this.add.sprite(width / 2 - 54, surface - 36, player.sprite, 0).setOrigin(0.5, 1).setScale(2).setDepth(3);
     this.bert.play(animKey(player.id, 'idle'));
+    this.harbor.build(width, this.scale.height, surface);
     this.tweens.add({ targets: [this.boat, this.bert], y: '-=4', duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
     this.glow = this.add.graphics().setDepth(6).setBlendMode(Phaser.BlendModes.ADD);
@@ -355,6 +371,7 @@ export class FishingScene extends Phaser.Scene {
       const completed = newlyCompleted(this.save, landed.save, sets);
       this.save = landed.save;
       writeSave(this.save);
+      this.harbor.landed(caught);
       if (landed.coins > 0) this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, depthMap.surfaceY - this.cameras.main.scrollY - 90, '#ffd23f');
       this.refresh(true);
       this.endRound(landed.firstCatches, completed);
@@ -376,6 +393,7 @@ export class FishingScene extends Phaser.Scene {
         this.ui.setMode('deck');
         this.bert.play(animKey(player.id, 'idle'));
         this.refresh();
+        this.harbor.playNext(() => undefined);
         return;
       }
       this.showFact(speciesById.get(id)!, true, next);
@@ -438,7 +456,7 @@ export class FishingScene extends Phaser.Scene {
     this.refresh(true);
   }
 
-  private showOffline(coins: number): void {
+  private showOffline(coins: number, done: () => void): void {
     let portrait: string | undefined;
     try {
       portrait = this.textures.getBase64(player.sprite, 0);
@@ -448,7 +466,15 @@ export class FishingScene extends Phaser.Scene {
     this.sheet.show(
       t('offline.title'),
       `${t('offline.text', { coins })} ${t('offline.comment')}`,
-      [{ label: t('offline.ok'), onSelect: () => this.sheet.close() }],
+      [
+        {
+          label: t('offline.ok'),
+          onSelect: () => {
+            this.sheet.close();
+            done();
+          },
+        },
+      ],
       undefined,
       portrait,
     );
@@ -457,6 +483,7 @@ export class FishingScene extends Phaser.Scene {
   private refresh(bump = false): void {
     const known = species.filter((s) => this.save.fishbook[s.id]).length;
     this.ui.update(this.save, known, species.length, bump);
+    this.harbor.refresh();
   }
 
   private applySync(r: SyncResult): void {

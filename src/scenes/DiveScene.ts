@@ -51,7 +51,7 @@ export class DiveScene extends Phaser.Scene {
   create(data: DiveData): void {
     this.zone = zoneById(data.zoneId);
     const { world, spawn } = this.zone;
-    const debug = new URLSearchParams(window.location.search).has('debug');
+    const debug = new URLSearchParams(window.location.search).has('debug') || window.location.hash === '#debug';
     const fxRng = createRng(`${this.zone.seed}-fx`);
 
     this.parallax = new Parallax(this, this.zone.background);

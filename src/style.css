@@ -1466,3 +1466,47 @@ body {
   pointer-events: none;
   z-index: 30;
 }
+
+.confetti {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border: 2px solid var(--ink);
+  pointer-events: none;
+  z-index: 30;
+}
+
+.shout {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(24px, 7.5vw, 56px);
+  white-space: nowrap;
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  pointer-events: none;
+  z-index: 25;
+  animation: shout 1.6s cubic-bezier(0.34, 1.8, 0.64, 1) forwards;
+}
+
+@keyframes shout {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2) rotate(-10deg);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, -50%) scale(1.1) rotate(-3deg);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(-50%, -50%) scale(1) rotate(-3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -80%) scale(0.9) rotate(-3deg);
+    opacity: 0;
+  }
+}

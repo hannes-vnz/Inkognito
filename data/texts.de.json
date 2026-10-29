@@ -347,5 +347,7 @@
   "npc.hilde.map.opt": "Ein Motor! Wie … menschlich.",
   "map.engine.next": "Nächster Platz: {name}",
   "hud.soundOn": "Ton an",
-  "hud.soundOff": "Ton aus"
+  "hud.soundOff": "Ton aus",
+  "round.rare": "SELTEN!",
+  "round.record": "NEUER REKORD! {depth} m"
 }

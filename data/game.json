@@ -14,7 +14,8 @@
     "comboMultiplier": 2,
     "maxOfflineHours": 8,
     "spriteScale": 3,
-    "flightSeconds": 1.4
+    "flightSeconds": 1.4,
+    "rareWeight": 2
   },
   "harbor": {
     "quizEveryCasts": 3,

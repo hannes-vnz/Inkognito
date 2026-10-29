@@ -305,6 +305,7 @@ export class FishingScene extends Phaser.Scene {
         case 'bite':
           this.cameras.main.shake(120, 0.006);
           play('bite');
+          this.celebrateRare(e.uid);
           this.ui.floater(t('round.bite'), r.hookX, screen(r.hookY) - 30, '#ffd23f');
           navigator.vibrate?.(25);
           this.ui.hideHint();
@@ -315,6 +316,7 @@ export class FishingScene extends Phaser.Scene {
         case 'catch': {
           const s = this.fishSprites.get(e.uid);
           if (s) this.tweens.add({ targets: s, scale: params.spriteScale * 1.4, duration: 90, yoyo: true });
+          this.celebrateRare(e.uid);
           play('catch', 1 + r.caught.length * 0.08);
           this.ui.floater(`${r.caught.length}`, r.hookX + 26, screen(r.hookY) - 10, '#ffffff');
           this.bubbles.burst(r.hookX, r.hookY, 5);
@@ -394,6 +396,7 @@ export class FishingScene extends Phaser.Scene {
         setBonus(this.save, sets, 'coins'),
       );
       const completed = newlyCompleted(this.save, landed.save, sets);
+      const record = landed.save.stats.deepestMeters > this.save.stats.deepestMeters && this.save.stats.casts > 0;
       this.save = landed.save;
       writeSave(this.save);
       this.harbor.landed(caught);
@@ -401,6 +404,11 @@ export class FishingScene extends Phaser.Scene {
       if (landed.coins > 0) {
         this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, boatScreenY - 90, '#ffd23f');
         this.ui.coinBurst(this.boat.x, boatScreenY - 40, Math.ceil(landed.coins / 10));
+      }
+      if (record) {
+        this.ui.shout(t('round.record', { depth: Math.round(landed.save.stats.deepestMeters).toLocaleString('de-DE') }));
+        this.ui.confetti(this.boat.x, boatScreenY - 60, 28);
+        play('fanfare');
       }
       this.refresh(true);
       this.endRound(landed.firstCatches, completed);
@@ -471,6 +479,17 @@ export class FishingScene extends Phaser.Scene {
     return t(zones[zoneIndexAt(def.depthMeters[0], depthMap)]!.nameKey);
   }
 
+  /** Seltene Art am Haken: Blitz, Schriftzug, heller Ton. */
+  private celebrateRare(uid: number): void {
+    const f = this.round?.fish.find((x) => x.uid === uid);
+    const def = f && speciesById.get(f.speciesId);
+    if (!def || def.weight > params.rareWeight) return;
+    this.cameras.main.flash(180, 255, 240, 180);
+    this.ui.shout(t('round.rare'), '#c78cff');
+    play('newSpecies', 1.2);
+    navigator.vibrate?.([20, 40, 20]);
+  }
+
   private openMap(): void {
     if (this.mode !== 'deck' || this.overlayOpen()) return;
     play('tap');
@@ -490,6 +509,7 @@ export class FishingScene extends Phaser.Scene {
     writeSave(this.save);
     this.bert.play(animKey(player.id, 'cheer'));
     play('upgrade');
+    this.ui.confetti(this.boat.x, depthMap.surfaceY - this.cameras.main.scrollY - 40);
     this.time.delayedCall(700, () => this.mode === 'deck' && this.bert.play(animKey(player.id, 'idle')));
     this.bubbles.burst(this.boat.x, depthMap.surfaceY, 10);
     this.refresh(true);

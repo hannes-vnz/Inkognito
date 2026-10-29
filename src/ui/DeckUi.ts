@@ -201,6 +201,38 @@ export class DeckUi {
     }
   }
 
+  /** Konfetti-Regen von einem Bildschirmpunkt aus. */
+  confetti(x: number, y: number, count = 18): void {
+    const colors = ['#ffd23f', '#ff6b6b', '#5ce1e6', '#7bd88f', '#c78cff'];
+    for (let i = 0; i < count; i++) {
+      const c = el('div', 'confetti');
+      c.style.left = `${x}px`;
+      c.style.top = `${y}px`;
+      c.style.background = colors[i % colors.length]!;
+      this.root.append(c);
+      const a = (i / count) * Math.PI * 2;
+      const dist = 60 + (i % 4) * 25;
+      const anim = c.animate(
+        [
+          { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist - 40}px)) rotate(${i * 47}deg)`, opacity: 1, offset: 0.4 },
+          { transform: `translate(calc(-50% + ${Math.cos(a) * dist * 1.2}px), calc(-50% + ${Math.sin(a) * dist + 80}px)) rotate(${i * 90}deg)`, opacity: 0 },
+        ],
+        { duration: 900 + (i % 5) * 80, easing: 'cubic-bezier(0.2, 0.8, 0.4, 1)' },
+      );
+      anim.onfinish = () => c.remove();
+    }
+  }
+
+  /** Großer Schriftzug mitten im Bild (Rekord, Seltenheit). */
+  shout(text: string, color = '#ffd23f'): void {
+    const s = el('div', 'shout');
+    s.textContent = text;
+    s.style.color = color;
+    this.root.append(s);
+    window.setTimeout(() => s.remove(), 1600);
+  }
+
   floater(text: string, x: number, y: number, color?: string): void {
     const f = el('div', 'floater');
     f.textContent = text;

@@ -52,6 +52,8 @@ export type GameParams = FishingParams &
     unitsPerZone: number;
     surfaceY: number;
     flightSeconds: number;
+    /** Arten mit Häufigkeit bis hier gelten als selten (Extra-Jubel beim Fang). */
+    rareWeight: number;
   };
 
 export const player = playerJson as PlayerDef;

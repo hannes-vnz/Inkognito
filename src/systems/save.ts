@@ -1,65 +1,110 @@
 /**
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
- * damit alte Stände (lokal oder später aus Supabase) weiter laden.
+ * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
-export interface Resident {
+export type StatName = 'strength' | 'speed' | 'diligence';
+export type Stats = Record<StatName, number>;
+export type Variant = 'normal' | 'zombie' | 'giant';
+
+export interface OwnedFish {
   uid: number;
   fishId: string;
-  buildingId: string;
-  /** Bis zu diesem Zeitpunkt (ms) wurden Muscheln schon ausgezahlt. */
-  producedUntil: number;
+  stats: Stats;
+  variant: Variant;
+  /** Job-ID aus data/jobs.json oder null. */
+  job: string | null;
 }
 
-export interface HeldFish {
-  uid: number;
-  fishId: string;
-}
-
-export interface SaveV1 {
-  version: 1;
+export interface SaveV2 {
+  version: 2;
   createdAt: number;
   updatedAt: number;
+  /** Kann Nachkommastellen haben (laufende Produktion), angezeigt wird abgerundet. */
   shells: number;
+  food: number;
   diveCount: number;
   nextUid: number;
-  /** Gefangene Fische, die noch keine Wohnung haben. */
-  holding: HeldFish[];
-  residents: Resident[];
+  /** Fische im alten Haus. */
+  fish: OwnedFish[];
+  /** Fische vor der Tür, wenn das Haus voll ist. */
+  waiting: OwnedFish[];
+  /** Ausbaustufe je Gebäude (1 = Start). */
+  buildings: Record<string, number>;
   quests: { active: string[]; done: string[] };
+  counters: { sold: number };
+  /** Bis hierhin (ms) wurde die Produktion schon verrechnet. */
+  lastTick: number;
 }
 
-export type Save = SaveV1;
+export type Save = SaveV2;
 
-export function newSave(now: number): Save {
+export function newSave(now: number, startFood = 10): Save {
   return {
-    version: 1,
+    version: 2,
     createdAt: now,
     updatedAt: now,
     shells: 0,
+    food: startFood,
     diveCount: 0,
     nextUid: 1,
-    holding: [],
-    residents: [],
+    fish: [],
+    waiting: [],
+    buildings: { house: 1, seaweed_farm: 1, shell_bed: 1 },
     quests: { active: [], done: [] },
+    counters: { sold: 0 },
+    lastTick: now,
   };
 }
 
 type Migration = (old: Record<string, unknown>, now: number) => Record<string, unknown>;
 
-/**
- * Migrationen von Version n auf n+1. Version 0 ist der unversionierte Prototyp-Stand
- * (nur `shells` und eine Fischliste), damit der Mechanismus von Anfang an getestet ist.
- */
+const DEFAULT_STATS: Stats = { strength: 2, speed: 2, diligence: 2 };
+/** Hauskapazität auf Stufe 1, für die Migration von v1 (dort gab es kein Haus). */
+const V1_HOUSE_CAPACITY = 4;
+
 const migrations: Record<number, Migration> = {
+  // v0: unversionierter Prototyp-Stand (nur Muscheln und eine Fischliste)
   0: (old, now) => {
     const fish = Array.isArray(old.fish) ? old.fish.filter((f): f is string => typeof f === 'string') : [];
     return {
-      ...newSave(now),
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
       shells: typeof old.shells === 'number' ? old.shells : 0,
-      holding: fish.map((fishId, i) => ({ uid: i + 1, fishId })),
+      diveCount: 0,
       nextUid: fish.length + 1,
+      holding: fish.map((fishId, i) => ({ uid: i + 1, fishId })),
+      residents: [],
+      quests: { active: [], done: [] },
+    };
+  },
+  // v1 → v2: Wohnhöhlen und Wartebecken werden zum alten Haus mit Werten und Jobs.
+  1: (old, now) => {
+    type V1Fish = { uid: number; fishId: string };
+    const residents = (Array.isArray(old.residents) ? old.residents : []) as V1Fish[];
+    const holding = (Array.isArray(old.holding) ? old.holding : []) as V1Fish[];
+    const all = [...residents, ...holding].map((f) => ({
+      uid: f.uid,
+      fishId: f.fishId,
+      stats: { ...DEFAULT_STATS },
+      variant: 'normal' as Variant,
+      job: null,
+    }));
+    const quests = (old.quests ?? { active: [], done: [] }) as { active: string[]; done: string[] };
+    // Der alte Auftrag „Erster Mieter“ heißt jetzt first_fish.
+    const rename = (ids: string[]) => ids.map((id) => (id === 'move_in_1' ? 'first_fish' : id));
+    return {
+      ...newSave(now),
+      createdAt: typeof old.createdAt === 'number' ? old.createdAt : now,
+      updatedAt: typeof old.updatedAt === 'number' ? old.updatedAt : now,
+      shells: typeof old.shells === 'number' ? old.shells : 0,
+      diveCount: typeof old.diveCount === 'number' ? old.diveCount : 0,
+      nextUid: typeof old.nextUid === 'number' ? old.nextUid : all.length + 1,
+      fish: all.slice(0, V1_HOUSE_CAPACITY),
+      waiting: all.slice(V1_HOUSE_CAPACITY),
+      quests: { active: rename(quests.active ?? []), done: rename(quests.done ?? []) },
     };
   },
 };

@@ -1,41 +1,86 @@
 [
   {
-    "id": "cave_algae",
-    "nameKey": "building.cave_algae.name",
-    "type": "cave",
-    "provides": "algae_nest",
-    "capacity": 3,
-    "sprite": "building_cave_algae",
-    "position": {
-      "x": 700,
-      "y": 1180
+    "id": "house",
+    "nameKey": "building.house.name",
+    "sprite": "building_house",
+    "frame": {
+      "width": 96,
+      "height": 80
     },
-    "placeholderColor": "#c84a4a"
+    "position": {
+      "x": 1200,
+      "y": 1430
+    },
+    "interactOffsetY": -140,
+    "levels": [
+      {
+        "capacity": 4
+      },
+      {
+        "capacity": 8,
+        "cost": 60
+      },
+      {
+        "capacity": 14,
+        "cost": 180
+      },
+      {
+        "capacity": 20,
+        "cost": 400
+      }
+    ],
+    "placeholderColor": "#9b7bb0"
   },
   {
-    "id": "cave_kelp",
-    "nameKey": "building.cave_kelp.name",
-    "type": "cave",
-    "provides": "kelp",
-    "capacity": 3,
-    "sprite": "building_cave_kelp",
-    "position": {
-      "x": 1300,
-      "y": 1180
+    "id": "seaweed_farm",
+    "nameKey": "building.seaweed_farm.name",
+    "sprite": "building_seaweed_farm",
+    "frame": {
+      "width": 64,
+      "height": 32
     },
+    "position": {
+      "x": 560,
+      "y": 1430
+    },
+    "interactOffsetY": -70,
+    "levels": [
+      {
+        "slots": 2
+      },
+      {
+        "slots": 4,
+        "cost": 50
+      },
+      {
+        "slots": 6,
+        "cost": 150
+      }
+    ],
     "placeholderColor": "#3f9a55"
   },
   {
-    "id": "cave_sand",
-    "nameKey": "building.cave_sand.name",
-    "type": "cave",
-    "provides": "sand",
-    "capacity": 3,
-    "sprite": "building_cave_sand",
-    "position": {
-      "x": 1900,
-      "y": 1180
+    "id": "shell_bed",
+    "nameKey": "building.shell_bed.name",
+    "sprite": "building_shell_bed",
+    "frame": {
+      "width": 48,
+      "height": 24
     },
+    "position": {
+      "x": 1840,
+      "y": 1430
+    },
+    "interactOffsetY": -60,
+    "levels": [
+      {
+        "slots": 2
+      },
+      {
+        "slots": 4,
+        "cost": 80
+      }
+    ],
     "placeholderColor": "#e2cf8f"
   }
 ]

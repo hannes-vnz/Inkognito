@@ -366,9 +366,8 @@ body {
 .sheet-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: calc(50vh - 24px);
-  max-height: calc(60vh);
+  gap: 14px;
+  max-height: 62vh;
   padding: 18px;
   overflow-y: auto;
   background: rgba(8, 36, 56, 0.86);
@@ -510,4 +509,24 @@ body {
   margin-right: 6px;
   border-radius: 50%;
   background: #7dffb0;
+}
+
+.hud-depth .sub-label.warn {
+  color: #ffb35c;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sheet-portrait {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 12px;
+  background: rgba(143, 243, 255, 0.12);
+  border: 1px solid rgba(228, 253, 255, 0.2);
 }

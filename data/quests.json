@@ -1,15 +1,57 @@
 [
   {
-    "id": "move_in_1",
-    "nameKey": "quest.move_in_1.name",
-    "giver": "hermit_broker",
+    "id": "first_fish",
+    "nameKey": "quest.first_fish.name",
+    "giver": "kalle",
     "goal": {
-      "type": "residentsAtLeast",
+      "type": "fishAtLeast",
       "count": 1
     },
     "reward": {
-      "shells": 20
+      "shells": 10,
+      "food": 10
     },
-    "doneTextKey": "quest.move_in_1.done"
+    "doneTextKey": "quest.first_fish.done"
+  },
+  {
+    "id": "first_job",
+    "nameKey": "quest.first_job.name",
+    "giver": "gisela",
+    "goal": {
+      "type": "jobAssigned",
+      "job": "seaweed_farm",
+      "count": 1
+    },
+    "reward": {
+      "food": 20
+    },
+    "doneTextKey": "quest.first_job.done"
+  },
+  {
+    "id": "first_sale",
+    "nameKey": "quest.first_sale.name",
+    "giver": "bruno",
+    "goal": {
+      "type": "sold",
+      "count": 1
+    },
+    "reward": {
+      "shells": 15
+    },
+    "doneTextKey": "quest.first_sale.done"
+  },
+  {
+    "id": "house_2",
+    "nameKey": "quest.house_2.name",
+    "giver": "kalle",
+    "goal": {
+      "type": "buildingLevel",
+      "building": "house",
+      "level": 2
+    },
+    "reward": {
+      "shells": 30
+    },
+    "doneTextKey": "quest.house_2.done"
   }
 ]

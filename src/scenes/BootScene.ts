@@ -22,6 +22,7 @@ export class BootScene extends Phaser.Scene {
       this.load.image(layer.key, `backgrounds/${layer.key}.png`);
     }
     for (const b of buildings) this.load.image(b.sprite, `sprites/${b.sprite}.png`);
+    this.load.image(reef.podestSprite, `sprites/${reef.podestSprite}.png`);
     for (const n of npcs) this.load.spritesheet(n.sprite, `sprites/${n.sprite}.png`, { frameWidth: n.frame.width, frameHeight: n.frame.height });
   }
 

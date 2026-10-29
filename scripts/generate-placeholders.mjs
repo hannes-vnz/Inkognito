@@ -514,51 +514,73 @@ for (const size of [192, 512]) {
 
 // ---------------------------------------------------------------- Riff: Höhlen, Makler, Hintergründe
 
-/** Höhle 64×48, Anker unten mittig: Felsbogen mit dunklem Eingang und Deko in der Farbe der Höhle. */
-function drawCave(def) {
-  const W2 = 64;
-  const H2 = 48;
-  const img = new Image(W2, H2);
-  const rock = hex('#7a6a8c');
-  const rockLight = hex('#a493b8');
-  const rockDark = hex('#4e4260');
-  const deco = hex(def.placeholderColor);
-  for (let y = 0; y < H2; y++)
-    for (let x = 0; x < W2; x++) {
-      const nx = (x + 0.5 - 32) / 31;
-      const ny = (y + 0.5 - 48) / 46;
-      if (nx * nx + ny * ny > 1) continue;
-      const hx = (x + 0.5 - 32) / 14;
-      const hy = (y + 0.5 - 48) / 26;
-      if (hx * hx + hy * hy <= 1) {
-        img.set(x, y, hex('#1b1030'), 1);
-        continue;
-      }
-      const shade = nx * -0.5 - ny * 0.6;
-      img.set(x, y, shade > 0.55 ? rockLight : shade < 0.25 ? rockDark : rock);
-    }
-  // Outline
-  const solid = (x, y) => img.alphaAt(x, y) > 0;
-  const outline = [];
-  for (let y = 0; y < H2; y++)
-    for (let x = 0; x < W2; x++)
-      if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) outline.push([x, y]);
-  for (const [x, y] of outline) img.set(x, y, hex('#2e2440'));
-  // Deko: Algenbüschel, Kelpstängel oder Sandhügel
-  if (def.provides === 'algae_nest') {
-    for (const bx of [8, 14, 50, 56]) for (let i = 0; i < 9; i++) img.set(bx + Math.round(Math.sin(i * 0.9)), 46 - i, deco);
-  } else if (def.provides === 'kelp') {
-    for (const bx of [6, 58]) for (let i = 0; i < 26; i++) { img.set(bx + Math.round(Math.sin(i * 0.4) * 1.5), 47 - i, deco); if (i % 6 === 3) img.set(bx + 2, 47 - i, deco); }
-  } else {
-    for (let x = 4; x < 60; x++) { const h = Math.round(3 + Math.sin(x * 0.3) * 1.5); for (let y = 47 - h; y < 48; y++) img.set(x, y, deco); }
-  }
+/** Umriss in Farbe um alle deckenden Pixel eines Bereichs. */
+function outlineRegion(img, x0, y0, w, h, color) {
+  const solid = (x, y) => x >= x0 && y >= y0 && x < x0 + w && y < y0 + h && img.alphaAt(x, y) > 0;
+  const pts = [];
+  for (let y = y0; y < y0 + h; y++)
+    for (let x = x0; x < x0 + w; x++)
+      if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) pts.push([x, y]);
+  for (const [x, y] of pts) img.set(x, y, color);
+}
+
+/** Altes Haus 96×80, Anker unten mittig: versunkene Villa mit Spitzdach, Fenstern und Tür. */
+function drawHouse() {
+  const img = new Image(96, 80);
+  const wall = hex('#8a7a9e'), wallLight = hex('#a999bd'), wallDark = hex('#655777');
+  const roof = hex('#5d4a6e'), roofLight = hex('#7a6590');
+  const win = hex('#ffe9a0'), dark = hex('#1b1030'), moss = hex('#4f9a55');
+  for (let y = 30; y < 79; y++) for (let x = 10; x < 86; x++) img.set(x, y, x < 20 ? wallLight : x > 76 ? wallDark : wall);
+  for (let y = 4; y < 31; y++) { const half = Math.round(((y - 4) / 26) * 44); for (let x = 48 - half; x <= 48 + half; x++) img.set(x, y, x < 48 ? roofLight : roof); }
+  for (let y = 10; y < 20; y++) for (let x = 64; x < 70; x++) img.set(x, y, wallDark); // Schornstein
+  for (const [wx, wy] of [[18, 40], [66, 40], [18, 58], [66, 58], [43, 16]]) for (let y = wy; y < wy + 10; y++) for (let x = wx; x < wx + 10; x++) img.set(x, y, (x + y) % 7 === 0 ? wallLight : win);
+  for (let y = 52; y < 79; y++) for (let x = 40; x < 56; x++) img.set(x, y, y < 55 ? wallDark : dark); // Tür
+  for (let x = 10; x < 86; x += 3) { const len = 2 + ((x * 7) % 5); for (let y = 0; y < len; y++) img.set(x, 30 + y, moss); }
+  for (let x = 2; x < 94; x++) for (let y = 76; y < 80; y++) img.set(x, y, wallDark); // Sockel
+  outlineRegion(img, 0, 0, 96, 80, hex('#2e2440'));
   return img;
 }
-const buildingDefs = JSON.parse(readFileSync(join(root, 'data', 'buildings.json'), 'utf8'));
-for (const def of buildingDefs) save(spritesDir, `${def.sprite}.png`, drawCave(def));
 
-/** Makler: Einsiedlerkrebs im Schneckenhaus, 32×32, Anker unten mittig, Reihe idle mit 4 Frames. */
-function drawBroker(def) {
+/** Seegras-Farm 64×32: Beete mit Seegras-Halmen. */
+function drawFarm() {
+  const img = new Image(64, 32);
+  const soil = hex('#6b5638'), soilLight = hex('#8c7450'), grass = hex('#3f9a55'), grassLight = hex('#7fd17a');
+  for (let y = 24; y < 32; y++) for (let x = 2; x < 62; x++) img.set(x, y, y < 26 ? soilLight : soil);
+  for (let bx = 5; bx < 60; bx += 5) {
+    const h = 12 + ((bx * 13) % 9);
+    for (let i = 0; i < h; i++) img.set(bx + Math.round(Math.sin(i * 0.5 + bx) * 1.2), 23 - i, i > h - 4 ? grassLight : grass);
+  }
+  outlineRegion(img, 0, 0, 64, 32, hex('#22401f'));
+  return img;
+}
+
+/** Muschelbank 48×24: Sandhügel mit Muscheln. */
+function drawShellBed() {
+  const img = new Image(48, 24);
+  const sand = hex('#e2cf8f'), sandDark = hex('#c2aa6d'), shell = hex('#ffd1dc'), shellDark = hex('#d98aa0');
+  for (let x = 1; x < 47; x++) { const h = Math.round(8 + Math.sin((x / 47) * Math.PI) * 8); for (let y = 24 - h; y < 24; y++) img.set(x, y, y > 20 ? sandDark : sand); }
+  for (const [sx, sy] of [[10, 14], [22, 10], [33, 13], [16, 18], [29, 18]]) for (let y = 0; y < 4; y++) for (let x = -y; x <= y; x++) img.set(sx + x, sy + y, y === 3 ? shellDark : shell);
+  outlineRegion(img, 0, 0, 48, 24, hex('#7a6436'));
+  return img;
+}
+
+/** Podest 64×16: Felsvorsprung, auf dem eine Figur steht. */
+function drawPodest() {
+  const img = new Image(64, 16);
+  const rock = hex('#7a6a8c'), light = hex('#a493b8'), dark = hex('#4e4260');
+  for (let y = 0; y < 16; y++) { const inset = Math.round(y * 0.9); for (let x = 2 + inset; x < 62 - inset; x++) img.set(x, y, y < 3 ? light : y > 10 ? dark : rock); }
+  outlineRegion(img, 0, 0, 64, 16, hex('#2e2440'));
+  return img;
+}
+
+console.log('Riff-Gebäude:');
+save(spritesDir, 'building_house.png', drawHouse());
+save(spritesDir, 'building_seaweed_farm.png', drawFarm());
+save(spritesDir, 'building_shell_bed.png', drawShellBed());
+save(spritesDir, 'prop_podest.png', drawPodest());
+
+/** Kalle: Einsiedlerkrebs im Schneckenhaus, 32×32, Reihe idle mit 4 Frames. */
+function drawKalle(def) {
   const img = new Image(32 * 4, 32);
   const shell = hex('#e9d6b0');
   const shellDark = hex('#b89a6a');
@@ -568,29 +590,20 @@ function drawBroker(def) {
     const ox = f * 32;
     const bob = f === 1 || f === 2 ? 1 : 0;
     const mask = new Int8Array(32 * 32);
-    // Schneckenhaus (Spirale angedeutet durch Ringe)
     for (let y = 0; y < 32; y++)
       for (let x = 0; x < 32; x++) {
         const d = Math.hypot(x + 0.5 - 13, y + 0.5 - (15 + bob));
         if (d <= 10) mask[y * 32 + x] = d % 4 < 1.4 ? 2 : 1;
       }
-    // Körper und Scheren rechts unten
     for (let y = 18 + bob; y < 27 + bob; y++) for (let x = 17; x < 27; x++) mask[y * 32 + x] ||= 3;
     for (let y = 16 + bob; y < 21 + bob; y++) for (let x = 25 + (f === 3 ? 1 : 0); x < 30; x++) mask[y * 32 + x] = 3;
-    // Beine
     for (const lx of [18, 21, 24]) for (let y = 27 + bob; y < 31; y++) mask[y * 32 + lx] = 4;
     for (let y = 0; y < 32; y++)
       for (let x = 0; x < 32; x++) {
         const m = mask[y * 32 + x];
         if (m) img.set(ox + x, y, m === 1 ? shell : m === 2 ? shellDark : body);
       }
-    for (let y = 0; y < 32; y++)
-      for (let x = 0; x < 32; x++) {
-        if (mask[y * 32 + x]) continue;
-        const n = (x > 0 && mask[y * 32 + x - 1]) || (x < 31 && mask[y * 32 + x + 1]) || (y > 0 && mask[(y - 1) * 32 + x]) || (y < 31 && mask[(y + 1) * 32 + x]);
-        if (n) img.set(ox + x, y, outlineC);
-      }
-    // Stielaugen
+    outlineRegion(img, ox, 0, 32, 32, outlineC);
     for (const ex of [21, 25]) {
       for (let y = 13 + bob; y < 18 + bob; y++) img.set(ox + ex, y, outlineC);
       img.set(ox + ex, 12 + bob, white); img.set(ox + ex + 1, 12 + bob, white); img.set(ox + ex, 11 + bob, white); img.set(ox + ex + 1, 11 + bob, pupil);
@@ -598,8 +611,56 @@ function drawBroker(def) {
   }
   return img;
 }
+
+/** Gisela: Seegurke, liegend, mit Brille und Warzen, 32×32. */
+function drawGisela(def) {
+  const img = new Image(32 * 4, 32);
+  const body = hex(def.placeholderColor), light = mix(body, [1, 1, 1], 0.35), dark = mix(body, hex('#1b1030'), 0.35);
+  for (let f = 0; f < 4; f++) {
+    const ox = f * 32;
+    const stretch = [0, 1, 2, 1][f];
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 32; x++) {
+        const nx = (x + 0.5 - 16) / (13 + stretch * 0.5);
+        const ny = (y + 0.5 - 24) / (6 - stretch * 0.3);
+        if (nx * nx + ny * ny <= 1) img.set(ox + x, y, ny < -0.3 ? light : ny > 0.4 ? dark : body);
+      }
+    for (const wx of [8, 13, 18, 23]) img.set(ox + wx, 20, light);
+    outlineRegion(img, ox, 0, 32, 32, hex('#3a1846'));
+    // Brille und Augen vorne rechts
+    for (const ex of [22, 26]) { for (let y = 19; y < 22; y++) for (let x = ex - 1; x <= ex + 1; x++) img.set(ox + x, y, white); img.set(ox + ex, 20, pupil); }
+    for (let x = 23; x < 26; x++) img.set(ox + x, 19, hex('#1b1030'));
+  }
+  return img;
+}
+
+/** Bruno: abgehalfterter Hai mit Augenklappe, 48×32. */
+function drawBruno(def) {
+  const img = new Image(48 * 4, 32);
+  const body = hex(def.placeholderColor), belly = hex('#d9dee5'), dark = mix(body, hex('#1b1030'), 0.35);
+  for (let f = 0; f < 4; f++) {
+    const ox = f * 48;
+    const tail = [0, 1, 2, 1][f];
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 48; x++) {
+        const nx = (x + 0.5 - 26) / 18;
+        const ny = (y + 0.5 - 20) / 8;
+        if (nx * nx + ny * ny <= 1) img.set(ox + x, y, ny > 0.35 ? belly : ny < -0.4 ? mix(body, [1, 1, 1], 0.2) : body);
+      }
+    for (let i = 0; i < 8; i++) for (let y = 12 - i; y < 13; y++) img.set(ox + 26 + Math.round(i * 0.3), y, dark); // Rückenflosse
+    for (let i = 0; i < 8; i++) { const h = 1 + i; for (let y = 20 - h + tail; y <= 20 + Math.round(h * 0.6) + tail; y++) img.set(ox + 8 - i, y, dark); } // Schwanz
+    outlineRegion(img, ox, 0, 48, 32, hex('#2a3038'));
+    for (let x = 33; x < 38; x++) img.set(ox + x, 17, hex('#1b1030')); // Augenklappe Band
+    for (let y = 16; y < 20; y++) for (let x = 37; x < 40; x++) img.set(ox + x, y, hex('#1b1030'));
+    for (let x = 30; x < 42; x += 2) img.set(ox + x, 23, white); // Zähne
+  }
+  return img;
+}
+
 const npcDefs = JSON.parse(readFileSync(join(root, 'data', 'npcs.json'), 'utf8'));
-for (const def of npcDefs) save(spritesDir, `${def.sprite}.png`, drawBroker(def));
+const npcDrawers = { kalle: drawKalle, gisela: drawGisela, bruno: drawBruno };
+console.log('Figuren:');
+for (const def of npcDefs) save(spritesDir, `${def.sprite}.png`, npcDrawers[def.id](def));
 
 // Riff-Hintergründe: wärmer und heller als der Kelpwald, Korallen statt Kelp.
 {
@@ -637,3 +698,30 @@ function coralLayer(file, { count, colors, alpha, minR, maxR }) {
 }
 coralLayer('bg_reef_1.png', { count: 26, colors: ['#5fb7b0', '#7aa6c9', '#8fb9a8'], alpha: 0.35, minR: 20, maxR: 60 });
 coralLayer('bg_reef_2.png', { count: 16, colors: ['#e88aa0', '#f2a65a', '#b48be0', '#6cc4a1'], alpha: 0.6, minR: 18, maxR: 46 });
+
+// Ruinen-Ebene: Säulen und Bögen im Dunst, zwischen Korallen hinten und vorne.
+{
+  const img = new Image(W, H, true);
+  const stone = hex('#6f8fa3');
+  for (let i = 0; i < 6; i++) {
+    const bx = rng.range(0, W);
+    const baseY = H - rng.range(0, 120);
+    const cols = rng.int(2, 4);
+    const gap = rng.range(70, 110);
+    const colH = rng.range(220, 420);
+    for (let c = 0; c < cols; c++) {
+      const cx = bx + c * gap;
+      const broken = rng.next() < 0.35 ? rng.range(0.4, 0.8) : 1;
+      for (let y = Math.floor(baseY - colH * broken); y < baseY; y++) for (let x = Math.floor(cx - 14); x < cx + 14; x++) img.blend(x, y, mix(stone, [1, 1, 1], x < cx - 6 ? 0.15 : 0), 0.45);
+      if (c < cols - 1 && broken === 1) {
+        for (let a = 0; a <= 40; a++) {
+          const t = a / 40;
+          const ax = cx + t * gap;
+          const ay = baseY - colH - Math.sin(t * Math.PI) * gap * 0.45;
+          for (let y = Math.floor(ay - 10); y < ay + 4; y++) for (let x = Math.floor(ax - 3); x < ax + 3; x++) img.blend(x, y, stone, 0.4);
+        }
+      }
+    }
+  }
+  save(bgDir, 'bg_reef_3.png', img);
+}

@@ -6,14 +6,31 @@
     "rarity": "common",
     "behavior": "curious",
     "speed": 0.9,
-    "catchWith": ["bubble"],
-    "home": { "needs": "algae_nest", "enemies": [] },
-    "produces": { "shells": 2, "everySeconds": 60 },
+    "catchWith": [
+      "bubble"
+    ],
     "sellValue": 12,
     "factKey": "fish.garibaldi.fact",
     "sprite": "fish_garibaldi",
-    "frame": { "width": 22, "height": 16 },
-    "placeholderColor": "#ff7a1a"
+    "frame": {
+      "width": 22,
+      "height": 16
+    },
+    "placeholderColor": "#ff7a1a",
+    "stats": {
+      "strength": [
+        2,
+        4
+      ],
+      "speed": [
+        1,
+        3
+      ],
+      "diligence": [
+        2,
+        4
+      ]
+    }
   },
   {
     "id": "kelp_perch",
@@ -22,14 +39,32 @@
     "rarity": "common",
     "behavior": "schooling",
     "speed": 1.1,
-    "catchWith": ["bubble", "net"],
-    "home": { "needs": "kelp", "enemies": [] },
-    "produces": { "shells": 1, "everySeconds": 45 },
+    "catchWith": [
+      "bubble",
+      "net"
+    ],
     "sellValue": 8,
     "factKey": "fish.kelp_perch.fact",
     "sprite": "fish_kelp_perch",
-    "frame": { "width": 20, "height": 12 },
-    "placeholderColor": "#d9b26b"
+    "frame": {
+      "width": 20,
+      "height": 12
+    },
+    "placeholderColor": "#d9b26b",
+    "stats": {
+      "strength": [
+        1,
+        2
+      ],
+      "speed": [
+        2,
+        4
+      ],
+      "diligence": [
+        1,
+        3
+      ]
+    }
   },
   {
     "id": "senorita",
@@ -38,13 +73,30 @@
     "rarity": "uncommon",
     "behavior": "skittish",
     "speed": 1.4,
-    "catchWith": ["bubble"],
-    "home": { "needs": "sand", "enemies": [] },
-    "produces": { "shells": 3, "everySeconds": 75 },
+    "catchWith": [
+      "bubble"
+    ],
     "sellValue": 20,
     "factKey": "fish.senorita.fact",
     "sprite": "fish_senorita",
-    "frame": { "width": 18, "height": 8 },
-    "placeholderColor": "#ffd23f"
+    "frame": {
+      "width": 18,
+      "height": 8
+    },
+    "placeholderColor": "#ffd23f",
+    "stats": {
+      "strength": [
+        1,
+        2
+      ],
+      "speed": [
+        3,
+        5
+      ],
+      "diligence": [
+        1,
+        2
+      ]
+    }
   }
 ]

@@ -32,7 +32,7 @@ Jeder Push auf `main` baut das Spiel und veröffentlicht es auf GitHub Pages:
 Steuerung:
 - **Schwimmen:** Daumen in der unteren Hälfte (hochkant) bzw. linken Hälfte (quer) aufsetzen und ziehen. Desktop: WASD oder Pfeiltasten.
 - **Schießen (Blasenkanone):** Kurz tippen, Ziel ist die Tippstelle. Quer kann man rechts auch ziehen zum Zielen und loslassen zum Schießen. Desktop: Mausklick oder Leertaste.
-- **Riff:** Zu Kalle (Makler) oder einer Höhle schwimmen, dann den gelben Knopf tippen (Desktop: E). Jeder Fisch passt in genau eine Höhle, Bewohner produzieren Muscheln. Der Ring rechts oben startet den Tauchgang.
+- **Riff:** Zu einer Figur, zum Haus, zur Seegras-Farm oder zur Muschelbank schwimmen, dann den gelben Knopf tippen (Desktop: E). Gefangene Fische schlafen im alten Haus und bekommen Jobs, Bruno der Hai kauft Fische. Der Ring rechts oben startet den Tauchgang.
 - Eine leichte Zielhilfe lenkt Schüsse auf Fische, die knapp daneben liegen. Gefangene Fische schweben in Blasen hinterher (max. 8).
 
 ## Online (Supabase)

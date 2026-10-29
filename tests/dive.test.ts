@@ -21,7 +21,7 @@ function config(overrides: Partial<DiveConfig> = {}): DiveConfig {
     surfaceY: zone.world.surfaceY,
     surfaceMeters: 0,
     pixelsPerMeter: zone.pixelsPerMeter,
-    fishDefs: fishJson as FishDef[],
+    fishDefs: fishJson as unknown as FishDef[],
     spawns: zone.fishSpawns as unknown as DiveConfig['spawns'],
     fishTuning: gameJson.fish as unknown as FishTuning,
     cannon: armsJson[0]!,

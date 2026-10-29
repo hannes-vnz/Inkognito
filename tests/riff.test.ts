@@ -1,129 +1,237 @@
 import { describe, expect, it } from 'vitest';
 import { deserialize, migrate, newSave, SAVE_VERSION, serialize, type Save } from '../src/systems/save';
-import { addCatch, candidatesFor, checkMoveIn, moveIn, type BuildingDef } from '../src/systems/residents';
-import { collectProduction, secondsUntilNext } from '../src/systems/economy';
+import {
+  addCatch,
+  assignJob,
+  canAssign,
+  checkUpgrade,
+  houseCapacity,
+  jobRate,
+  letIn,
+  rollFish,
+  sellFish,
+  sellPrice,
+  tick,
+  upgrade,
+  type BuildingDef,
+  type ColonyDefs,
+  type EconomyParams,
+  type JobDef,
+} from '../src/systems/colony';
 import { completeQuests, startQuest, type QuestDef } from '../src/systems/quests';
-import { dialogNode, validateDialog, type NpcDef } from '../src/systems/dialog';
-import type { FishDef } from '../src/systems/fish';
+import { dialogNode, npcUnlocked, validateDialog, type NpcDef } from '../src/systems/dialog';
 import fishJson from '../data/fish.json';
 import buildingsJson from '../data/buildings.json';
+import jobsJson from '../data/jobs.json';
 import questsJson from '../data/quests.json';
 import npcsJson from '../data/npcs.json';
+import reefJson from '../data/reef.json';
 import texts from '../data/texts.de.json';
 
-const fishDefs = new Map((fishJson as FishDef[]).map((f) => [f.id, f]));
-const buildings = buildingsJson as BuildingDef[];
-const quests = questsJson as QuestDef[];
+const defs: ColonyDefs = {
+  buildings: buildingsJson as BuildingDef[],
+  jobs: jobsJson as JobDef[],
+  fish: new Map(fishJson.map((f) => [f.id, { id: f.id, sellValue: f.sellValue, stats: f.stats as never }])),
+  economy: reefJson.economy as EconomyParams,
+  waitingCapacity: reefJson.waitingCapacity,
+};
+const quests = questsJson as unknown as QuestDef[];
+const npcs = npcsJson as unknown as NpcDef[];
 const T0 = 1_800_000_000_000;
-const caveFor = (fishId: string) => buildings.find((b) => b.provides === fishDefs.get(fishId)!.home.needs)!;
+const MIN = 60_000;
 
-describe('Spielstand', () => {
-  it('neuer Stand hat die aktuelle Version und übersteht Speichern/Laden', () => {
+const withFish = (ids: string[]): Save => addCatch(newSave(T0), ids, defs, T0).save;
+
+describe('Spielstand v2', () => {
+  it('neuer Stand: aktuelle Version, übersteht Speichern/Laden', () => {
     const s = newSave(T0);
     expect(s.version).toBe(SAVE_VERSION);
     expect(deserialize(serialize(s), T0)).toEqual(s);
   });
 
-  it('migriert den unversionierten Stand', () => {
+  it('migriert v0 über v1 bis v2', () => {
     const s = migrate({ shells: 42, fish: ['garibaldi', 'senorita', 7] }, T0);
-    expect(s.version).toBe(SAVE_VERSION);
+    expect(s.version).toBe(2);
     expect(s.shells).toBe(42);
-    expect(s.holding.map((h) => h.fishId)).toEqual(['garibaldi', 'senorita']);
-    expect(s.nextUid).toBe(3);
+    expect(s.fish.map((f) => f.fishId)).toEqual(['garibaldi', 'senorita']);
+    expect(s.fish[0]!.stats).toEqual({ strength: 2, speed: 2, diligence: 2 });
+  });
+
+  it('migriert v1: Höhlenbewohner und Wartebecken ziehen ins Haus, Rest vor die Tür', () => {
+    const v1 = {
+      version: 1,
+      createdAt: T0 - 1000,
+      updatedAt: T0 - 500,
+      shells: 25,
+      diveCount: 3,
+      nextUid: 7,
+      holding: [{ uid: 4, fishId: 'senorita' }, { uid: 5, fishId: 'garibaldi' }, { uid: 6, fishId: 'garibaldi' }],
+      residents: [{ uid: 1, fishId: 'garibaldi', buildingId: 'cave_algae', producedUntil: T0 }, { uid: 2, fishId: 'kelp_perch', buildingId: 'cave_kelp', producedUntil: T0 }],
+      quests: { active: [], done: ['move_in_1'] },
+    };
+    const s = migrate(v1, T0);
+    expect(s.fish.map((f) => f.uid)).toEqual([1, 2, 4, 5]);
+    expect(s.waiting.map((f) => f.uid)).toEqual([6]);
+    expect(s.quests.done).toEqual(['first_fish']);
+    expect(s).toMatchObject({ shells: 25, diveCount: 3, nextUid: 7, updatedAt: T0 - 500 });
   });
 
   it('kaputte Daten ergeben einen neuen Stand, zu neue Versionen werfen', () => {
     expect(deserialize('{nicht json', T0)).toEqual(newSave(T0));
-    expect(deserialize(null, T0)).toEqual(newSave(T0));
     expect(() => migrate({ version: SAVE_VERSION + 1 }, T0)).toThrow();
   });
 });
 
-describe('Bewohner', () => {
-  const withCatch = (ids: string[]): Save => addCatch(newSave(T0), ids, 12, T0).save;
+describe('Haus und Fang', () => {
+  it('Werte werden im Bereich der Art gewürfelt und sind reproduzierbar', () => {
+    const s = newSave(T0);
+    for (let uid = 1; uid < 50; uid++) {
+      const f = rollFish(s, 'senorita', uid, defs);
+      expect(f.stats.speed).toBeGreaterThanOrEqual(3);
+      expect(f.stats.speed).toBeLessThanOrEqual(5);
+    }
+    expect(rollFish(s, 'garibaldi', 3, defs)).toEqual(rollFish(s, 'garibaldi', 3, defs));
+    expect(rollFish(s, 'garibaldi', 3, defs, 'zombie').stats.strength).toBe(rollFish(s, 'garibaldi', 3, defs).stats.strength + 1);
+  });
 
-  it('Fang landet im Wartebecken, begrenzt auf die Kapazität', () => {
-    const r = addCatch(newSave(T0), ['garibaldi', 'kelp_perch', 'senorita'], 2, T0);
-    expect(r.added).toBe(2);
-    expect(r.save.holding).toHaveLength(2);
+  it('erst ins Haus, dann vor die Tür, dann freilassen', () => {
+    const cap = houseCapacity(newSave(T0), defs);
+    const many = Array.from({ length: cap + defs.waitingCapacity + 2 }, () => 'kelp_perch');
+    const r = addCatch(newSave(T0), many, defs, T0);
+    expect(r).toMatchObject({ housed: cap, waiting: defs.waitingCapacity, released: 2 });
     expect(r.save.diveCount).toBe(1);
   });
 
-  it('jeder Fisch passt in genau eine Höhle', () => {
-    for (const f of fishDefs.values()) expect(buildings.filter((b) => b.provides === f.home.needs)).toHaveLength(1);
+  it('nach dem Ausbau dürfen Wartende rein', () => {
+    let s = addCatch({ ...newSave(T0), shells: 100 }, Array(6).fill('garibaldi'), defs, T0).save;
+    expect(s.waiting).toHaveLength(2);
+    expect(checkUpgrade(s, 'house', defs)).toEqual({ ok: true, cost: 60 });
+    s = letIn(upgrade(s, 'house', defs, T0), defs, T0);
+    expect(s.fish).toHaveLength(6);
+    expect(s.waiting).toHaveLength(0);
+    expect(Math.floor(s.shells)).toBe(40);
   });
 
-  it('Einzug nur in die passende Höhle und bis sie voll ist', () => {
-    let s = withCatch(['garibaldi', 'garibaldi', 'garibaldi', 'garibaldi', 'senorita']);
-    const algae = caveFor('garibaldi');
-    expect(checkMoveIn(s, 5, algae, fishDefs)).toBe('wrongHome');
-    expect(candidatesFor(s, algae, fishDefs)).toEqual([1, 2, 3, 4]);
-    for (const uid of [1, 2, 3]) s = moveIn(s, uid, algae, fishDefs, T0);
-    expect(checkMoveIn(s, 4, algae, fishDefs)).toBe('full');
-    expect(checkMoveIn(s, 99, algae, fishDefs)).toBe('notHeld');
-    expect(s.residents).toHaveLength(3);
-    expect(s.holding.map((h) => h.uid)).toEqual([4, 5]);
-    expect(() => moveIn(s, 4, algae, fishDefs, T0)).toThrow();
-  });
-});
-
-describe('Muscheln', () => {
-  const settled = (): Save => {
-    const s = addCatch(newSave(T0), ['garibaldi'], 12, T0).save;
-    return moveIn(s, 1, caveFor('garibaldi'), fishDefs, T0);
-  };
-  const g = fishJson.find((f) => f.id === 'garibaldi')!;
-
-  it('ein eingezogener Fang produziert Muscheln', () => {
-    const s = settled();
-    expect(collectProduction(s, T0 + 1000, fishDefs, 8 * 3600e3).gained).toBe(0);
-    const r = collectProduction(s, T0 + g.produces.everySeconds * 1000 * 3 + 500, fishDefs, 8 * 3600e3);
-    expect(r.gained).toBe(3 * g.produces.shells);
-    expect(r.save.shells).toBe(3 * g.produces.shells);
-    // Rest der angefangenen Periode bleibt erhalten, nichts wird doppelt gezahlt.
-    expect(collectProduction(r.save, T0 + g.produces.everySeconds * 1000 * 3 + 900, fishDefs, 8 * 3600e3).gained).toBe(0);
-    expect(collectProduction(r.save, T0 + g.produces.everySeconds * 1000 * 4, fishDefs, 8 * 3600e3).gained).toBe(g.produces.shells);
-  });
-
-  it('Offline-Zeit ist gedeckelt', () => {
-    const max = 3600e3;
-    const r = collectProduction(settled(), T0 + 100 * max, fishDefs, max);
-    expect(r.gained).toBe(Math.floor(max / (g.produces.everySeconds * 1000)) * g.produces.shells);
-  });
-
-  it('zeigt die Zeit bis zur nächsten Muschel', () => {
-    expect(secondsUntilNext(T0, 60, T0 + 15_000)).toBe(45);
+  it('Ausbau scheitert ohne Muscheln und auf Maximalstufe', () => {
+    expect(checkUpgrade(newSave(T0), 'house', defs)).toEqual({ ok: false, reason: 'shells', missing: 60 });
+    const max = { ...newSave(T0), buildings: { house: 4 } };
+    expect(checkUpgrade(max, 'house', defs)).toEqual({ ok: false, reason: 'max' });
   });
 });
 
-describe('Aufträge und Dialog', () => {
-  it('erster Mieter: Auftrag starten, Einzug schließt ihn ab und zahlt aus', () => {
-    let s = startQuest(newSave(T0), 'move_in_1', T0);
-    expect(startQuest(s, 'move_in_1', T0)).toBe(s);
-    expect(completeQuests(s, quests, T0).completed).toEqual([]);
-    s = addCatch(s, ['senorita'], 12, T0).save;
-    s = moveIn(s, 1, caveFor('senorita'), fishDefs, T0);
-    const r = completeQuests(s, quests, T0);
-    expect(r.completed.map((q) => q.id)).toEqual(['move_in_1']);
-    expect(r.save.shells).toBe(quests[0]!.reward.shells);
-    expect(r.save.quests).toEqual({ active: [], done: ['move_in_1'] });
+describe('Jobs und Produktion', () => {
+  it('Jobs haben begrenzte Plätze', () => {
+    let s = withFish(['garibaldi', 'garibaldi', 'garibaldi']);
+    s = assignJob(s, 1, 'seaweed_farm', defs, T0);
+    s = assignJob(s, 2, 'seaweed_farm', defs, T0);
+    expect(canAssign(s, 3, 'seaweed_farm', defs)).toBe('full');
+    expect(canAssign(s, 3, 'nope', defs)).toBe('unknownJob');
+    expect(canAssign(s, 99, null, defs)).toBe('notFound');
+    s = assignJob(s, 1, null, defs, T0);
+    expect(canAssign(s, 3, 'seaweed_farm', defs)).toBe('ok');
   });
 
-  it('alle NPC-Dialoge sind gültig und haben Texte', () => {
-    for (const npc of npcsJson as unknown as NpcDef[]) {
-      expect(validateDialog(npc.dialog)).toEqual([]);
+  it('ein Fang zieht ein, übernimmt einen Job und erarbeitet Futter und Muscheln', () => {
+    let s = withFish(['garibaldi', 'senorita']);
+    s = assignJob(s, 1, 'seaweed_farm', defs, T0);
+    s = assignJob(s, 2, 'shell_gathering', defs, T0);
+    const farm = jobRate(s, 'seaweed_farm', defs).food;
+    const gather = jobRate(s, 'shell_gathering', defs).shells;
+    expect(farm).toBeGreaterThan(0);
+    expect(gather).toBeGreaterThan(0);
+    const r = tick(s, T0 + 10 * MIN, defs);
+    const eat = 2 * defs.economy.foodPerFishPerMinute;
+    expect(r.food).toBeCloseTo((farm - eat) * 10, 6);
+    expect(r.shells).toBeCloseTo(gather * 10, 6);
+    expect(r.save.lastTick).toBe(T0 + 10 * MIN);
+    expect(tick(r.save, T0 + 10 * MIN, defs).shells).toBe(0);
+  });
+
+  it('ohne Futter wird nur halb so viel gearbeitet', () => {
+    let s = { ...withFish(['senorita', 'senorita', 'senorita', 'senorita']), food: 0 };
+    s = assignJob(s, 1, 'shell_gathering', defs, T0);
+    const full = jobRate(s, 'shell_gathering', defs).shells * 10;
+    const r = tick(s, T0 + 10 * MIN, defs);
+    expect(r.shells).toBeCloseTo(full * defs.economy.hungryFactor, 6);
+    expect(r.save.food).toBe(0);
+  });
+
+  it('meldet, wenn das Futter ausgeht, und deckelt Offline-Zeit', () => {
+    const s = { ...withFish(['kelp_perch', 'kelp_perch']), food: 1 };
+    expect(tick(s, T0 + 60 * MIN, defs).ranOut).toBe(true);
+    const long = tick({ ...s, food: 1e6 }, T0 + 1000 * 3600e3, defs);
+    expect(long.food).toBeCloseTo(-2 * defs.economy.foodPerFishPerMinute * 60 * defs.economy.maxOfflineHours, 3);
+  });
+});
+
+describe('Bruno', () => {
+  it('zahlt mehr für bessere Werte und Zombies', () => {
+    const base = { uid: 1, fishId: 'garibaldi', variant: 'normal' as const, job: null };
+    const weak = sellPrice({ ...base, stats: { strength: 1, speed: 1, diligence: 1 } }, defs);
+    const strong = sellPrice({ ...base, stats: { strength: 4, speed: 4, diligence: 4 } }, defs);
+    const zombie = sellPrice({ ...base, variant: 'zombie', stats: { strength: 4, speed: 4, diligence: 4 } }, defs);
+    expect(strong).toBeGreaterThan(weak);
+    expect(zombie).toBeGreaterThan(strong);
+  });
+
+  it('Verkauf entfernt den Fisch, zahlt aus und zählt mit', () => {
+    const s = withFish(['garibaldi']);
+    const r = sellFish(s, 1, defs, T0);
+    expect(r.save.fish).toHaveLength(0);
+    expect(r.save.shells).toBe(r.price);
+    expect(r.save.counters.sold).toBe(1);
+    expect(() => sellFish(r.save, 1, defs, T0)).toThrow();
+  });
+});
+
+describe('Story', () => {
+  it('Auftragskette: erster Fisch → erste Schicht → Verkauf → Anbau', () => {
+    let s = startQuest(newSave(T0), 'first_fish', T0);
+    s = addCatch(s, ['garibaldi', 'senorita'], defs, T0).save;
+    let r = completeQuests(s, quests, T0);
+    expect(r.completed.map((q) => q.id)).toEqual(['first_fish']);
+    s = startQuest(r.save, 'first_job', T0);
+    s = assignJob(s, 1, 'seaweed_farm', defs, T0);
+    s = startQuest(completeQuests(s, quests, T0).save, 'first_sale', T0);
+    s = sellFish(s, 2, defs, T0).save;
+    r = completeQuests(s, quests, T0);
+    expect(r.save.quests.done).toEqual(['first_fish', 'first_job', 'first_sale']);
+    expect(r.save.food).toBeGreaterThan(newSave(T0).food);
+  });
+
+  it('Figuren werden nach der Story freigeschaltet', () => {
+    const by = (id: string) => npcs.find((n) => n.id === id)!;
+    const q = { active: [], done: [] as string[] };
+    expect(npcUnlocked(by('kalle'), q)).toBe(true);
+    expect(npcUnlocked(by('gisela'), q)).toBe(false);
+    expect(npcUnlocked(by('gisela'), { active: [], done: ['first_fish'] })).toBe(true);
+  });
+
+  it('Kalle reagiert auf den Auftragsstand', () => {
+    const d = npcs.find((n) => n.id === 'kalle')!.dialog;
+    expect(dialogNode(d, 'start').id).toBe('start');
+    expect(dialogNode(d, 'start', { active: ['first_fish'], done: [] }).id).toBe('first_fish_wait');
+    expect(dialogNode(d, 'start', { active: [], done: ['first_fish', 'first_job', 'first_sale'] }).id).toBe('house_2_offer');
+    expect(dialogNode(d, 'start', { active: [], done: ['first_fish', 'first_sale', 'house_2'] }).id).toBe('idle');
+  });
+
+  it('alle Dialoge sind gültig, alle Texte vorhanden, jede Figur und jeder Auftrag existiert', () => {
+    for (const npc of npcs) {
+      expect(validateDialog(npc.dialog), npc.id).toEqual([]);
       expect(texts).toHaveProperty([npc.nameKey]);
       for (const node of Object.values(npc.dialog)) {
         expect(texts).toHaveProperty([node.textKey]);
         for (const o of node.options ?? []) expect(texts).toHaveProperty([o.textKey]);
+        if (node.action?.type === 'startQuest') expect(quests.map((q) => q.id)).toContain(node.action.quest);
       }
+      if (npc.unlock.questDone) expect(quests.map((q) => q.id)).toContain(npc.unlock.questDone);
     }
-  });
-
-  it('der Makler leitet nach erledigtem Auftrag um', () => {
-    const d = (npcsJson[0] as unknown as NpcDef).dialog;
-    expect(dialogNode(d, 'flat').id).toBe('flat');
-    expect(dialogNode(d, 'flat', ['move_in_1']).id).toBe('flat_done');
-    expect(dialogNode(d, 'flat').action).toEqual({ type: 'startQuest', quest: 'move_in_1' });
+    for (const q of quests) {
+      expect(texts).toHaveProperty([q.nameKey]);
+      expect(texts).toHaveProperty([q.doneTextKey]);
+      expect(npcs.map((n) => n.id)).toContain(q.giver);
+    }
+    for (const b of buildingsJson) expect(texts).toHaveProperty([b.nameKey]);
+    for (const j of jobsJson) expect(texts).toHaveProperty([j.nameKey]);
   });
 });

@@ -7,8 +7,8 @@ export function isFresh(s: Save): boolean {
   return (
     s.diveCount === 0 &&
     s.shells === 0 &&
-    s.holding.length === 0 &&
-    s.residents.length === 0 &&
+    s.fish.length === 0 &&
+    s.waiting.length === 0 &&
     s.quests.active.length === 0 &&
     s.quests.done.length === 0
   );

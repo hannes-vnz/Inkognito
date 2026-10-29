@@ -40,14 +40,23 @@ export class Sheet {
     return this.input?.value ?? '';
   }
 
-  show(title: string, text: string, options: readonly SheetOption[], input?: SheetInput): void {
+  /** `portrait`: Bild-URL der sprechenden Figur (Dialog wie bei Dave the Diver). */
+  show(title: string, text: string, options: readonly SheetOption[], input?: SheetInput, portrait?: string): void {
     const card = el('div', 'card sheet-card');
     const body = el('div', 'sheet-body');
+    const head = el('div', 'sheet-head');
+    if (portrait) {
+      const img = el('img', 'sheet-portrait');
+      img.src = portrait;
+      img.alt = '';
+      head.append(img);
+    }
     const h = el('div', 'sheet-title');
     h.textContent = title;
+    head.append(h);
     const p = el('p', 'sheet-text');
     p.textContent = text;
-    body.append(h, p);
+    body.append(head, p);
     this.input = null;
     if (input) {
       const field = el('input', 'sheet-input');

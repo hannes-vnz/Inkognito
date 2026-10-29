@@ -1,68 +1,265 @@
 [
   {
-    "id": "hermit_broker",
-    "nameKey": "npc.broker.name",
-    "sprite": "npc_hermit_broker",
+    "id": "kalle",
+    "nameKey": "npc.kalle.name",
+    "sprite": "npc_kalle",
     "frame": {
       "width": 32,
       "height": 32
     },
     "placeholderColor": "#e88a3a",
-    "unlock": {
-      "residentsAtLeast": 0
+    "podest": {
+      "x": 1500,
+      "y": 1180,
+      "layer": 0
     },
+    "unlock": {},
     "dialog": {
       "start": {
-        "textKey": "npc.broker.hello",
+        "textKey": "npc.kalle.hello",
+        "redirect": [
+          {
+            "questActive": "first_fish",
+            "to": "first_fish_wait"
+          },
+          {
+            "questDone": "house_2",
+            "to": "idle"
+          },
+          {
+            "questActive": "house_2",
+            "to": "house_2_wait"
+          },
+          {
+            "questDone": "first_sale",
+            "to": "house_2_offer"
+          },
+          {
+            "questDone": "first_fish",
+            "to": "idle"
+          }
+        ],
         "options": [
           {
-            "textKey": "npc.broker.opt_flat",
-            "next": "flat"
+            "textKey": "npc.kalle.opt_house",
+            "next": "intro"
           },
           {
-            "textKey": "npc.broker.opt_who",
-            "next": "who"
-          },
-          {
-            "textKey": "npc.broker.opt_bye",
+            "textKey": "npc.kalle.opt_bye",
             "next": null
           }
         ]
       },
-      "who": {
-        "textKey": "npc.broker.who",
-        "options": [
-          {
-            "textKey": "npc.broker.opt_back",
-            "next": "start"
-          }
-        ]
-      },
-      "flat": {
-        "textKey": "npc.broker.flat",
+      "intro": {
+        "textKey": "npc.kalle.intro",
         "action": {
           "type": "startQuest",
-          "quest": "move_in_1"
+          "quest": "first_fish"
         },
         "options": [
           {
-            "textKey": "npc.broker.opt_ok",
-            "next": null
-          }
-        ],
-        "redirect": {
-          "questDone": "move_in_1",
-          "to": "flat_done"
-        }
-      },
-      "flat_done": {
-        "textKey": "npc.broker.flat_done",
-        "options": [
-          {
-            "textKey": "npc.broker.opt_ok",
+            "textKey": "npc.kalle.opt_ok",
             "next": null
           }
         ]
+      },
+      "first_fish_wait": {
+        "textKey": "npc.kalle.first_fish_wait",
+        "options": [
+          {
+            "textKey": "npc.kalle.opt_ok",
+            "next": null
+          }
+        ]
+      },
+      "house_2_offer": {
+        "textKey": "npc.kalle.house_2_offer",
+        "action": {
+          "type": "startQuest",
+          "quest": "house_2"
+        },
+        "options": [
+          {
+            "textKey": "npc.kalle.opt_ok",
+            "next": null
+          }
+        ]
+      },
+      "house_2_wait": {
+        "textKey": "npc.kalle.house_2_wait",
+        "options": [
+          {
+            "textKey": "npc.kalle.opt_ok",
+            "next": null
+          }
+        ]
+      },
+      "idle": {
+        "textKey": "npc.kalle.idle",
+        "options": [
+          {
+            "textKey": "npc.kalle.opt_bye",
+            "next": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gisela",
+    "nameKey": "npc.gisela.name",
+    "sprite": "npc_gisela",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "placeholderColor": "#a35fb8",
+    "podest": {
+      "x": 360,
+      "y": 1250,
+      "layer": 0
+    },
+    "unlock": {
+      "questDone": "first_fish"
+    },
+    "dialog": {
+      "start": {
+        "textKey": "npc.gisela.hello",
+        "redirect": [
+          {
+            "questActive": "first_job",
+            "to": "wait"
+          },
+          {
+            "questDone": "first_job",
+            "to": "idle"
+          }
+        ],
+        "options": [
+          {
+            "textKey": "npc.gisela.opt_work",
+            "next": "intro"
+          },
+          {
+            "textKey": "npc.gisela.opt_union",
+            "next": "union"
+          }
+        ]
+      },
+      "union": {
+        "textKey": "npc.gisela.union",
+        "options": [
+          {
+            "textKey": "npc.gisela.opt_work",
+            "next": "intro"
+          }
+        ]
+      },
+      "intro": {
+        "textKey": "npc.gisela.intro",
+        "action": {
+          "type": "startQuest",
+          "quest": "first_job"
+        },
+        "options": [
+          {
+            "textKey": "npc.gisela.opt_ok",
+            "next": null
+          }
+        ]
+      },
+      "wait": {
+        "textKey": "npc.gisela.wait",
+        "options": [
+          {
+            "textKey": "npc.gisela.opt_ok",
+            "next": null
+          }
+        ]
+      },
+      "idle": {
+        "textKey": "npc.gisela.idle",
+        "options": [
+          {
+            "textKey": "npc.gisela.opt_bye",
+            "next": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "bruno",
+    "nameKey": "npc.bruno.name",
+    "sprite": "npc_bruno",
+    "frame": {
+      "width": 48,
+      "height": 32
+    },
+    "placeholderColor": "#8a95a3",
+    "podest": {
+      "x": 2150,
+      "y": 1150,
+      "layer": 0
+    },
+    "unlock": {
+      "questDone": "first_job"
+    },
+    "dialog": {
+      "start": {
+        "textKey": "npc.bruno.hello",
+        "redirect": [
+          {
+            "questDone": "first_sale",
+            "to": "regular"
+          }
+        ],
+        "options": [
+          {
+            "textKey": "npc.bruno.opt_what",
+            "next": "intro"
+          },
+          {
+            "textKey": "npc.bruno.opt_bye",
+            "next": null
+          }
+        ]
+      },
+      "intro": {
+        "textKey": "npc.bruno.intro",
+        "action": {
+          "type": "startQuest",
+          "quest": "first_sale"
+        },
+        "options": [
+          {
+            "textKey": "npc.bruno.opt_shop",
+            "next": "shop"
+          },
+          {
+            "textKey": "npc.bruno.opt_bye",
+            "next": null
+          }
+        ]
+      },
+      "regular": {
+        "textKey": "npc.bruno.regular",
+        "options": [
+          {
+            "textKey": "npc.bruno.opt_shop",
+            "next": "shop"
+          },
+          {
+            "textKey": "npc.bruno.opt_bye",
+            "next": null
+          }
+        ]
+      },
+      "shop": {
+        "textKey": "npc.bruno.shop",
+        "action": {
+          "type": "openShop"
+        }
       }
     }
   }

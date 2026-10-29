@@ -15,6 +15,8 @@ export class Parallax {
   constructor(
     private readonly scene: Phaser.Scene,
     layers: BackgroundLayerDef[],
+    /** Welthöhe, nötig für Ebenen mit `anchorBottom`. */
+    private readonly worldHeight = 0,
   ) {
     layers.forEach((def, i) => {
       const depth = DEPTH_BASE + i * 2;
@@ -51,6 +53,12 @@ export class Parallax {
       const tw = tex.width;
       const th = tex.height;
       const l = layoutTiles(camera.scrollX, camera.scrollY, layer.def.factorX, layer.def.factorY, tw, th, w, h);
+      if (layer.def.anchorBottom) {
+        // Unterkante liegt auf dem Bildschirmboden, wenn die Kamera ganz unten ist.
+        const anchorY = h - th + (this.worldHeight - h) * layer.def.factorY;
+        l.offsetY = anchorY - camera.scrollY * layer.def.factorY;
+        l.rows = 1;
+      }
       const needed = l.cols * l.rows;
       while (layer.pool.length < needed) {
         layer.pool.push(

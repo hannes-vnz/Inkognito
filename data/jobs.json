@@ -1,0 +1,20 @@
+[
+  {
+    "id": "seaweed_farm",
+    "nameKey": "job.seaweed_farm.name",
+    "building": "seaweed_farm",
+    "stat": "diligence",
+    "produces": {
+      "food": 0.6
+    }
+  },
+  {
+    "id": "shell_gathering",
+    "nameKey": "job.shell_gathering.name",
+    "building": "shell_bed",
+    "stat": "speed",
+    "produces": {
+      "shells": 0.25
+    }
+  }
+]

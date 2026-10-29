@@ -2,29 +2,20 @@
   "id": "reef",
   "nameKey": "zone.reef.name",
   "world": {
-    "width": 2600,
-    "height": 1400,
-    "floorY": 1260
+    "width": 2400,
+    "height": 1600,
+    "floorY": 1440
   },
   "spawn": {
-    "x": 1300,
-    "y": 700
+    "x": 1200,
+    "y": 900
   },
   "diveEntrance": {
-    "x": 2350,
-    "y": 420,
+    "x": 2180,
+    "y": 360,
     "radius": 120
   },
-  "npcs": [
-    {
-      "npc": "hermit_broker",
-      "x": 1000,
-      "y": 1240
-    }
-  ],
   "interactRadius": 150,
-  "maxOfflineHours": 8,
-  "holdingCapacity": 12,
   "water": {
     "deep": "#1d6f8f"
   },
@@ -44,13 +35,38 @@
     {
       "key": "bg_reef_1",
       "factorX": 0.2,
-      "factorY": 0.1
+      "factorY": 0.1,
+      "anchorBottom": true
+    },
+    {
+      "key": "bg_reef_3",
+      "factorX": 0.4,
+      "factorY": 0.25,
+      "anchorBottom": true
     },
     {
       "key": "bg_reef_2",
-      "factorX": 0.45,
-      "factorY": 0.3
+      "factorX": 0.6,
+      "factorY": 0.45,
+      "anchorBottom": true
     }
   ],
-  "seed": "reef-layout-1"
+  "seed": "reef-layout-1",
+  "waitingCapacity": 6,
+  "economy": {
+    "foodPerFishPerMinute": 0.3,
+    "hungryFactor": 0.5,
+    "startFood": 10,
+    "maxOfflineHours": 8,
+    "statMultiplier": {
+      "base": 0.6,
+      "perPoint": 0.2
+    },
+    "variantMultiplier": {
+      "normal": 1,
+      "zombie": 1.6,
+      "giant": 1.4
+    }
+  },
+  "podestSprite": "prop_podest"
 }

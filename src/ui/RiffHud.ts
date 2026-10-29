@@ -6,6 +6,8 @@ import { t } from '../i18n';
 export class RiffHud {
   private readonly shells: HTMLDivElement;
   private readonly holding: HTMLDivElement;
+  private readonly status: HTMLDivElement;
+  private lastStatus = '';
   private readonly action: HTMLButtonElement;
   private readonly toast: Toast;
   private readonly hint: HTMLDivElement;
@@ -21,10 +23,9 @@ export class RiffHud {
     const left = el('div', 'card hud-depth');
     const label = el('div', 'label');
     label.textContent = t(titleKey);
-    const sub = el('div', 'sub-label');
-    sub.textContent = t('riff.holding');
+    this.status = el('div', 'sub-label');
     this.holding = el('div', 'carry');
-    left.append(label, sub, this.holding);
+    left.append(label, this.status, this.holding);
 
     const right = el('div', 'card hud-shells');
     const sl = el('div', 'label');
@@ -42,6 +43,14 @@ export class RiffHud {
     this.hint = el('div', 'card hint');
     root.append(left, right, this.action, this.hint);
     this.toast = new Toast(root);
+  }
+
+  /** Zeile unter dem Riffnamen, z. B. „Fische 3/4 · Futter 12“. */
+  setStatus(text: string, warn: boolean): void {
+    if (text === this.lastStatus) return;
+    this.lastStatus = text;
+    this.status.textContent = text;
+    this.status.classList.toggle('warn', warn);
   }
 
   setShells(n: number, bump = false): void {

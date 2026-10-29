@@ -8,6 +8,7 @@ import predatorsJson from '../data/predators.json';
 import buildingsJson from '../data/buildings.json';
 import npcsJson from '../data/npcs.json';
 import questsJson from '../data/quests.json';
+import jobsJson from '../data/jobs.json';
 import reefJson from '../data/reef.json';
 import type { MovementParams } from './systems/movement';
 import type { CameraParams } from './systems/camera';
@@ -20,7 +21,7 @@ import type { PredatorSpawnDef, SpawnDef } from './systems/dive';
 import type { PredatorDef } from './systems/predator';
 import type { OxygenParams } from './systems/oxygen';
 import type { CurrentParams } from './systems/current';
-import type { BuildingDef } from './systems/residents';
+import type { BuildingDef, ColonyDefs, EconomyParams, JobDef } from './systems/colony';
 import type { NpcDef } from './systems/dialog';
 import type { QuestDef } from './systems/quests';
 
@@ -53,6 +54,8 @@ export interface BackgroundLayerDef {
   factorX: number;
   factorY: number;
   fixed?: boolean;
+  /** Nicht senkrecht kacheln, sondern am Weltboden verankern (Korallen, Ruinen). */
+  anchorBottom?: boolean;
 }
 
 export interface ZoneDef {
@@ -105,7 +108,7 @@ export const player = playerJson as PlayerDef;
 export const zones = zonesJson as ZoneDef[];
 export const game = gameJson as GameConfig;
 export const texts = textsJson as TextTable;
-export const fish = fishJson as FishDef[];
+export const fish = fishJson as unknown as FishDef[];
 export const arms = armsJson as ArmDef[];
 export const predators = predatorsJson as PredatorDef[];
 
@@ -127,10 +130,10 @@ export interface ReefDef {
   world: { width: number; height: number; floorY: number };
   spawn: { x: number; y: number };
   diveEntrance: { x: number; y: number; radius: number };
-  npcs: { npc: string; x: number; y: number }[];
   interactRadius: number;
-  maxOfflineHours: number;
-  holdingCapacity: number;
+  waitingCapacity: number;
+  economy: EconomyParams;
+  podestSprite: string;
   water: { deep: string };
   floor: { sand: string; sandShadow: string; rock: string; rockLight: string };
   background: BackgroundLayerDef[];
@@ -138,7 +141,17 @@ export interface ReefDef {
 }
 
 export const buildings = buildingsJson as BuildingDef[];
+export const jobs = jobsJson as JobDef[];
 export const npcs = npcsJson as unknown as NpcDef[];
-export const quests = questsJson as QuestDef[];
-export const reef = reefJson as ReefDef;
+export const quests = questsJson as unknown as QuestDef[];
+export const reef = reefJson as unknown as ReefDef;
+
+/** Alles, was die Riff-Logik aus den Daten braucht. */
+export const colonyDefs: ColonyDefs = {
+  buildings,
+  jobs,
+  fish: new Map(fish.map((f) => [f.id, { id: f.id, sellValue: f.sellValue, stats: f.stats }])),
+  economy: reef.economy,
+  waitingCapacity: reef.waitingCapacity,
+};
 export const fishById = new Map(fish.map((f) => [f.id, f]));

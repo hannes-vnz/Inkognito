@@ -15,9 +15,9 @@ export interface FishDef {
   /** Faktor auf die Grundgeschwindigkeit. */
   speed: number;
   catchWith: string[];
-  home: { needs: string; enemies: string[] };
-  produces: { shells: number; everySeconds: number };
   sellValue: number;
+  /** Wertebereiche für die Würfel beim Fang (min, max). */
+  stats: { strength: [number, number]; speed: [number, number]; diligence: [number, number] };
   factKey: string;
   sprite: string;
   frame: { width: number; height: number };

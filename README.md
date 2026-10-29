@@ -17,7 +17,12 @@ Platzhaltergrafiken neu erzeugen (überschreibt `assets/sprites` und `assets/bac
 npm run assets:placeholders
 ```
 
-## Auf dem Handy testen
+## Online spielen
+
+Jeder Push auf `main` baut das Spiel und veröffentlicht es auf GitHub Pages:
+**https://hannes-vnz.github.io/Inkognito/** (FPS-Anzeige: `…/Inkognito/#debug`).
+
+## Lokal auf dem Handy testen
 
 1. Handy und Rechner ins selbe WLAN.
 2. `npm run dev` starten. Vite zeigt neben `Local` auch eine `Network`-Adresse, z. B. `http://192.168.0.23:5173/`.

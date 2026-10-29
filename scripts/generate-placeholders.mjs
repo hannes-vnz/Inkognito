@@ -1,7 +1,7 @@
 // Erzeugt Platzhaltergrafiken in den finalen Größen und Dateinamen (siehe Asset-Regeln in INKOGNITO.md).
 // Echte Grafiken ersetzen diese Dateien später 1:1. Aufruf: npm run assets:placeholders
 import { deflateSync } from 'node:zlib';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRng } from '../src/systems/rng.ts';
@@ -281,6 +281,106 @@ for (let y = 0; y < 8; y++)
   }
 bubble.set(2, 2, white, 1);
 save(spritesDir, 'fx_bubble.png', bubble);
+
+// ---------------------------------------------------------------- Fische (Größe und Farbe aus data/fish.json)
+
+/**
+ * Fisch als Spritesheet: Reihen idle, swim, turn, catch mit je 4 Frames, schaut nach rechts.
+ * Platzhalter: Körper-Ellipse, Schwanzflosse, Rückenflosse, großes Auge mit Glanzpunkt.
+ */
+function drawFishSheet(def) {
+  const fw = def.frame.width;
+  const fh = def.frame.height;
+  const base = hex(def.placeholderColor);
+  const fishRamp = {
+    outline: mix(base, hex('#1b1030'), 0.65),
+    shadow: mix(base, hex('#1b1030'), 0.3),
+    base,
+    light: mix(base, [1, 1, 1], 0.45),
+  };
+  const sheetImg = new Image(fw * 4, fh * 4);
+  const frameOpts = [
+    [0, 1, 2, 1].map((t) => ({ tail: t * 0.5, squash: 1 })),
+    [0, 1, 2, 1].map((t) => ({ tail: t - 1, squash: 1 })),
+    [0.35, 0.6, 0.85, 1].map((sq) => ({ tail: 0, squash: sq })),
+    [0, 1, 0, -1].map((t) => ({ tail: t, squash: 1, wide: true })),
+  ];
+  frameOpts.forEach((row, r) =>
+    row.forEach((o, c) => {
+      const ox = c * fw;
+      const oy = r * fh;
+      const mask = new Int8Array(fw * fh);
+      const bodyW = (fw - 2) * 0.72 * o.squash;
+      const bodyH = (fh - 2) * 0.78;
+      const cx = fw * 0.58;
+      const cy = fh / 2;
+      // Körper
+      for (let y = 0; y < fh; y++)
+        for (let x = 0; x < fw; x++) {
+          const nx = (x + 0.5 - cx) / (bodyW / 2);
+          const ny = (y + 0.5 - cy) / (bodyH / 2);
+          if (nx * nx + ny * ny <= 1) mask[y * fw + x] = 1;
+        }
+      // Schwanzflosse (Dreieck links), wedelt über o.tail
+      const tailX0 = Math.round(cx - bodyW / 2) + 1;
+      const tailLen = Math.max(3, Math.round(fw * 0.22));
+      for (let i = 0; i < tailLen; i++) {
+        const x = tailX0 - i;
+        const half = Math.round((i / tailLen) * fh * 0.36) + 1;
+        const shift = Math.round(o.tail * (i / tailLen));
+        for (let y = Math.round(cy) - half + shift; y <= Math.round(cy) + half - 1 + shift; y++)
+          if (x >= 1 && y >= 1 && y < fh - 1) mask[y * fw + x] = 2;
+      }
+      // Rückenflosse
+      for (let i = 0; i < Math.round(bodyW * 0.35); i++) {
+        const x = Math.round(cx - bodyW * 0.15 + i);
+        const y = Math.round(cy - bodyH / 2) - 1;
+        if (y >= 1 && i % 3 !== 2) mask[y * fw + x] = 2;
+      }
+      for (let y = 0; y < fh; y++)
+        for (let x = 0; x < fw; x++) {
+          const m = mask[y * fw + x];
+          if (!m) continue;
+          let color = fishRamp.base;
+          if (m === 2) color = fishRamp.shadow;
+          else if (y < cy - bodyH * 0.2) color = fishRamp.light;
+          else if (y > cy + bodyH * 0.22) color = fishRamp.shadow;
+          sheetImg.set(ox + x, oy + y, color);
+        }
+      for (let y = 0; y < fh; y++)
+        for (let x = 0; x < fw; x++) {
+          if (mask[y * fw + x]) continue;
+          const n =
+            (x > 0 && mask[y * fw + x - 1]) || (x < fw - 1 && mask[y * fw + x + 1]) ||
+            (y > 0 && mask[(y - 1) * fw + x]) || (y < fh - 1 && mask[(y + 1) * fw + x]);
+          if (n) sheetImg.set(ox + x, oy + y, fishRamp.outline);
+        }
+      // Auge vorne, groß mit Glanzpunkt
+      const ex = Math.round(cx + bodyW * 0.22);
+      const ey = Math.round(cy - 1);
+      const eyeR = o.wide ? 2 : fh >= 12 ? 2 : 1;
+      for (let dy = -eyeR; dy < eyeR; dy++) for (let dx = -eyeR; dx < eyeR; dx++) sheetImg.set(ox + ex + dx, oy + ey + dy, white);
+      sheetImg.set(ox + ex, oy + ey, pupil);
+      if (eyeR > 1) sheetImg.set(ox + ex, oy + ey - 1, pupil);
+      sheetImg.set(ox + ex - eyeR, oy + ey - eyeR, white);
+    }),
+  );
+  return sheetImg;
+}
+
+const fishDefs = JSON.parse(readFileSync(join(root, 'data', 'fish.json'), 'utf8'));
+for (const def of fishDefs) save(spritesDir, `${def.sprite}.png`, drawFishSheet(def));
+
+// Fangblase (32×32): umschließt einen gefangenen Fisch.
+const catchBubble = new Image(32, 32);
+for (let y = 0; y < 32; y++)
+  for (let x = 0; x < 32; x++) {
+    const d = Math.hypot(x + 0.5 - 16, y + 0.5 - 16);
+    if (d <= 15 && d > 13.6) catchBubble.set(x, y, hex('#e4fdff'), 0.95);
+    else if (d <= 13.6) catchBubble.set(x, y, hex('#a8f2ff'), 0.16 + (d / 13.6) * 0.14);
+  }
+for (const [x, y] of [[9, 7], [10, 7], [8, 8], [8, 9], [9, 8], [7, 10]]) catchBubble.set(x, y, white, 1);
+save(spritesDir, 'fx_catch_bubble.png', catchBubble);
 
 // ---------------------------------------------------------------- Hintergründe Kelpwald (1920×1080)
 

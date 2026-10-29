@@ -62,3 +62,12 @@ describe('joystickZone', () => {
     expect(inRect(z, 700, 300)).toBe(false);
   });
 });
+
+import { isTap } from '../src/systems/joystick';
+
+describe('isTap', () => {
+  const p = { maxMs: 220, maxMove: 12 };
+  it('kurz und ohne Ziehen ist ein Tipp', () => expect(isTap(120, 4, p)).toBe(true));
+  it('langes Halten ist Steuern', () => expect(isTap(400, 2, p)).toBe(false));
+  it('Ziehen ist Steuern', () => expect(isTap(100, 30, p)).toBe(false));
+});

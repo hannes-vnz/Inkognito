@@ -64,3 +64,35 @@ describe('Daten und Assets', () => {
     }
   });
 });
+
+import fish from '../data/fish.json';
+import arms from '../data/arms.json';
+import game from '../data/game.json';
+
+describe('Fische und Arme', () => {
+  it('jeder Fisch hat Texte und ein Spritesheet in erlaubter Größe', () => {
+    for (const f of fish) {
+      expect(texts).toHaveProperty([f.nameKey]);
+      expect(texts).toHaveProperty([f.factKey]);
+      expect(f.sprite).toBe(`fish_${f.id}`);
+      expect(f.frame.width).toBeGreaterThanOrEqual(16);
+      expect(f.frame.width).toBeLessThanOrEqual(24);
+      const sheet = pngSize(join(root, 'assets', 'sprites', `${f.sprite}.png`));
+      expect(sheet.width % f.frame.width).toBe(0);
+      expect(sheet.height / f.frame.height).toBe(game.fish.animations.length);
+      expect(Object.keys(game.fish.behaviors)).toContain(f.behavior);
+    }
+  });
+
+  it('jede Zone setzt nur bekannte Fische ein', () => {
+    for (const zone of zones) for (const sp of zone.fishSpawns) expect(fish.map((f) => f.id)).toContain(sp.fish);
+  });
+
+  it('Gerd-Sprüche passen in eine Zeile', () => {
+    for (const [key, value] of Object.entries(texts)) if (key.startsWith('arm.gerd.')) expect(value.length, key).toBeLessThanOrEqual(36);
+  });
+
+  it('Blasenkanone ist definiert', () => {
+    expect(arms.find((a) => a.id === 'bubble_cannon')?.cooldownMs).toBeGreaterThan(0);
+  });
+});

@@ -2,23 +2,88 @@
   {
     "id": "kelp",
     "nameKey": "zone.kelp.name",
-    "depthMeters": { "min": 0, "max": 200 },
-    "world": { "width": 3840, "height": 4200, "surfaceY": 120, "floorHeight": 180 },
+    "depthMeters": {
+      "min": 0,
+      "max": 200
+    },
+    "world": {
+      "width": 3840,
+      "height": 4200,
+      "surfaceY": 120,
+      "floorHeight": 180
+    },
     "pixelsPerMeter": 19.5,
-    "spawn": { "x": 1920, "y": 300 },
+    "spawn": {
+      "x": 1920,
+      "y": 300
+    },
     "water": {
       "shallow": "#3fd3d0",
       "deep": "#0f4f7a",
       "hazeColor": "#08304f",
       "hazeMaxAlpha": 0.45
     },
-    "floor": { "sand": "#c9b27a", "sandShadow": "#a38b56", "rock": "#4c5d6b", "rockLight": "#6e8291" },
+    "floor": {
+      "sand": "#c9b27a",
+      "sandShadow": "#a38b56",
+      "rock": "#4c5d6b",
+      "rockLight": "#6e8291"
+    },
     "background": [
-      { "key": "bg_kelp_0", "factorX": 0, "factorY": 0, "fixed": true },
-      { "key": "bg_kelp_1", "factorX": 0.15, "factorY": 0.1 },
-      { "key": "bg_kelp_2", "factorX": 0.35, "factorY": 0.3 },
-      { "key": "bg_kelp_3", "factorX": 0.6, "factorY": 0.55 }
+      {
+        "key": "bg_kelp_0",
+        "factorX": 0,
+        "factorY": 0,
+        "fixed": true
+      },
+      {
+        "key": "bg_kelp_1",
+        "factorX": 0.15,
+        "factorY": 0.1
+      },
+      {
+        "key": "bg_kelp_2",
+        "factorX": 0.35,
+        "factorY": 0.3
+      },
+      {
+        "key": "bg_kelp_3",
+        "factorX": 0.6,
+        "factorY": 0.55
+      }
     ],
-    "seed": "kelp-layout-1"
+    "seed": "kelp-layout-1",
+    "fishSpawns": [
+      {
+        "fish": "garibaldi",
+        "groups": 8,
+        "perGroup": 1,
+        "depthMeters": [
+          4,
+          70
+        ],
+        "spread": 40
+      },
+      {
+        "fish": "kelp_perch",
+        "groups": 4,
+        "perGroup": 6,
+        "depthMeters": [
+          10,
+          110
+        ],
+        "spread": 90
+      },
+      {
+        "fish": "senorita",
+        "groups": 7,
+        "perGroup": 1,
+        "depthMeters": [
+          20,
+          170
+        ],
+        "spread": 40
+      }
+    ]
   }
 ]

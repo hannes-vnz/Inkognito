@@ -6,10 +6,34 @@
   "frameHeight": 32,
   "scale": 3,
   "animations": [
-    { "key": "idle", "row": 0, "frames": 6, "fps": 10, "repeat": -1 },
-    { "key": "swim", "row": 1, "frames": 6, "fps": 10, "repeat": -1 },
-    { "key": "turn", "row": 2, "frames": 4, "fps": 10, "repeat": 0 },
-    { "key": "catch", "row": 3, "frames": 4, "fps": 10, "repeat": 0 }
+    {
+      "key": "idle",
+      "row": 0,
+      "frames": 6,
+      "fps": 10,
+      "repeat": -1
+    },
+    {
+      "key": "swim",
+      "row": 1,
+      "frames": 6,
+      "fps": 10,
+      "repeat": -1
+    },
+    {
+      "key": "turn",
+      "row": 2,
+      "frames": 4,
+      "fps": 10,
+      "repeat": 0
+    },
+    {
+      "key": "catch",
+      "row": 3,
+      "frames": 4,
+      "fps": 10,
+      "repeat": 0
+    }
   ],
   "swimAnimationMinSpeed": 60,
   "movement": {
@@ -28,5 +52,14 @@
     "amount": 0.12,
     "perAcceleration": 0.0004,
     "rate": 10
+  },
+  "carry": {
+    "capacity": 8,
+    "spacing": 50,
+    "followRate": 9,
+    "offset": {
+      "x": -46,
+      "y": -26
+    }
   }
 }

@@ -168,3 +168,39 @@ body {
   font-size: 15px;
   color: var(--ui-text-dim);
 }
+
+.hud-depth .carry {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.hud-depth .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(228, 253, 255, 0.55);
+  box-sizing: border-box;
+}
+
+.hud-depth .dot.full {
+  background: var(--fish);
+  border-color: #e4fdff;
+}
+
+.toast {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--ui-margin) + 84px);
+  left: 50%;
+  transform: translate(-50%, 0);
+  max-width: calc(100% - 2 * var(--ui-margin) - var(--safe-left) - var(--safe-right));
+  padding: 8px 14px;
+  font-size: 14px;
+  text-align: center;
+  white-space: nowrap;
+  transition: opacity 0.35s ease;
+}
+
+.toast.hidden {
+  opacity: 0;
+}

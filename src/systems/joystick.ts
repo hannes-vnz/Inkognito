@@ -76,3 +76,14 @@ export function joystickZone(width: number, height: number): Rect {
 
 export const inRect = (r: Rect, x: number, y: number): boolean =>
   x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
+
+export interface TapParams {
+  /** Längste Berührung, die noch als Tipp zählt. */
+  maxMs: number;
+  /** Weiteste Daumenbewegung, die noch als Tipp zählt. */
+  maxMove: number;
+}
+
+/** Kurz und ohne Ziehen = Tipp (schießt), sonst war es Steuern. */
+export const isTap = (durationMs: number, moved: number, p: TapParams): boolean =>
+  durationMs <= p.maxMs && moved <= p.maxMove;

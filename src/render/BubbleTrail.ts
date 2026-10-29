@@ -49,7 +49,12 @@ export class BubbleTrail {
     }
   }
 
-  private spawn(x: number, y: number): void {
+  /** Plopp: mehrere Blasen auf einmal, z. B. beim Fang. */
+  burst(x: number, y: number, count: number): void {
+    for (let i = 0; i < count; i++) this.spawn(x, y, this.rng.range(-140, 140));
+  }
+
+  private spawn(x: number, y: number, vx?: number): void {
     let b = this.pool.find((p) => !p.img.visible);
     if (!b) {
       if (this.pool.length >= this.p.maxCount) return;
@@ -58,7 +63,7 @@ export class BubbleTrail {
     }
     b.age = 0;
     b.life = this.p.lifeSeconds * this.rng.range(0.6, 1.1);
-    b.vx = this.rng.range(-20, 20);
+    b.vx = vx ?? this.rng.range(-20, 20);
     b.wobble = this.rng.range(0, Math.PI * 2);
     b.img
       .setPosition(x + this.rng.range(-10, 10), y + this.rng.range(-6, 6))

@@ -2,10 +2,16 @@ import playerJson from '../data/player.json';
 import zonesJson from '../data/zones.json';
 import gameJson from '../data/game.json';
 import textsJson from '../data/texts.de.json';
+import fishJson from '../data/fish.json';
+import armsJson from '../data/arms.json';
 import type { MovementParams } from './systems/movement';
 import type { CameraParams } from './systems/camera';
-import type { JoystickParams } from './systems/joystick';
+import type { JoystickParams, TapParams } from './systems/joystick';
 import type { TextTable } from './systems/texts';
+import type { FishDef, FishTuning } from './systems/fish';
+import type { CannonDef } from './systems/bubbles';
+import type { CarryParams } from './systems/carry';
+import type { SpawnDef } from './systems/dive';
 
 export interface AnimationDef {
   key: string;
@@ -27,6 +33,7 @@ export interface PlayerDef {
   movement: MovementParams;
   tilt: { maxDegrees: number; perSpeed: number };
   squash: { amount: number; perAcceleration: number; rate: number };
+  carry: CarryParams;
 }
 
 export interface BackgroundLayerDef {
@@ -46,24 +53,51 @@ export interface ZoneDef {
   water: { shallow: string; deep: string; hazeColor: string; hazeMaxAlpha: number };
   floor: { sand: string; sandShadow: string; rock: string; rockLight: string };
   background: BackgroundLayerDef[];
+  fishSpawns: SpawnDef[];
   seed: string;
 }
 
 export interface GameConfig {
   fixedStepHz: number;
   camera: CameraParams;
-  joystick: JoystickParams & { restMargin: number };
+  joystick: JoystickParams & { restMargin: number; tap: TapParams };
   juice: {
     bubbles: { maxCount: number; perSecondAtMaxSpeed: number; riseSpeed: number; lifeSeconds: number };
     marineSnow: { count: number; parallax: number; driftSpeed: number };
   };
   ui: { margin: number; fontFamily: string };
+  spriteScale: number;
+  fish: FishTuning & { animations: AnimationDef[] };
+  catching: {
+    hitStopMs: number;
+    vibrateMs: number;
+    vibration: boolean;
+    respawnSeconds: number;
+    respawnMinDistance: number;
+    gerdMissChance: number;
+  };
+}
+
+export interface ArmDef extends CannonDef {
+  nameKey: string;
+  slotUnlock: number;
+  ammo: string[];
+  upgrades: { level: number; cost: number; effect: Record<string, number> }[];
+  personalityKey: string;
 }
 
 export const player = playerJson as PlayerDef;
 export const zones = zonesJson as ZoneDef[];
 export const game = gameJson as GameConfig;
 export const texts = textsJson as TextTable;
+export const fish = fishJson as FishDef[];
+export const arms = armsJson as ArmDef[];
+
+export function armById(id: string): ArmDef {
+  const arm = arms.find((a) => a.id === id);
+  if (!arm) throw new Error(`Arm "${id}" fehlt in data/arms.json`);
+  return arm;
+}
 
 export function zoneById(id: string): ZoneDef {
   const zone = zones.find((z) => z.id === id);

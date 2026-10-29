@@ -1,0 +1,13 @@
+[
+  {
+    "id": "bubble_cannon",
+    "nameKey": "arm.bubble_cannon.name",
+    "slotUnlock": 1,
+    "cooldownMs": 600,
+    "ammo": ["basic", "sticky", "bait", "double", "armored"],
+    "upgrades": [{ "level": 2, "cost": 120, "effect": { "cooldownMs": 450 } }],
+    "personalityKey": "arm.gerd",
+    "projectile": { "speed": 820, "drag": 1.2, "lifeSeconds": 0.8, "radius": 18, "inheritVelocity": 0.4 },
+    "aimAssist": { "maxAngleDegrees": 16, "range": 480 }
+  }
+]

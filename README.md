@@ -29,4 +29,7 @@ Jeder Push auf `main` baut das Spiel und veröffentlicht es auf GitHub Pages:
 3. Diese Adresse im Handy-Browser öffnen. Mit `?debug` hinten dran (`http://192.168.0.23:5173/?debug`) erscheint oben rechts die FPS-Anzeige.
 4. Für Vollbild: im Browser-Menü „Zum Home-Bildschirm“ wählen und von dort starten.
 
-Steuerung: Daumen irgendwo in der unteren Hälfte (hochkant) bzw. linken Hälfte (quer) aufsetzen und ziehen. Am Desktop WASD oder Pfeiltasten.
+Steuerung:
+- **Schwimmen:** Daumen in der unteren Hälfte (hochkant) bzw. linken Hälfte (quer) aufsetzen und ziehen. Desktop: WASD oder Pfeiltasten.
+- **Schießen (Blasenkanone):** Kurz tippen, Ziel ist die Tippstelle. Quer kann man rechts auch ziehen zum Zielen und loslassen zum Schießen. Desktop: Mausklick oder Leertaste.
+- Eine leichte Zielhilfe lenkt Schüsse auf Fische, die knapp daneben liegen. Gefangene Fische schweben in Blasen hinterher (max. 8).

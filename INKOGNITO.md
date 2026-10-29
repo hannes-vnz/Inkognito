@@ -1,18 +1,19 @@
 # Inkognito – Game Design Konzept
 
-Stand: 29.10.2026
+Stand: 29.10.2026 (Überarbeitung: Riff als 2,5D-Basis mit Haus und Jobs, Gadgets, Zombie-Fische, Fischarmee)
 
 ## Pitch & Kernidee
 
-Inkognito ist ein Unterwasser-Abenteuer für Mobile: Du spielst einen Oktopus, der mit Blasenkanone und Angel Fische lebend fängt und sie in seinem Riff ansiedelt, das zur chaotischen WG-Basis voller verrückter NPCs wächst.
+Inkognito ist ein Unterwasser-Abenteuer für Mobile: Du spielst einen Oktopus, der mit acht Armen voller Gadgets Fische fängt, sie in einem alten Haus im Riff einquartiert und für sich arbeiten lässt, während das Riff Stück für Stück zur Heimat voller schräger Figuren wird.
 
 **Genre-Mix:** Tauch-Action (Fangen, Ausweichen, Erkunden) im Wechsel mit Basis-Management (Riff ausbauen, Bewohner zufriedenstellen, Aufträge von NPCs).
 
 **Alleinstellungsmerkmale:**
 
 - Acht Arme als acht Werkzeug-Slots, und jeder Arm hat eine eigene Meinung.
-- Fische werden nicht getötet, sondern lebend gefangen und zu Bewohnern mit Wohnwünschen.
-- Das Riff ist eine WG-Basis statt eines Restaurants: Je mehr Arten einziehen, desto mehr NPCs, Läden und Nebenspiele.
+- Fische werden gefangen statt gegessen: Sie schlafen im alten Haus, haben Werte und übernehmen Jobs (Seegras farmen, Muscheln sammeln, bauen, kämpfen).
+- Böse Fische und Zombie-Fische bringen Action: mit der Schrotflinte k.o. schießen, dann einsammeln, behalten oder beim Hai verkaufen.
+- Das Riff ist eine 2,5D-Basis zum Durchschwimmen: Jede Story-Figur hat ihre Ecke auf einem Podest und schaltet ein Feature frei.
 - Der Walfall als großer Wendepunkt: Ein Wal sinkt neben das Riff und öffnet neue Zonen und Bewohner.
 
 **Zielplattform:** Mobile (hochkant und quer) und Browser. **Tauchgang:** 5–10 Minuten. **Session:** 1–2 Tauchgänge plus Basis-Zeit.
@@ -21,11 +22,11 @@ Inkognito ist ein Unterwasser-Abenteuer für Mobile: Du spielst einen Oktopus, d
 
 Das Spiel wechselt zwischen Tauchgang und Riff-Basis; was du draußen fängst, verändert drinnen, was du bauen und erleben kannst.
 
-1. **Im Riff vorbereiten:** Arme ausrüsten, Munition für die Blasenkanone wählen, Aufträge von NPCs annehmen.
+1. **Im Riff vorbereiten:** Gadgets auf die Arme legen, Begleitfisch wählen, Aufträge der Story-Figuren annehmen.
 2. **Tauchgang in Echtzeit:** Eine Zone mit festem Layout und wechselnden Fischen, Ereignissen und Räubern. Steuerung: Bewegen + 1 Aktionstaste, weitere Arme per Schnellwahl. Sauerstoff begrenzt die Zeit.
-3. **Fangen:** Kleine Fische mit der Blasenkanone, große mit der Angel. Gefangene Fische schweben in Blasen hinter dir her, Räuber versuchen sie dir abzujagen.
-4. **Zurück ins Riff:** Fische ansiedeln, verkaufen oder für Aufträge abgeben. Neue Arten locken neue NPCs an.
-5. **Basis-Zeit:** Bauen, Bewohner-Wünsche erfüllen, mit NPCs reden, Nebenspiele spielen. Danach der nächste Tauchgang.
+3. **Fangen:** Kleine Fische mit der Blasenkanone, große mit der Angel, böse und Zombie-Fische erst mit der Schrotflinte k.o. schießen. Gefangene Fische schweben in Blasen hinter dir her, Räuber versuchen sie dir abzujagen.
+4. **Zurück ins Riff:** Fische ziehen ins alte Haus (solange Platz ist), warten vor der Tür oder gehen an den Hai. Jeder Fang hat eigene Werte.
+5. **Basis-Zeit (wie die Sushi-Abende bei Dave the Diver):** Jobs verteilen, Futter und Muscheln einsammeln, Haus und Farm ausbauen, mit den Figuren reden. Danach der nächste Tauchgang.
 
 **Walfall (Prestige):** Erreicht das Riff eine Stufe, kannst du einen Walfall auslösen. Ein Wal sinkt neben dein Riff, öffnet eine neue Zone und bringt Aasfresser-Bewohner. Muscheln (Währung) setzen sich zurück, Bewohner und Arm-Upgrades bleiben.
 
@@ -43,30 +44,50 @@ Die Hauptfigur ist ein Oktopus, dessen acht Arme acht Werkzeug-Slots sind; zu Be
 | Greifarm | Schätze, Muscheln und Bauteile vom Grund holen |
 | Saugnapf-Anker | An Felsen festhalten gegen Strömung |
 | Werkzeug-Arm | Reparieren und Bauen unterwegs |
+| Fisch-Radar | Zeigt am Bildschirmrand, wo eine gewählte Art schwimmt |
+| Schrotflinte | Gag-Waffe mit Streuschuss: schießt Fische k.o. (Sternchen, schwimmen bäuchlings), dann einsammeln. Pflicht gegen Zombie- und böse Fische |
+
+Jeder Arm ist ein Gadget-Platz: Was auf den Armen liegt, nimmst du mit in den Tauchgang. Mehr Arme = mehr Gadgets gleichzeitig, das macht die Spielweise je nach Ausrüstung anders.
 
 **Blasen-Munition:** Klebeblase (bremst schnelle Fische), Köderblase (lockt an), Doppelblase (zwei kleine Fische), Panzerblase (für stachelige Arten).
 
 **Die Arme reden mit:** Etwa zwei Drittel der Nervenzellen eines Oktopus sitzen in den Armen. Im Spiel hat jeder Arm einen Namen und eine Persönlichkeit, kommentiert Fehlschüsse und Käufe, und Upgrades verbessern auch die Laune des Arms.
 
-## Riff-Basis, Bewohner & NPCs
+## Riff-Basis: Haus, Jobs & Story-Figuren
 
-Das Riff ist eine begehbare WG-Basis: Du schwimmst durch Höhlen, Gärten und Läden, und jeder gefangene Fisch wird Bewohner mit Wünschen.
+Das Riff ist eine begehbare **2,5D-Basis** in der Seitenansicht: mehrere Ebenen in die Tiefe (vorne, Mitte, hinten), Felsvorsprünge und alte Ruinen. Hochkant wirkt es wie ein Wimmelbild mit Etagen übereinander, quer wie ein Panorama.
 
-**Bewohner:** Jede Art braucht etwas (Clownfische eine Anemone, Muränen eine dunkle Höhle, Papageifische Korallen zum Knabbern). Zufriedene Bewohner produzieren Muscheln oder Dienste: Putzerfische senken Reparaturkosten, Papageifische machen Sand. Falsch kombiniert fressen sich Bewohner gegenseitig, mit Meldung: „Der Zackenbarsch hat deine Investition gegessen.“
+**Das alte Haus:** Alle gefangenen Fische schlafen in einem großen, alten Haus (eine versunkene Villa). Seine Ausbaustufe bestimmt, wie viele Fische du halten kannst (**Fischstärke**). Wer keinen Platz hat, wartet vor der Tür, bis ausgebaut oder verkauft wird.
 
-**Was mit einem Fang passiert:** Ansiedeln, an Kunden mit Aufträgen verkaufen, für Ruf freilassen oder züchten (seltene Varianten wie Farbmorph, Mini, Riesig).
+**Fische haben Werte:** Stärke, Tempo und Fleiß, bei jedem Fang neu ausgewürfelt (Seed-RNG). Seltene Varianten (Zombie, Riesig, Farbmorph) haben bessere Werte.
 
-| NPC | Rolle | Was man mit ihm macht |
+**Jobs:** Jeder Fisch im Haus kann einen Job übernehmen, die Leistung hängt am passenden Wert:
+
+| Job | Wert | Ergebnis |
 | --- | --- | --- |
-| Einsiedlerkrebs-Makler | Wohnungsnot, vermittelt Höhlen | Wohnungsbesichtigungen, Umzugs-Aufträge |
-| Muräne an der Tür | Lässt nur „coole“ Fische ins Riff-Café | Outfits und Status-Fische sammeln |
-| Putzerfisch-Friseur | Salon im Riff | Frisuren-Minispiel für Bewohner |
-| Seegurken-Gewerkschaft | Streikt bei Überlastung | Tarifverhandlung als Dialog-Minispiel |
-| Walross-Sammler | Reicher Aquarien-Fan von oben | Zahlt das Dreifache für seltene lebende Fische |
-| Pottwal-Bürgermeister | Uralt, verschläft jede Sitzung | Riff-Ausbau genehmigen lassen, Wecken als Event |
-| Sushi-Hai | Dubioser Händler | Fragwürdige Deals mit Folgen |
+| Seegras-Farm | Fleiß | Futter (alle Fische essen, ohne Futter arbeiten sie nur halb so gut) |
+| Muscheln sammeln | Tempo | Muscheln |
+| Bautrupp | Stärke | Ausbauten gehen schneller (später) |
+| Wache | Stärke | Verteidigt das Riff gegen Angriffe (später) |
+| Expedition | alle | Fische ziehen los und bringen nach Zeit Beute (später) |
 
-**Veränderung über die Woche:** Neue NPCs ziehen ein, sobald bestimmte Arten im Riff leben. Ab Tag 5 kommen Events wie die Laichwanderung (eine Art massenhaft, Preise fallen) und ein wöchentlicher „Fisch der Woche“ mit Sonderauftrag.
+**Story-Figuren auf Podesten:** Jede Figur bekommt ihre Ecke auf einem Podest im Riff, zieht im Lauf der Story ein, erklärt ihr Feature in kurzen Dialogen (Vorbild: Dave the Diver) und gibt Aufträge.
+
+| Figur | Ecke | Feature |
+| --- | --- | --- |
+| Kalle Krebs, Hausverwalter | Vor dem alten Haus | Einstieg, Haus und Ausbau |
+| Gisela Seegurke | Seegras-Farm | Jobs und Futter (und die Seegurken-Gewerkschaft) |
+| Bruno, abgehalfterter Hai | Wrack am Rand | Kauft Fische für Muscheln, zahlt extra für Zombie-Fische |
+| Werkzeug-Garnele | Werkbank | Gadgets und Arm-Plätze |
+| General Barsch | Exerzierplatz | Fischarmee: Begleiter, Expeditionen, Verteidigung |
+| Pottwal-Bürgermeister | Ganz hinten, schläft | Große Ausbauten, Wecken als Event |
+
+**Fischarmee (drei Stufen):**
+1. **Expeditionen:** Fische ziehen los und bringen nach Zeit Beute (passiv, auch offline).
+2. **Begleiter:** Ein Fisch begleitet dich im Tauchgang und hilft je nach Werten (verscheucht Räuber, sammelt k.o. Fische ein).
+3. **Verteidigung:** Böse Fische greifen das Riff an, Wachen halten dagegen.
+
+**Veränderung über die Woche:** Neue Figuren ziehen ein, sobald die Story es freigibt. Ab Tag 5 kommen Events wie die Laichwanderung (eine Art massenhaft, Preise fallen) und ein wöchentlicher „Fisch der Woche“ mit Sonderauftrag.
 
 ## Zonen
 
@@ -88,10 +109,10 @@ Jeder Spieltag schaltet mindestens eine neue Sache frei, und neue Inhalte verän
 
 | Spieltag | Neues |
 | --- | --- |
-| 1 | Kelpwald, Blasenkanone, Makler und erste Wohnhöhlen |
-| 2 | Korallenriff, Angel, Riff-Café mit Muräne |
-| 3 | Dämmerzone, Laterne, Zucht |
-| 4 | Walross-Sammler, Netz, Ruf-System |
+| 1 | Kelpwald, Blasenkanone, Kalle und das alte Haus, Gisela und die Seegras-Farm |
+| 2 | Bruno der Hai (Handel), Schrotflinte, erste Zombie-Fische |
+| 3 | Korallenriff, Werkzeug-Garnele (Gadgets, Fisch-Radar), Angel |
+| 4 | Dämmerzone, Laterne, General Barsch (Begleiter, Expeditionen) |
 | 5 | Mitternachtszone, erster Walfall möglich |
 | 6–7 | Hydrothermalquellen, Events, Fisch der Woche |
 
@@ -104,7 +125,7 @@ Jeder Spieltag schaltet mindestens eine neue Sache frei, und neue Inhalte verän
 
 ## Art Direction: Pixel-Figuren in gemalter Welt
 
-Vorbild ist das Hybrid-Prinzip von Dave the Diver: Figuren und Fische sind Pixel-Sprites, Unterwasserwelt und Licht sind hochauflösend gemalt, die UI ist modern und flach. Übernommen wird nur das Prinzip, alle Figuren und Grafiken sind eigene Designs.
+Vorbild ist der Stil von Dave the Diver: Figuren und Fische sind Pixel-Sprites, Unterwasserwelt und Licht sind hochauflösend gemalt (dichte Korallen im Vordergrund, Lichtstrahlen, Ruinen und Dunst in der Tiefe), die UI ist modern und flach. Auch Ablauf, Mechaniken und Dialoge (Figuren-Porträts, kurze Zeilen, Auftrags-Karten) nehmen Dave the Diver als Vorbild. Alle Figuren, Namen und Grafiken sind eigene Designs.
 
 | Ebene | Stil | Details |
 | --- | --- | --- |
@@ -175,13 +196,15 @@ supabase/    migrations
 
 **Meilensteine:**
 
-1. **Bewegung:** Oktopus mit Unterwasser-Trägheit, Kamera, ein Hintergrund mit Parallax. Fertig, wenn sich Schwimmen hochkant und quer auf einem Handy flüssig anfühlt (60 fps).
-2. **Fangen:** Blasenkanone, 3 Fischarten mit Verhalten, Fische folgen in Blasen. Fertig, wenn ein Fang vom Zielen bis zur Blase unter 3 Sekunden dauert und sich gut anfühlt.
-3. **Tauchgang komplett:** Sauerstoff, Rückkehr zum Riff, ein Räuber, Kelpwald als Zone. Fertig, wenn ein Tauchgang von Start bis Rückkehr spielbar ist.
-4. **Riff-Basis:** Begehbares Riff, 3 Wohnhöhlen, Bewohner ansiedeln, Muscheln verdienen, Makler-NPC mit Dialog. Fertig, wenn ein Fang im Riff einzieht und Muscheln produziert.
+1. ✅ **Bewegung:** Oktopus mit Unterwasser-Trägheit, Kamera, ein Hintergrund mit Parallax. Fertig, wenn sich Schwimmen hochkant und quer auf einem Handy flüssig anfühlt (60 fps).
+2. ✅ **Fangen:** Blasenkanone, 3 Fischarten mit Verhalten, Fische folgen in Blasen. Fertig, wenn ein Fang vom Zielen bis zur Blase unter 3 Sekunden dauert und sich gut anfühlt.
+3. ✅ **Tauchgang komplett:** Sauerstoff, Rückkehr zum Riff, ein Räuber, Kelpwald als Zone. Fertig, wenn ein Tauchgang von Start bis Rückkehr spielbar ist.
+4. **Riff-Basis (neu):** 2,5D-Riff mit Ebenen und Podesten, altes Haus mit Ausbaustufen, Fisch-Werte, Jobs Seegras-Farm und Muscheln sammeln, Futter, Bruno der Hai als Händler, Story-Aufträge von Kalle, Gisela und Bruno. Fertig, wenn ein Fang ins Haus zieht, einen Job übernimmt und Futter oder Muscheln erarbeitet, und wenn ein Fisch an Bruno verkauft werden kann.
 5. **Online:** Login, Cloud-Speicherstand, Freundesliste. Fertig, wenn derselbe Spielstand auf zwei Geräten lädt.
-6. **Inhalt:** Angel, weitere Zonen, alle NPCs, Zucht, Walfall, Events.
-7. **Gegen Freunde:** Asynchrone Duelle, danach Echtzeit (siehe Online & Multiplayer).
+6. **Gadgets & böse Fische:** Arme als Gadget-Plätze mit Ausrüsten im Riff, Schrotflinte, Fisch-Radar, Zombie- und böse Fische (k.o. schießen, einsammeln). Fertig, wenn zwei verschiedene Ausrüstungen sich spürbar anders spielen.
+7. **Fischarmee:** Begleiter im Tauchgang, Expeditionen, Riff-Verteidigung.
+8. **Inhalt:** Angel, weitere Zonen, alle Figuren, Zucht, Walfall, Events.
+9. **Gegen Freunde:** Asynchrone Duelle, danach Echtzeit (siehe Online & Multiplayer).
 
 ## Online & Multiplayer
 
@@ -197,7 +220,7 @@ Alle Spielstände liegen online; Freunde-Kämpfe kommen in zwei Stufen, erst asy
 | duels | Herausforderungen, Ergebnisse, Status |
 | leaderboards | Wöchentliche Wertungen (größter Fang, Fischbuch-Fortschritt) |
 
-**Stufe 1, asynchron (Meilenstein 7):**
+**Stufe 1, asynchron (Meilenstein 9):**
 
 - **Riff-Besuch:** Das Riff eines Freundes ansehen, ein Geschenk dalassen, einen Fisch tauschen.
 - **Fang-Duell:** Beide spielen denselben Tauchgang mit gleichem Seed, wer in 3 Minuten mehr Punkte fängt, gewinnt.
@@ -263,7 +286,19 @@ Alle Inhalte liegen als JSON in `/data`; jede Datei ist ein Array solcher Eintr�
 }
 ```
 
-Weitere Dateien nach gleichem Muster: `zones.json`, `quests.json`, `buildings.json`, `events.json`.
+**fish.json** bekommt zusätzlich Wertebereiche für die Fang-Würfel:
+
+```json
+"stats": { "strength": [1, 3], "speed": [2, 4], "diligence": [1, 3] }
+```
+
+**jobs.json:**
+
+```json
+{ "id": "seaweed_farm", "nameKey": "job.seaweed_farm.name", "building": "seaweed_farm", "stat": "diligence", "produces": { "food": 0.5 } }
+```
+
+Weitere Dateien nach gleichem Muster: `zones.json`, `quests.json`, `buildings.json` (mit Ausbaustufen), `npcs.json` (mit Podest und Freischaltung), `events.json`.
 
 ## Steuerung & UI-Layout
 

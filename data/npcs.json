@@ -1,0 +1,69 @@
+[
+  {
+    "id": "hermit_broker",
+    "nameKey": "npc.broker.name",
+    "sprite": "npc_hermit_broker",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "placeholderColor": "#e88a3a",
+    "unlock": {
+      "residentsAtLeast": 0
+    },
+    "dialog": {
+      "start": {
+        "textKey": "npc.broker.hello",
+        "options": [
+          {
+            "textKey": "npc.broker.opt_flat",
+            "next": "flat"
+          },
+          {
+            "textKey": "npc.broker.opt_who",
+            "next": "who"
+          },
+          {
+            "textKey": "npc.broker.opt_bye",
+            "next": null
+          }
+        ]
+      },
+      "who": {
+        "textKey": "npc.broker.who",
+        "options": [
+          {
+            "textKey": "npc.broker.opt_back",
+            "next": "start"
+          }
+        ]
+      },
+      "flat": {
+        "textKey": "npc.broker.flat",
+        "action": {
+          "type": "startQuest",
+          "quest": "move_in_1"
+        },
+        "options": [
+          {
+            "textKey": "npc.broker.opt_ok",
+            "next": null
+          }
+        ],
+        "redirect": {
+          "questDone": "move_in_1",
+          "to": "flat_done"
+        }
+      },
+      "flat_done": {
+        "textKey": "npc.broker.flat_done",
+        "options": [
+          {
+            "textKey": "npc.broker.opt_ok",
+            "next": null
+          }
+        ]
+      }
+    }
+  }
+]

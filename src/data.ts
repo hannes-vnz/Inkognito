@@ -5,6 +5,10 @@ import textsJson from '../data/texts.de.json';
 import fishJson from '../data/fish.json';
 import armsJson from '../data/arms.json';
 import predatorsJson from '../data/predators.json';
+import buildingsJson from '../data/buildings.json';
+import npcsJson from '../data/npcs.json';
+import questsJson from '../data/quests.json';
+import reefJson from '../data/reef.json';
 import type { MovementParams } from './systems/movement';
 import type { CameraParams } from './systems/camera';
 import type { JoystickParams, TapParams } from './systems/joystick';
@@ -16,6 +20,9 @@ import type { PredatorSpawnDef, SpawnDef } from './systems/dive';
 import type { PredatorDef } from './systems/predator';
 import type { OxygenParams } from './systems/oxygen';
 import type { CurrentParams } from './systems/current';
+import type { BuildingDef } from './systems/residents';
+import type { NpcDef } from './systems/dialog';
+import type { QuestDef } from './systems/quests';
 
 export interface AnimationDef {
   key: string;
@@ -113,3 +120,25 @@ export function zoneById(id: string): ZoneDef {
   if (!zone) throw new Error(`Zone "${id}" fehlt in data/zones.json`);
   return zone;
 }
+
+export interface ReefDef {
+  id: string;
+  nameKey: string;
+  world: { width: number; height: number; floorY: number };
+  spawn: { x: number; y: number };
+  diveEntrance: { x: number; y: number; radius: number };
+  npcs: { npc: string; x: number; y: number }[];
+  interactRadius: number;
+  maxOfflineHours: number;
+  holdingCapacity: number;
+  water: { deep: string };
+  floor: { sand: string; sandShadow: string; rock: string; rockLight: string };
+  background: BackgroundLayerDef[];
+  seed: string;
+}
+
+export const buildings = buildingsJson as BuildingDef[];
+export const npcs = npcsJson as unknown as NpcDef[];
+export const quests = questsJson as QuestDef[];
+export const reef = reefJson as ReefDef;
+export const fishById = new Map(fish.map((f) => [f.id, f]));

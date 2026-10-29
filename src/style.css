@@ -280,3 +280,183 @@ body {
   outline: 3px solid #fff3b0;
   outline-offset: 2px;
 }
+
+.hud-depth .sub-label {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ui-text-dim);
+}
+
+.hud-shells {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--ui-margin));
+  right: calc(var(--safe-right) + var(--ui-margin));
+  padding: 8px 14px 9px;
+  min-width: 64px;
+  text-align: right;
+}
+
+.hud-shells .label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ui-text-dim);
+}
+
+.hud-shells .value {
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.hud-shells .value.bump {
+  animation: bump 0.4s ease-out;
+}
+
+@keyframes bump {
+  40% {
+    transform: scale(1.25);
+    color: #fff3b0;
+  }
+}
+
+.action-button {
+  position: absolute;
+  right: calc(var(--safe-right) + var(--ui-margin));
+  bottom: calc(var(--safe-bottom) + var(--ui-margin) + 8px);
+  min-width: 96px;
+  min-height: 56px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 28px;
+  background: #fff3b0;
+  color: #3a2a06;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 20, 40, 0.35);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.action-button[hidden] {
+  display: none;
+}
+
+.action-button:focus-visible,
+.sheet-option:focus-visible {
+  outline: 3px solid #8ff3ff;
+  outline-offset: 2px;
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 calc(var(--safe-right) + 12px) calc(var(--safe-bottom) + 12px) calc(var(--safe-left) + 12px);
+  pointer-events: auto;
+}
+
+.sheet[hidden] {
+  display: none;
+}
+
+.sheet-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: calc(50vh - 24px);
+  max-height: calc(60vh);
+  padding: 18px;
+  overflow-y: auto;
+  background: rgba(8, 36, 56, 0.86);
+}
+
+.sheet-title {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ui-accent);
+}
+
+.sheet-text {
+  margin: 6px 0 0;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.sheet-options {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid rgba(228, 253, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(228, 253, 255, 0.1);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-option:active {
+  background: rgba(228, 253, 255, 0.22);
+}
+
+.sheet-option .dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--fish);
+}
+
+@media (orientation: landscape) {
+  .sheet-card {
+    flex-direction: row;
+    align-items: flex-end;
+    min-height: 0;
+    max-height: calc(100vh - 24px);
+  }
+
+  .sheet-body {
+    flex: 1 1 55%;
+    min-width: 0;
+  }
+
+  .sheet-options {
+    flex: 1 1 45%;
+    min-width: 0;
+    margin-top: 0;
+  }
+}
+
+/* Ebenen: Karten und Overlays liegen über Joystick und Hinweisen. */
+.action-button {
+  z-index: 4;
+}
+
+.sheet {
+  z-index: 5;
+}
+
+.overlay {
+  z-index: 6;
+}
+
+@media (orientation: portrait) {
+  /* Hochkant über dem Joystick, damit der Daumen beides erreicht, ohne dass sie sich überdecken. */
+  .action-button {
+    bottom: calc(var(--safe-bottom) + 190px);
+  }
+}

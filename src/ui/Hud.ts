@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { Toast } from './Toast';
 
 /** Flache DOM-Oberfläche über dem Canvas: scharf auf jedem Display, Safe Areas per CSS. */
 export class Hud {
@@ -10,8 +11,7 @@ export class Hud {
   private readonly oxygen: HTMLDivElement;
   private readonly oxygenFill: HTMLDivElement;
   private lastOxygen = -1;
-  private readonly toast: HTMLDivElement;
-  private toastTimer = 0;
+  private readonly toast: Toast;
   private lastDepth = -1;
   private lastCarry = '';
 
@@ -33,8 +33,7 @@ export class Hud {
     depth.append(this.depthLabel, this.depthValue, this.oxygen, this.carry);
     root.append(depth);
 
-    this.toast = el('div', 'card toast hidden');
-    root.append(this.toast);
+    this.toast = new Toast(root);
 
     this.fps = debug ? el('div', 'card hud-fps') : null;
     if (this.fps) root.append(this.fps);
@@ -75,10 +74,7 @@ export class Hud {
 
   /** Kurzer Einzeiler oben (z. B. Kommentare der Arme). */
   say(text: string, seconds = 2.2): void {
-    this.toast.textContent = text;
-    this.toast.classList.remove('hidden');
-    window.clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => this.toast.classList.add('hidden'), seconds * 1000);
+    this.toast.say(text, seconds);
   }
 
   setFps(fps: number): void {
@@ -99,7 +95,7 @@ export class Hud {
   }
 
   destroy(): void {
-    window.clearTimeout(this.toastTimer);
+    this.toast.destroy();
     this.root.replaceChildren();
   }
 }

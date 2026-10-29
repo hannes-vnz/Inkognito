@@ -17,7 +17,7 @@ export class ResultOverlay {
     root.append(this.node);
   }
 
-  show(titleKey: string, subKey: string | null, entries: readonly ResultEntry[], onAgain: () => void): void {
+  show(titleKey: string, subKey: string | null, entries: readonly ResultEntry[], buttonKey: string, onButton: () => void): void {
     const card = el('div', 'card');
     const title = el('div', 'title');
     title.textContent = t(titleKey);
@@ -46,10 +46,10 @@ export class ResultOverlay {
     }
     const button = el('button', 'button');
     button.type = 'button';
-    button.textContent = t('result.again');
+    button.textContent = t(buttonKey);
     button.addEventListener('click', () => {
       this.node.hidden = true;
-      onAgain();
+      onButton();
     });
     card.append(button);
     this.node.replaceChildren(card);

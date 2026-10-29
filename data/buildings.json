@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cave_algae",
+    "nameKey": "building.cave_algae.name",
+    "type": "cave",
+    "provides": "algae_nest",
+    "capacity": 3,
+    "sprite": "building_cave_algae",
+    "position": {
+      "x": 700,
+      "y": 1180
+    },
+    "placeholderColor": "#c84a4a"
+  },
+  {
+    "id": "cave_kelp",
+    "nameKey": "building.cave_kelp.name",
+    "type": "cave",
+    "provides": "kelp",
+    "capacity": 3,
+    "sprite": "building_cave_kelp",
+    "position": {
+      "x": 1300,
+      "y": 1180
+    },
+    "placeholderColor": "#3f9a55"
+  },
+  {
+    "id": "cave_sand",
+    "nameKey": "building.cave_sand.name",
+    "type": "cave",
+    "provides": "sand",
+    "capacity": 3,
+    "sprite": "building_cave_sand",
+    "position": {
+      "x": 1900,
+      "y": 1180
+    },
+    "placeholderColor": "#e2cf8f"
+  }
+]

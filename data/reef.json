@@ -1,0 +1,56 @@
+{
+  "id": "reef",
+  "nameKey": "zone.reef.name",
+  "world": {
+    "width": 2600,
+    "height": 1400,
+    "floorY": 1260
+  },
+  "spawn": {
+    "x": 1300,
+    "y": 700
+  },
+  "diveEntrance": {
+    "x": 2350,
+    "y": 420,
+    "radius": 120
+  },
+  "npcs": [
+    {
+      "npc": "hermit_broker",
+      "x": 1000,
+      "y": 1240
+    }
+  ],
+  "interactRadius": 150,
+  "maxOfflineHours": 8,
+  "holdingCapacity": 12,
+  "water": {
+    "deep": "#1d6f8f"
+  },
+  "floor": {
+    "sand": "#e6d29a",
+    "sandShadow": "#c2aa6d",
+    "rock": "#7a6a8c",
+    "rockLight": "#9b8bb0"
+  },
+  "background": [
+    {
+      "key": "bg_reef_0",
+      "factorX": 0,
+      "factorY": 0,
+      "fixed": true
+    },
+    {
+      "key": "bg_reef_1",
+      "factorX": 0.2,
+      "factorY": 0.1
+    },
+    {
+      "key": "bg_reef_2",
+      "factorX": 0.45,
+      "factorY": 0.3
+    }
+  ],
+  "seed": "reef-layout-1"
+}

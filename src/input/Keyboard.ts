@@ -4,7 +4,7 @@ import type { Vec2 } from '../systems/vector';
 
 /** WASD und Pfeiltasten für den Desktop. */
 export class KeyboardControls {
-  private readonly keys: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'space', Phaser.Input.Keyboard.Key> | null;
+  private readonly keys: Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'space' | 'e' | 'enter', Phaser.Input.Keyboard.Key> | null;
 
   constructor(scene: Phaser.Scene) {
     const kb = scene.input.keyboard;
@@ -19,6 +19,8 @@ export class KeyboardControls {
           s: Phaser.Input.Keyboard.KeyCodes.S,
           d: Phaser.Input.Keyboard.KeyCodes.D,
           space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+          e: Phaser.Input.Keyboard.KeyCodes.E,
+          enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
         }) as KeyboardControls['keys'])
       : null;
   }
@@ -37,5 +39,10 @@ export class KeyboardControls {
   /** Leertaste: einmal pro Drücken. */
   firePressed(): boolean {
     return this.keys ? Phaser.Input.Keyboard.JustDown(this.keys.space) : false;
+  }
+
+  /** E oder Enter: Aktion im Riff (reden, einziehen lassen, tauchen). */
+  actionPressed(): boolean {
+    return this.keys ? Phaser.Input.Keyboard.JustDown(this.keys.e) || Phaser.Input.Keyboard.JustDown(this.keys.enter) : false;
   }
 }

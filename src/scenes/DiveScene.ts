@@ -121,6 +121,7 @@ export class DiveScene extends Phaser.Scene {
     cam.centerOn(spawn.x, spawn.y);
 
     const uiRoot = document.getElementById('ui') as HTMLElement;
+    uiRoot.replaceChildren();
     this.hud = new Hud(uiRoot, this.zone.nameKey, debug);
     this.hud.setCarry([], this.cfg.carry.capacity);
     this.joystick = new TouchJoystick(this, new JoystickView(uiRoot, game.joystick.radius), game.joystick);
@@ -245,8 +246,8 @@ export class DiveScene extends Phaser.Scene {
     });
     const surfaced = status === 'surfaced';
     this.time.delayedCall(surfaced ? 250 : 600, () =>
-      this.result.show(surfaced ? 'result.surfaced.title' : 'result.outOfAir.title', surfaced ? null : 'result.outOfAir.sub', entries, () =>
-        this.scene.restart({ zoneId: this.zone.id, diveNumber: this.diveNumber + 1 }),
+      this.result.show(surfaced ? 'result.surfaced.title' : 'result.outOfAir.title', surfaced ? null : 'result.outOfAir.sub', entries, 'result.toReef', () =>
+        this.scene.start('Riff', { returned: [...fish] }),
       ),
     );
   }

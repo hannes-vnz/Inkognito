@@ -1,0 +1,15 @@
+[
+  {
+    "id": "move_in_1",
+    "nameKey": "quest.move_in_1.name",
+    "giver": "hermit_broker",
+    "goal": {
+      "type": "residentsAtLeast",
+      "count": 1
+    },
+    "reward": {
+      "shells": 20
+    },
+    "doneTextKey": "quest.move_in_1.done"
+  }
+]

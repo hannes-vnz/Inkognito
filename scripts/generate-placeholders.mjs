@@ -511,3 +511,129 @@ for (const size of [192, 512]) {
     }
   save(iconsDir, `icon-${size}.png`, icon);
 }
+
+// ---------------------------------------------------------------- Riff: Höhlen, Makler, Hintergründe
+
+/** Höhle 64×48, Anker unten mittig: Felsbogen mit dunklem Eingang und Deko in der Farbe der Höhle. */
+function drawCave(def) {
+  const W2 = 64;
+  const H2 = 48;
+  const img = new Image(W2, H2);
+  const rock = hex('#7a6a8c');
+  const rockLight = hex('#a493b8');
+  const rockDark = hex('#4e4260');
+  const deco = hex(def.placeholderColor);
+  for (let y = 0; y < H2; y++)
+    for (let x = 0; x < W2; x++) {
+      const nx = (x + 0.5 - 32) / 31;
+      const ny = (y + 0.5 - 48) / 46;
+      if (nx * nx + ny * ny > 1) continue;
+      const hx = (x + 0.5 - 32) / 14;
+      const hy = (y + 0.5 - 48) / 26;
+      if (hx * hx + hy * hy <= 1) {
+        img.set(x, y, hex('#1b1030'), 1);
+        continue;
+      }
+      const shade = nx * -0.5 - ny * 0.6;
+      img.set(x, y, shade > 0.55 ? rockLight : shade < 0.25 ? rockDark : rock);
+    }
+  // Outline
+  const solid = (x, y) => img.alphaAt(x, y) > 0;
+  const outline = [];
+  for (let y = 0; y < H2; y++)
+    for (let x = 0; x < W2; x++)
+      if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) outline.push([x, y]);
+  for (const [x, y] of outline) img.set(x, y, hex('#2e2440'));
+  // Deko: Algenbüschel, Kelpstängel oder Sandhügel
+  if (def.provides === 'algae_nest') {
+    for (const bx of [8, 14, 50, 56]) for (let i = 0; i < 9; i++) img.set(bx + Math.round(Math.sin(i * 0.9)), 46 - i, deco);
+  } else if (def.provides === 'kelp') {
+    for (const bx of [6, 58]) for (let i = 0; i < 26; i++) { img.set(bx + Math.round(Math.sin(i * 0.4) * 1.5), 47 - i, deco); if (i % 6 === 3) img.set(bx + 2, 47 - i, deco); }
+  } else {
+    for (let x = 4; x < 60; x++) { const h = Math.round(3 + Math.sin(x * 0.3) * 1.5); for (let y = 47 - h; y < 48; y++) img.set(x, y, deco); }
+  }
+  return img;
+}
+const buildingDefs = JSON.parse(readFileSync(join(root, 'data', 'buildings.json'), 'utf8'));
+for (const def of buildingDefs) save(spritesDir, `${def.sprite}.png`, drawCave(def));
+
+/** Makler: Einsiedlerkrebs im Schneckenhaus, 32×32, Anker unten mittig, Reihe idle mit 4 Frames. */
+function drawBroker(def) {
+  const img = new Image(32 * 4, 32);
+  const shell = hex('#e9d6b0');
+  const shellDark = hex('#b89a6a');
+  const body = hex(def.placeholderColor);
+  const outlineC = hex('#5a2a12');
+  for (let f = 0; f < 4; f++) {
+    const ox = f * 32;
+    const bob = f === 1 || f === 2 ? 1 : 0;
+    const mask = new Int8Array(32 * 32);
+    // Schneckenhaus (Spirale angedeutet durch Ringe)
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 32; x++) {
+        const d = Math.hypot(x + 0.5 - 13, y + 0.5 - (15 + bob));
+        if (d <= 10) mask[y * 32 + x] = d % 4 < 1.4 ? 2 : 1;
+      }
+    // Körper und Scheren rechts unten
+    for (let y = 18 + bob; y < 27 + bob; y++) for (let x = 17; x < 27; x++) mask[y * 32 + x] ||= 3;
+    for (let y = 16 + bob; y < 21 + bob; y++) for (let x = 25 + (f === 3 ? 1 : 0); x < 30; x++) mask[y * 32 + x] = 3;
+    // Beine
+    for (const lx of [18, 21, 24]) for (let y = 27 + bob; y < 31; y++) mask[y * 32 + lx] = 4;
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 32; x++) {
+        const m = mask[y * 32 + x];
+        if (m) img.set(ox + x, y, m === 1 ? shell : m === 2 ? shellDark : body);
+      }
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 32; x++) {
+        if (mask[y * 32 + x]) continue;
+        const n = (x > 0 && mask[y * 32 + x - 1]) || (x < 31 && mask[y * 32 + x + 1]) || (y > 0 && mask[(y - 1) * 32 + x]) || (y < 31 && mask[(y + 1) * 32 + x]);
+        if (n) img.set(ox + x, y, outlineC);
+      }
+    // Stielaugen
+    for (const ex of [21, 25]) {
+      for (let y = 13 + bob; y < 18 + bob; y++) img.set(ox + ex, y, outlineC);
+      img.set(ox + ex, 12 + bob, white); img.set(ox + ex + 1, 12 + bob, white); img.set(ox + ex, 11 + bob, white); img.set(ox + ex + 1, 11 + bob, pupil);
+    }
+  }
+  return img;
+}
+const npcDefs = JSON.parse(readFileSync(join(root, 'data', 'npcs.json'), 'utf8'));
+for (const def of npcDefs) save(spritesDir, `${def.sprite}.png`, drawBroker(def));
+
+// Riff-Hintergründe: wärmer und heller als der Kelpwald, Korallen statt Kelp.
+{
+  const img = new Image(W, H);
+  const top = hex('#9af0e4');
+  const bottom = hex('#2a9fb5');
+  for (let y = 0; y < H; y++) { const c = mix(top, bottom, y / (H - 1)); for (let x = 0; x < W; x++) img.set(x, y, c); }
+  const sun = hex('#fff6d0');
+  for (let i = 0; i < 7; i++) {
+    const rx = rng.range(0, W); const width = rng.range(60, 160); const slant = rng.range(0.2, 0.4); const alpha = rng.range(0.08, 0.15);
+    for (let y = 0; y < H; y++) { const c = rx + y * slant; const w = width * (1 + y / H); for (let x = Math.floor(c - w); x <= c + w; x++) { const e = 1 - Math.abs(x - c) / w; if (e > 0 && x >= 0 && x < W) img.blend(x, y, sun, alpha * e * e * Math.pow(1 - y / H, 1.4)); } }
+  }
+  save(bgDir, 'bg_reef_0.png', img);
+}
+function coralLayer(file, { count, colors, alpha, minR, maxR }) {
+  const img = new Image(W, H, true);
+  for (let i = 0; i < count; i++) {
+    const cx = rng.range(0, W);
+    const cy = rng.range(H * 0.45, H);
+    const color = hex(rng.pick(colors));
+    const blobs = rng.int(3, 7);
+    for (let b = 0; b < blobs; b++) {
+      const bx = cx + rng.range(-maxR, maxR);
+      const by = cy + rng.range(-maxR * 0.8, 0);
+      const r = rng.range(minR, maxR);
+      for (let y = Math.floor(by - r - 1); y <= by + r + 1; y++)
+        for (let x = Math.floor(bx - r - 1); x <= bx + r + 1; x++) {
+          const d = Math.hypot(x + 0.5 - bx, y + 0.5 - by);
+          const cover = clamp01(r - d + 0.5);
+          if (cover > 0) img.blend(x, y, mix(color, [1, 1, 1], clamp01((by - y) / r) * 0.25), alpha * cover);
+        }
+    }
+  }
+  save(bgDir, file, img);
+}
+coralLayer('bg_reef_1.png', { count: 26, colors: ['#5fb7b0', '#7aa6c9', '#8fb9a8'], alpha: 0.35, minR: 20, maxR: 60 });
+coralLayer('bg_reef_2.png', { count: 16, colors: ['#e88aa0', '#f2a65a', '#b48be0', '#6cc4a1'], alpha: 0.6, minR: 18, maxR: 46 });

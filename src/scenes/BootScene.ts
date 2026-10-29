@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { fish, game, player, predators, zones } from '../data';
+import { buildings, fish, game, npcs, player, predators, reef, zones } from '../data';
 import { createSheetAnimations } from '../entities/Octopus';
 
 /** Lädt alle Grafiken aus /assets (Dateinamen laut Asset-Regeln) und legt Animationen an. */
@@ -18,15 +18,18 @@ export class BootScene extends Phaser.Scene {
     }
     this.load.image('fx_bubble', 'sprites/fx_bubble.png');
     this.load.image('fx_catch_bubble', 'sprites/fx_catch_bubble.png');
-    for (const zone of zones) {
-      for (const layer of zone.background) this.load.image(layer.key, `backgrounds/${layer.key}.png`);
+    for (const layer of [...zones.flatMap((z) => z.background), ...reef.background]) {
+      this.load.image(layer.key, `backgrounds/${layer.key}.png`);
     }
+    for (const b of buildings) this.load.image(b.sprite, `sprites/${b.sprite}.png`);
+    for (const n of npcs) this.load.spritesheet(n.sprite, `sprites/${n.sprite}.png`, { frameWidth: n.frame.width, frameHeight: n.frame.height });
   }
 
   create(): void {
     createSheetAnimations(this, player.sprite, player.frameWidth, player.id, player.animations);
     for (const f of [...fish, ...predators]) createSheetAnimations(this, f.sprite, f.frame.width, f.sprite, game.fish.animations);
+    for (const n of npcs) createSheetAnimations(this, n.sprite, n.frame.width, n.sprite, [{ key: 'idle', row: 0, frames: 4, fps: 4, repeat: -1 }]);
     document.getElementById('loading')?.remove();
-    this.scene.start('Dive', { zoneId: 'kelp' });
+    this.scene.start('Riff', {});
   }
 }

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { createRng } from '../systems/rng';
+import { createRng, type Rng } from '../systems/rng';
 import type { ZoneDef } from '../data';
 
 const color = (hex: string): number => Phaser.Display.Color.HexStringToColor(hex).color;
@@ -22,17 +22,27 @@ export function drawWorldDecor(scene: Phaser.Scene, zone: ZoneDef): void {
     surface.fillRect(x, y, 24, 3);
   }
 
-  // Sandgrund mit welliger Oberkante.
-  const floorTop = height - floorHeight;
+  drawFloor(scene, width, height, height - floorHeight, zone.floor, rng);
+}
+
+export interface FloorColors {
+  sand: string;
+  sandShadow: string;
+  rock: string;
+  rockLight: string;
+}
+
+/** Sandgrund mit welliger Oberkante und Felsen. */
+export function drawFloor(scene: Phaser.Scene, width: number, height: number, floorTop: number, floor: FloorColors, rng: Rng): void {
   const g = scene.add.graphics().setDepth(-5);
   const points: Phaser.Types.Math.Vector2Like[] = [{ x: 0, y: height }];
   for (let x = 0; x <= width; x += 64) {
     points.push({ x, y: floorTop + Math.sin(x * 0.004) * 22 + rng.range(-10, 10) });
   }
   points.push({ x: width, y: height });
-  g.fillStyle(color(zone.floor.sandShadow), 1);
+  g.fillStyle(color(floor.sandShadow), 1);
   g.fillPoints(points, true);
-  g.fillStyle(color(zone.floor.sand), 1);
+  g.fillStyle(color(floor.sand), 1);
   g.fillPoints(
     points.map((p) => ({ x: p.x, y: p.y === height ? height : p.y + 10 })),
     true,
@@ -51,9 +61,9 @@ export function drawWorldDecor(scene: Phaser.Scene, zone: ZoneDef): void {
       const rr = r * rng.range(0.7, 1.05);
       shape.push({ x: cx + Math.cos(a) * rr * 1.3, y: cy + Math.sin(a) * rr });
     }
-    g.fillStyle(color(zone.floor.rock), 1);
+    g.fillStyle(color(floor.rock), 1);
     g.fillPoints(shape, true);
-    g.fillStyle(color(zone.floor.rockLight), 1);
+    g.fillStyle(color(floor.rockLight), 1);
     g.fillPoints(
       shape.slice(0, Math.ceil(corners / 2)).map((p) => ({ x: p.x + 6, y: p.y + 6 })).concat([{ x: cx, y: cy }]),
       true,

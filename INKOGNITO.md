@@ -103,6 +103,8 @@ Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 | Atlantik | Die Seeschlange | Riemenfisch | Offene See, nachts, 200–500 m, Haken ab 8 |
 | Nordsee | Das Ungeheuer von Stronsay | Riesenhai | Doggerbank, tagsüber, 0–40 m, Haken ab 6 |
 
+**Köder (Bruno):** gelten für einen Wurf, Preis wächst mit Leine und Haken. Leuchtköder (leuchtende Arten ×3), Krabbelköder (alles außer Fischen ×3), Legendenköder (Legende kommt sicher, wenn Platz, Zeit und Tiefe stimmen). Daten in data/baits.json.
+
 ## Prestige: Neue Meere
 
 Kennt Bert genug Arten eines Meeres (Atlantik: 15 von 21), leuchtet auf der Seekarte „Neues Meer“. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde lässt sich „rein zufällig“ mitversetzen.

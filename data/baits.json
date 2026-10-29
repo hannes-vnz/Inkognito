@@ -1,0 +1,41 @@
+[
+  {
+    "id": "glow",
+    "nameKey": "bait.glow.name",
+    "descKey": "bait.glow.desc",
+    "costBase": 20,
+    "costPerLevel": 6,
+    "effect": {
+      "type": "glow",
+      "factor": 3
+    }
+  },
+  {
+    "id": "crawl",
+    "nameKey": "bait.crawl.name",
+    "descKey": "bait.crawl.desc",
+    "costBase": 15,
+    "costPerLevel": 5,
+    "effect": {
+      "type": "group",
+      "groups": [
+        "crustacean",
+        "echinoderm",
+        "cnidarian",
+        "cephalopod"
+      ],
+      "factor": 3
+    }
+  },
+  {
+    "id": "legend",
+    "nameKey": "bait.legend.name",
+    "descKey": "bait.legend.desc",
+    "costBase": 120,
+    "costPerLevel": 30,
+    "effect": {
+      "type": "legend",
+      "factor": 1
+    }
+  }
+]

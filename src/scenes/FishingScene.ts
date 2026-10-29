@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { dailyParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { baitById, dailyParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
+import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
 import { play } from '../audio/sfx';
@@ -308,14 +309,20 @@ export class FishingScene extends Phaser.Scene {
     }
     const hooks = upgradeValue(upgradeById('hook'), this.save.upgrades.hook);
     const night = isNight(this.save.stats.casts, timeParams);
-    const pool = nightSpecies(spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight), night, timeParams);
+    const bait = baitById(this.save.bait);
+    const pool = baitSpecies(nightSpecies(spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight), night, timeParams), bait);
     const seed = `${this.save.createdAt}-${this.save.stats.casts}`;
     this.legend = legendOf(species, this.save.sea.current);
-    const legendMeters = this.legend ? legendSpawn(seed, this.legend, this.spot.id, night, line) : null;
+    const legendMeters = this.legend ? legendSpawn(seed, this.legend, this.spot.id, night, line, baitCallsLegend(bait)) : null;
     const extra = this.legend && legendMeters !== null ? [{ species: this.legend, meters: legendMeters }] : [];
     this.round = createRound(seed, this.scale.width, line, hooks, pool, this.depth, params, this.spot.current, extra);
     this.legendUid = extra.length ? this.round.fish[this.round.fish.length - 1]!.uid : -1;
     this.legendSeen = false;
+    if (bait) {
+      this.save = consumeBait(this.save);
+      writeSave(this.save);
+      this.refresh();
+    }
     play('splash');
     this.round.hookX = this.rodTip().x;
     this.steerX = null;
@@ -674,6 +681,8 @@ export class FishingScene extends Phaser.Scene {
     const known = here.filter((s) => this.save.fishbook[s.id]).length;
     this.ui.update(this.save, known, here.length, bump);
     this.ui.setTime(this.timeLabel(), isNight(this.save.stats.casts, timeParams));
+    const bait = baitById(this.save.bait);
+    this.ui.setCastLabel(bait ? t('bait.cast', { name: t(bait.nameKey) }) : t('deck.cast'), bait !== null);
     this.harbor.refresh();
   }
 

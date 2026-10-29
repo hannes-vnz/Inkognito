@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -70,11 +70,17 @@ export interface SaveV9 extends Omit<SaveV8, 'version' | 'yarn'> {
   legend: { hints: Record<string, number>; hintAtCast: number; snapped: string[] };
 }
 
-export type Save = SaveV9;
+export interface SaveV10 extends Omit<SaveV9, 'version'> {
+  version: 10;
+  /** Gekaufter Köder für den nächsten Wurf (id aus data/baits.json). */
+  bait: string | null;
+}
+
+export type Save = SaveV10;
 
 export function newSave(now: number): Save {
   return {
-    version: 9,
+    version: 10,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -90,6 +96,7 @@ export function newSave(now: number): Save {
     daily: { lastDay: '', streak: 0 },
     sea: { current: 'atlantic', left: [] },
     legend: { hints: {}, hintAtCast: 0, snapped: [] },
+    bait: null,
   };
 }
 
@@ -137,6 +144,8 @@ const migrations: Record<number, Migration> = {
     const { yarn: _yarn, ...rest } = old;
     return { ...rest, legend: { hints: {}, hintAtCast: 0, snapped: [] } };
   },
+  // v9 → v10: Köder.
+  9: (old) => ({ ...old, bait: null }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

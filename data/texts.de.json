@@ -556,5 +556,18 @@
   "npc.knut.legend": "",
   "npc.knut.caught": "Du hast sie *wirklich* gefangen! Sechzig Jahre such ich die, und du … mit deinem *Bart* … Respekt.",
   "npc.knut.caught.opt": "Anfängerglück.",
-  "reaction.knut.caught": "LEGENDE!"
+  "reaction.knut.caught": "LEGENDE!",
+  "bait.glow.name": "Leuchtköder",
+  "bait.glow.desc": "Leuchtende Arten ×3",
+  "bait.crawl.name": "Krabbelköder",
+  "bait.crawl.desc": "Alles außer Fischen ×3",
+  "bait.legend.name": "Legendenköder",
+  "bait.legend.desc": "Legende kommt sicher",
+  "bait.title": "Brunos Köder",
+  "bait.text": "Frisch aus dem Mantel. Gilt für *einen Wurf*. Keine Fragen.",
+  "bait.bought": "*{name}* am Haken. Auf geht's!",
+  "bait.poor": "Bruno: „Ohne Münzen kein Köder, Kollege.“",
+  "bait.active": "Köder schon dran: *{name}*.",
+  "bait.cast": "Auswerfen mit {name}",
+  "npc.bruno.hub.bait": "Köder kaufen"
 }

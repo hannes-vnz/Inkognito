@@ -24,6 +24,8 @@ import type { DailyParams } from './systems/daily';
 import type { SparkStyle } from './render/Sparks';
 import bottlesJson from '../data/bottles.json';
 import gagsJson from '../data/gags.json';
+import baitsJson from '../data/baits.json';
+import type { BaitDef } from './systems/bait';
 import type { HintParams, TimeParams } from './systems/legend';
 
 export interface AnimationDef {
@@ -92,6 +94,8 @@ export const dailyParams = gameJson.daily as DailyParams;
 export const bottles = bottlesJson as string[];
 export const timeParams = gameJson.time as TimeParams;
 export const gags = gagsJson as string[];
+export const baits = baitsJson as BaitDef[];
+export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;
 export const texts = textsJson as TextTable;
 
 /** Tiefenskala eines Meeres: jede seiner Zonen ist im Spiel gleich lang. */

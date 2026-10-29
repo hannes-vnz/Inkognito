@@ -226,6 +226,12 @@ export class DeckUi {
     }
   }
 
+  /** Auswerfen-Knopf zeigt einen aktiven Köder an. */
+  setCastLabel(text: string, baited: boolean): void {
+    this.castButton.textContent = text;
+    this.castButton.classList.toggle('baited', baited);
+  }
+
   /** Tageszeit unter dem Rekord: Sonne oder Mond und wann es wechselt. */
   setTime(text: string, night: boolean): void {
     this.timeLabel.textContent = text;

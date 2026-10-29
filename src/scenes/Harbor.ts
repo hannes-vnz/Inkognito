@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { gags, harbor, homeOf, npcById, npcs, quiz, species, speciesById, speciesIn, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gags, harbor, homeOf, npcById, npcs, quiz, species, speciesById, speciesIn, spotsIn, story, upgradeById } from '../data';
+import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters } from '../systems/seaMap';
 import { play } from '../audio/sfx';
@@ -167,6 +168,7 @@ export class Harbor {
       if (node.action?.type === 'showRequest') return this.showRequest(npc, portrait, done);
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       if (node.action?.type === 'legendHint') return this.legendHint(npc, portrait, done);
+      if (node.action?.type === 'showBaits') return this.showBaits(npc, portrait, done);
       if (node.action?.type === 'gag') return this.gag(npc, portrait, done);
       this.anim(npc, 'talk');
       this.sheet.show(
@@ -220,6 +222,42 @@ export class Harbor {
     this.anim(npc, 'talk');
     const title = legend ? t(legend.legend.nameKey) : t(npc.nameKey);
     this.sheet.show(title, text, [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+  }
+
+  /** Brunos Köder: für den nächsten Wurf, Preis wächst mit den Upgrades. */
+  private showBaits(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const save = this.host.save;
+    const active = baitById(save.bait);
+    if (active) {
+      this.sheet.show(t('bait.title'), t('bait.active', { name: t(active.nameKey) }), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+      return;
+    }
+    this.anim(npc, 'talk');
+    this.sheet.show(
+      t('bait.title'),
+      t('bait.text'),
+      [
+        ...baits.map((b) => ({
+          label: `${t(b.nameKey)} · ${t(b.descKey)}`,
+          meta: baitCost(b, save).toLocaleString('de-DE'),
+          onSelect: () => {
+            const bought = buyBait(this.host.save, b);
+            if (!bought) {
+              play('wrong');
+              this.host.say(t('bait.poor'));
+              return;
+            }
+            this.host.setSave(bought);
+            play('coin');
+            this.host.say(t('bait.bought', { name: t(b.nameKey) }));
+            this.finish(npc, done);
+          },
+        })),
+        { label: t('npc.bye'), onSelect: () => this.finish(npc, done) },
+      ],
+      undefined,
+      portrait,
+    );
   }
 
   private showRequest(npc: NpcDef, portrait: string | undefined, done?: () => void): void {

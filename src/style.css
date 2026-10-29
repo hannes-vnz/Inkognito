@@ -1657,3 +1657,8 @@ body {
 .hud-depth-card:not(.deck-mode) .time-label {
   display: none;
 }
+
+.cast.baited {
+  font-size: 18px;
+  animation: ready-glow 0.9s ease-in-out infinite alternate;
+}

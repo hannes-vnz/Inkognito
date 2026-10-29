@@ -205,6 +205,10 @@
             "next": "request"
           },
           {
+            "textKey": "npc.bruno.hub.bait",
+            "next": "bait"
+          },
+          {
             "textKey": "npc.bye",
             "next": null
           }
@@ -241,6 +245,12 @@
             "next": null
           }
         ]
+      },
+      "bait": {
+        "textKey": "npc.bruno.request",
+        "action": {
+          "type": "showBaits"
+        }
       }
     }
   },

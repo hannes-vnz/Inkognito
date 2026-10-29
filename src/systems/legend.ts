@@ -48,11 +48,11 @@ export const legendOf = (species: readonly SpeciesDef[], sea: string): LegendDef
  * wenn die Leine tief genug reicht, und dann mit ihrer Chance (Seed).
  * Gibt die Tiefe zurück, in der sie schwimmt, oder null.
  */
-export function legendSpawn(seed: string, legend: LegendDef, spot: string, night: boolean, lineMeters: number): number | null {
+export function legendSpawn(seed: string, legend: LegendDef, spot: string, night: boolean, lineMeters: number, sure = false): number | null {
   const r = legend.legend;
   if (spot !== r.spot || night !== r.night || lineMeters < legend.depthMeters[0]) return null;
   const rng = createRng(`${seed}-legend`);
-  if (rng.next() >= r.chance) return null;
+  if (rng.next() >= (sure ? 1 : r.chance)) return null;
   const top = legend.depthMeters[0];
   const bottom = Math.min(legend.depthMeters[1], lineMeters);
   return top + rng.next() * (bottom - top);

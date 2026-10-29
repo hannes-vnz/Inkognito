@@ -460,3 +460,54 @@ body {
     bottom: calc(var(--safe-bottom) + 190px);
   }
 }
+
+.sheet-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border: 1px solid rgba(228, 253, 255, 0.35);
+  border-radius: 12px;
+  background: rgba(4, 22, 36, 0.6);
+  color: var(--ui-text);
+  /* 16px verhindert das automatische Zoomen von iOS beim Fokus. */
+  font: inherit;
+  font-size: 16px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.sheet-input:focus-visible {
+  outline: 3px solid #8ff3ff;
+  outline-offset: 1px;
+}
+
+.account-button {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--ui-margin) + 92px);
+  right: calc(var(--safe-right) + var(--ui-margin));
+  min-width: 48px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--ui-card-border);
+  border-radius: 20px;
+  background: var(--ui-card);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 14px;
+  pointer-events: auto;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.account-button.online::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #7dffb0;
+}

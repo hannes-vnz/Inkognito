@@ -24,6 +24,9 @@ import { JoystickView } from '../ui/JoystickView';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { RiffHud } from '../ui/RiffHud';
 import { Sheet } from '../ui/Sheet';
+import { AccountMenu } from '../ui/AccountMenu';
+import { syncNow, type SyncResult } from '../online/sync';
+import { onAuthChange } from '../online/cloud';
 import { readSafeArea } from '../ui/safeArea';
 
 interface RiffData {
@@ -64,6 +67,7 @@ export class RiffScene extends Phaser.Scene {
   private time_ = 0;
   private paused = false;
   private moved = false;
+  private account!: AccountMenu;
 
   constructor() {
     super('Riff');
@@ -82,6 +86,7 @@ export class RiffScene extends Phaser.Scene {
     this.hud = new RiffHud(uiRoot, reef.nameKey);
     this.sheet = new Sheet(uiRoot);
     this.pause = new PauseOverlay(uiRoot);
+    this.account = new AccountMenu(uiRoot, this.sheet, (r) => this.applySync(r, true), (text) => this.hud.say(text, 3));
 
     // Ausbeute vom Tauchgang ins Wartebecken, dann Offline-Produktion auszahlen.
     const messages: string[] = [];
@@ -146,9 +151,34 @@ export class RiffScene extends Phaser.Scene {
     this.refreshHud(false);
     this.hud.showHint(t('ui.hint.riff'), this.scale.height * 0.62);
 
+    // Abgleich bei jeder Rückkehr ins Riff; Login über den Mail-Link meldet sich hier.
+    void syncNow().then((r) => this.applySync(r, false));
+    const stopAuth = onAuthChange((user) => {
+      if (user && window.location.hash.includes('access_token')) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        void this.account.afterLogin();
+      }
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, stopAuth);
+
     if (new URLSearchParams(window.location.search).has('debug') || window.location.hash === '#debug') {
       (window as unknown as { inkognito: unknown }).inkognito = { riff: this };
     }
+  }
+
+  /** Ergebnis eines Abgleichs übernehmen; `announce` meldet auch „nichts zu tun“. */
+  private applySync(r: SyncResult, announce: boolean): void {
+    if (!this.sys.isActive()) return;
+    if (r.decision === 'pull') {
+      // Neuer Stand aus der Cloud: Riff mit diesem Stand neu aufbauen.
+      this.hud.say(t('sync.pulled'), 2.5);
+      this.time.delayedCall(400, () => this.scene.restart({}));
+      return;
+    }
+    if (!announce) return;
+    if (r.decision === 'push') this.hud.say(t('sync.pushed'));
+    else if (r.decision === 'none') this.hud.say(t('sync.none'));
+    else if (r.decision === 'offline') this.hud.say(t('sync.offline'));
   }
 
   /** Für Tests und Debug: aktueller Stand. */

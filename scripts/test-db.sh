@@ -7,6 +7,6 @@ DB="inkognito_test_$$"
 export PGUSER="${PGUSER:-postgres}"
 createdb "$DB"
 trap 'dropdb --if-exists "$DB"' EXIT
-psql -q -v ON_ERROR_STOP=1 -d "$DB" -f supabase/tests/stub_auth.sql
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -f scripts/db-tests/stub_auth.sql
 for f in supabase/migrations/*.sql; do psql -q -v ON_ERROR_STOP=1 -d "$DB" -f "$f"; done
-psql -q -v ON_ERROR_STOP=1 -d "$DB" -f supabase/tests/friends_test.sql
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -f scripts/db-tests/friends_test.sql

@@ -34,3 +34,15 @@ Steuerung:
 - **Schießen (Blasenkanone):** Kurz tippen, Ziel ist die Tippstelle. Quer kann man rechts auch ziehen zum Zielen und loslassen zum Schießen. Desktop: Mausklick oder Leertaste.
 - **Riff:** Zu Kalle (Makler) oder einer Höhle schwimmen, dann den gelben Knopf tippen (Desktop: E). Jeder Fisch passt in genau eine Höhle, Bewohner produzieren Muscheln. Der Ring rechts oben startet den Tauchgang.
 - Eine leichte Zielhilfe lenkt Schüsse auf Fische, die knapp daneben liegen. Gefangene Fische schweben in Blasen hinterher (max. 8).
+
+## Online (Supabase)
+
+Ohne Zugangsdaten läuft das Spiel rein lokal. Mit Supabase:
+
+1. `.env` aus `.env.example` anlegen, `VITE_SUPABASE_URL` und `VITE_SUPABASE_ANON_KEY` eintragen (nur der öffentliche anon-Key, nie `service_role`).
+2. Schema: `supabase/migrations/*.sql` (spielt die Supabase-GitHub-Integration bei Pushes auf `main` ein, sonst im SQL Editor ausführen).
+3. Für GitHub Pages dieselben zwei Werte unter Settings → Secrets and variables → Actions → **Variables** anlegen.
+4. Supabase → Authentication → URL Configuration: `https://hannes-vnz.github.io/Inkognito/` als Site URL bzw. Redirect URL eintragen.
+5. Damit der Login auch in der Home-Bildschirm-App klappt: in der Mail-Vorlage „Magic Link“ `{{ .Token }}` ergänzen, dann kann man den 6-stelligen Code eintippen.
+
+Datenbank-Tests lokal (braucht Postgres): `scripts/test-db.sh`.

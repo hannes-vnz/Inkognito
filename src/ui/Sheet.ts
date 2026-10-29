@@ -1,5 +1,15 @@
 import { el } from './Hud';
 
+export interface SheetInput {
+  id: string;
+  type: 'email' | 'text';
+  placeholder: string;
+  inputMode?: 'email' | 'numeric' | 'text';
+  autocomplete?: string;
+  maxLength?: number;
+  value?: string;
+}
+
 export interface SheetOption {
   label: string;
   /** Farbpunkt vor der Antwort (z. B. Fischfarbe). */
@@ -13,6 +23,7 @@ export interface SheetOption {
  */
 export class Sheet {
   private readonly node: HTMLDivElement;
+  private input: HTMLInputElement | null = null;
 
   constructor(root: HTMLElement) {
     this.node = el('div', 'sheet');
@@ -24,7 +35,12 @@ export class Sheet {
     return !this.node.hidden;
   }
 
-  show(title: string, text: string, options: readonly SheetOption[]): void {
+  /** Inhalt des Eingabefelds der aktuellen Karte. */
+  get inputValue(): string {
+    return this.input?.value ?? '';
+  }
+
+  show(title: string, text: string, options: readonly SheetOption[], input?: SheetInput): void {
     const card = el('div', 'card sheet-card');
     const body = el('div', 'sheet-body');
     const h = el('div', 'sheet-title');
@@ -32,6 +48,23 @@ export class Sheet {
     const p = el('p', 'sheet-text');
     p.textContent = text;
     body.append(h, p);
+    this.input = null;
+    if (input) {
+      const field = el('input', 'sheet-input');
+      field.id = input.id;
+      field.type = input.type;
+      field.placeholder = input.placeholder;
+      field.value = input.value ?? '';
+      if (input.inputMode) field.inputMode = input.inputMode;
+      if (input.autocomplete) field.autocomplete = input.autocomplete as AutoFill;
+      if (input.maxLength) field.maxLength = input.maxLength;
+      field.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') options[0]?.onSelect();
+      });
+      body.append(field);
+      this.input = field;
+    }
     const list = el('div', 'sheet-options');
     for (const o of options) {
       const b = el('button', 'sheet-option');
@@ -55,7 +88,14 @@ export class Sheet {
     this.node.hidden = false;
   }
 
+  /** Nur den Text der offenen Karte ändern (z. B. „Einen Moment …“ oder Fehler). */
+  setText(text: string): void {
+    const p = this.node.querySelector('.sheet-text');
+    if (p) p.textContent = text;
+  }
+
   close(): void {
+    this.input = null;
     this.node.hidden = true;
     this.node.replaceChildren();
   }

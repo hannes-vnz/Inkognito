@@ -4,6 +4,7 @@ import { BootScene } from './scenes/BootScene';
 import { DiveScene } from './scenes/DiveScene';
 import { RiffScene } from './scenes/RiffScene';
 import { t } from './i18n';
+import { pushOnHide } from './online/sync';
 
 document.title = t('game.title');
 const loading = document.getElementById('loading');
@@ -36,3 +37,6 @@ const onViewportChange = (): void => {
 };
 window.addEventListener('orientationchange', onViewportChange);
 window.visualViewport?.addEventListener('resize', onViewportChange);
+
+// Spielstand beim Schließen oder Wechsel in den Hintergrund online sichern.
+pushOnHide();

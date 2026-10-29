@@ -62,7 +62,7 @@ describe('Prestige: neue Meere', () => {
 
 describe('Strömung', () => {
   const p = gameJson.fishing as unknown as FishingParams;
-  const map: DepthMap = { zones: seasJson[1]!.zones, unitsPerZone: 2600, surfaceY: 260 };
+  const map: DepthMap = { zones: seasJson[1]!.zones as DepthMap['zones'], unitsPerZone: 2600, surfaceY: 260 };
   const ns = species.filter((f) => f.sea === 'northsea');
 
   it('treibt den Haken ohne Daumen zur Seite, ohne Strömung bleibt er stehen', () => {

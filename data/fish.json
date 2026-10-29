@@ -908,5 +908,81 @@
     "source": "https://www.marlin.ac.uk/species/detail/1672",
     "factChecked": "2026-10-29",
     "sea": "northsea"
+  },
+  {
+    "id": "oarfish",
+    "nameKey": "fish.oarfish.name",
+    "factKey": "fish.oarfish.fact",
+    "commentKey": "fish.oarfish.comment",
+    "group": "fish",
+    "depthMeters": [
+      200,
+      500
+    ],
+    "value": 600,
+    "weight": 0,
+    "behavior": "cruise",
+    "speed": 0.6,
+    "glow": false,
+    "shape": "eel",
+    "sprite": "fish_oarfish",
+    "frame": {
+      "width": 64,
+      "height": 16
+    },
+    "placeholderColor": "#c8d4e0",
+    "source": "https://en.wikipedia.org/wiki/Giant_oarfish",
+    "factChecked": "2026-10-29",
+    "sea": "atlantic",
+    "legend": {
+      "spot": "open",
+      "night": true,
+      "minHook": 8,
+      "chance": 0.6,
+      "nameKey": "legend.atlantic.name",
+      "hintKeys": [
+        "legend.atlantic.hint.1",
+        "legend.atlantic.hint.2",
+        "legend.atlantic.hint.3"
+      ]
+    }
+  },
+  {
+    "id": "basking_shark",
+    "nameKey": "fish.basking_shark.name",
+    "factKey": "fish.basking_shark.fact",
+    "commentKey": "fish.basking_shark.comment",
+    "group": "fish",
+    "depthMeters": [
+      0,
+      40
+    ],
+    "value": 250,
+    "weight": 0,
+    "behavior": "cruise",
+    "speed": 0.4,
+    "glow": false,
+    "shape": "default",
+    "sprite": "fish_basking_shark",
+    "frame": {
+      "width": 64,
+      "height": 24
+    },
+    "placeholderColor": "#6f7f8f",
+    "source": "https://en.wikipedia.org/wiki/Stronsay_Beast",
+    "factChecked": "2026-10-29",
+    "sea": "northsea",
+    "legend": {
+      "spot": "dogger",
+      "night": false,
+      "minHook": 6,
+      "chance": 0.6,
+      "nameKey": "legend.northsea.name",
+      "hintKeys": [
+        "legend.northsea.hint.1",
+        "legend.northsea.hint.2",
+        "legend.northsea.hint.3"
+      ]
+    }
   }
 ]

@@ -209,7 +209,7 @@ describe('Spielstand v3', () => {
   it('migriert v0, v1 und v2 (Muscheln werden Münzen)', () => {
     expect(migrate({ shells: 42 }, T).coins).toBe(42);
     expect(migrate({ version: 1, shells: 7, createdAt: 5 }, T)).toMatchObject({ coins: 7, createdAt: 5 });
-    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 8, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "harbor", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "atlantic", left: [] }, yarn: { asked: 0 } });
+    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 9, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "harbor", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "atlantic", left: [] }, legend: { hints: {}, snapped: [] } });
   });
   it('kaputte Daten ergeben einen neuen Stand, zu neue Versionen werfen', () => {
     expect(deserialize('{nicht json', T)).toEqual(newSave(T));

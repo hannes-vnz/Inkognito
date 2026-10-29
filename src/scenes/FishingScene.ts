@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { dailyParams, depthMapFor, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { dailyParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
+import { castsUntilSwitch, hookHolds, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
 import { play } from '../audio/sfx';
 import { claimDaily, dailyReward, dailyStreak, dayKey } from '../systems/daily';
@@ -11,11 +12,12 @@ import { playReaction } from '../ui/ReactionShot';
 import { animKey } from '../entities/Octopus';
 import { MarineSnow } from '../render/MarineSnow';
 import { BubbleTrail } from '../render/BubbleTrail';
+import { Sparks, type SparkStyle } from '../render/Sparks';
 import { FixedStepper } from '../systems/movement';
 import { createRng } from '../systems/rng';
 import { metersToY, yToMeters, zoneIndexAt } from '../systems/depthMap';
-import { createRound, stepRound, type RoundEvent, type RoundFish, type RoundState, type SpeciesDef } from '../systems/fishing';
-import { buyUpgrade, collectIdle, upgradeCost, upgradeValue, landCatch, type UpgradeDef } from '../systems/economy';
+import { createRound, releaseFish, stepRound, type RoundEvent, type RoundFish, type RoundState, type SpeciesDef } from '../systems/fishing';
+import { buyUpgrade, collectIdle, fishValue, upgradeCost, upgradeValue, landCatch, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { loadSave, writeSave } from '../storage';
 import { t } from '../i18n';
@@ -64,13 +66,20 @@ export class FishingScene extends Phaser.Scene {
   private harbor!: Harbor;
   private spot!: SpotDef;
   private depth!: SeaDepthMap;
+  private sparks!: Sparks;
+  /** Kurzes Einfrieren beim Biss (Sekunden), damit der Treffer sitzt. */
+  private hitstop = 0;
+  /** Legende in dieser Runde (uid), ob sie schon gesichtet wurde, und welche Art. */
+  private legendUid = -1;
+  private legendSeen = false;
+  private legend: LegendDef | null = null;
   private limitSaid = false;
 
   constructor() {
     super('Fishing');
   }
 
-  create(): void {
+  create(data: { toast?: string } = {}): void {
     const now = Date.now();
     this.mode = 'deck';
     this.round = null;
@@ -119,7 +128,8 @@ export class FishingScene extends Phaser.Scene {
     const intro = () => this.save.stats.casts === 0 && this.ui.showHint(t('ui.hint.cast'));
     const story = () => {
       if (this.spot.harbor) this.harbor.playNext(intro);
-      else this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
+      else if (!data.toast) this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
+      if (data.toast) this.ui.say(data.toast, 3);
     };
     const daily = () => this.showDaily(story);
     this.time.delayedCall(400, () => (idle.coins >= 1 ? this.showOffline(idle.coins, daily) : daily()));
@@ -193,6 +203,21 @@ export class FishingScene extends Phaser.Scene {
       fx.fillStyle(0xffffff, 0.12);
       for (let x = 0; x < width; x += 16) fx.fillRect(x, y, 8, 2);
     }
+    // Nacht: Himmel und Wasser dunkler, Sterne, die Leuchtpunkte bleiben hell
+    if (isNight(this.save.stats.casts, timeParams)) {
+      const night = this.add.graphics();
+      night.fillStyle(0x0b1630, 0.62).fillRect(0, 0, width, surface).setDepth(-17);
+      const dark = this.add.graphics().setDepth(-9.5);
+      dark.fillStyle(0x050b1a, 0.4).fillRect(0, surface, width, this.worldHeight);
+      const stars = this.add.graphics().setDepth(-16);
+      for (let i = 0; i < 60; i++) {
+        stars.fillStyle(0xffffff, rng.range(0.4, 1));
+        stars.fillRect(rng.range(0, width), rng.range(0, surface - 60), rng.pick([1, 2]), rng.pick([1, 2]));
+      }
+      const moonY = surface - Math.min(170, this.scale.height * 0.3);
+      stars.fillStyle(0xfff6d0, 1).fillCircle(width * 0.45, moonY, 16);
+      stars.fillStyle(0x0b1630, 1).fillCircle(width * 0.45 + 7, moonY - 4, 14);
+    }
     // Wasseroberfläche
     const wave = this.add.graphics().setDepth(5);
     wave.fillStyle(0xe8fffb, 0.9);
@@ -211,6 +236,7 @@ export class FishingScene extends Phaser.Scene {
 
     const fxRng = createRng('sea-snow');
     this.snow = new MarineSnow(this, fxRng, 60, 0.85, 8);
+    this.sparks = new Sparks(this, fxRng, 'fx_bubble', 13);
     this.bubbles = new BubbleTrail(this, fxRng, { maxCount: 40, perSecondAtMaxSpeed: 14, riseSpeed: 70, lifeSeconds: 1.4 }, 'fx_bubble');
 
     const cam = this.cameras.main;
@@ -281,14 +307,22 @@ export class FishingScene extends Phaser.Scene {
       this.ui.say(t('spot.limit', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 4);
     }
     const hooks = upgradeValue(upgradeById('hook'), this.save.upgrades.hook);
-    const pool = spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight);
-    this.round = createRound(`${this.save.createdAt}-${this.save.stats.casts}`, this.scale.width, line, hooks, pool, this.depth, params, this.spot.current);
+    const night = isNight(this.save.stats.casts, timeParams);
+    const pool = nightSpecies(spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight), night, timeParams);
+    const seed = `${this.save.createdAt}-${this.save.stats.casts}`;
+    this.legend = legendOf(species, this.save.sea.current);
+    const legendMeters = this.legend ? legendSpawn(seed, this.legend, this.spot.id, night, line) : null;
+    const extra = this.legend && legendMeters !== null ? [{ species: this.legend, meters: legendMeters }] : [];
+    this.round = createRound(seed, this.scale.width, line, hooks, pool, this.depth, params, this.spot.current, extra);
+    this.legendUid = extra.length ? this.round.fish[this.round.fish.length - 1]!.uid : -1;
+    this.legendSeen = false;
     play('splash');
     this.round.hookX = this.rodTip().x;
     this.steerX = null;
     this.zoneShown = -1;
     this.mode = 'round';
     this.ui.setMode('round');
+    this.burst(this.round.hookX, this.depth.surfaceY, 18, juice.splash);
     this.bert.play(animKey(player.id, 'cast'));
     this.bert.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => this.bert.play(animKey(player.id, 'idle')));
     this.hook.setVisible(true);
@@ -312,7 +346,15 @@ export class FishingScene extends Phaser.Scene {
         case 'bite':
           this.cameras.main.shake(120, 0.006);
           play('bite');
+          if (this.snapIfTooWeak(e.uid)) break;
           this.celebrateRare(e.uid);
+          this.hitstop = juice.hitstopSeconds;
+          this.burst(r.hookX, r.hookY, 14, juice.spark);
+          {
+            const s = this.fishSprites.get(e.uid);
+            s?.setTintFill(0xffffff);
+            this.time.delayedCall(90, () => s?.clearTint());
+          }
           this.ui.floater(t('round.bite'), r.hookX, screen(r.hookY) - 30, '#ffd23f');
           navigator.vibrate?.(25);
           this.ui.hideHint();
@@ -321,10 +363,12 @@ export class FishingScene extends Phaser.Scene {
           this.ui.floater(t('round.lineEnd'), r.hookX, screen(r.hookY) - 30, '#ff6b6b');
           break;
         case 'catch': {
+          if (this.snapIfTooWeak(e.uid)) break;
           const s = this.fishSprites.get(e.uid);
           if (s) this.tweens.add({ targets: s, scale: params.spriteScale * 1.4, duration: 90, yoyo: true });
           this.celebrateRare(e.uid);
           play('catch', 1 + r.caught.length * 0.08);
+          this.burst(r.hookX, r.hookY, 8, juice.spark);
           this.ui.floater(`${r.caught.length}`, r.hookX + 26, screen(r.hookY) - 10, '#ffffff');
           this.bubbles.burst(r.hookX, r.hookY, 5);
           navigator.vibrate?.(12);
@@ -335,6 +379,8 @@ export class FishingScene extends Phaser.Scene {
           play('full');
           break;
         case 'landed':
+          this.burst(r.hookX, this.depth.surfaceY, 22, juice.splash);
+          play('splash');
           this.finale(e.species, e.deepestMeters);
           break;
       }
@@ -349,6 +395,7 @@ export class FishingScene extends Phaser.Scene {
     if (i <= this.zoneShown) return;
     this.zoneShown = i;
     const z = this.depth.zones[i]!;
+    if (i > 0) this.ui.banner(t(z.nameKey));
     if (i > 0 && z.depthMeters[0] > this.save.stats.deepestMeters) this.ui.say(t(z.enterKey), 3.2);
   }
 
@@ -384,6 +431,15 @@ export class FishingScene extends Phaser.Scene {
           const p = tw.progress;
           s.y = this.depth.surfaceY - 40 - Math.sin(p * Math.PI) * (this.scale.height * 0.35);
         },
+        onComplete: () => {
+          // Aufprall an Deck: Münzen spritzen, Wert ploppt auf, Ton steigt mit jedem Fisch
+          const def = speciesById.get(f.speciesId)!;
+          const value = fishValue(def, this.save.fishbook[def.id] !== undefined, combos.has(i), params, setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams));
+          this.burst(s.x, s.y, 6, juice.coinSpark);
+          this.ui.floater(`+${value}`, s.x, s.y - this.cameras.main.scrollY - 24, '#ffd23f');
+          play('coin', 1 + i * 0.07);
+          s.setVisible(false);
+        },
       });
       return s;
     });
@@ -403,6 +459,7 @@ export class FishingScene extends Phaser.Scene {
         setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams),
       );
       const completed = newlyCompleted(this.save, landed.save, sets);
+      const switched = isNight(this.save.stats.casts, timeParams) !== isNight(landed.save.stats.casts, timeParams);
       const record = landed.save.stats.deepestMeters > this.save.stats.deepestMeters && this.save.stats.casts > 0;
       this.save = landed.save;
       writeSave(this.save);
@@ -412,17 +469,26 @@ export class FishingScene extends Phaser.Scene {
         this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, boatScreenY - 90, '#ffd23f');
         this.ui.coinBurst(this.boat.x, boatScreenY - 40, Math.ceil(landed.coins / 10));
       }
-      if (record) {
+      if (this.legend && caught.includes(this.legend.id)) {
+        this.ui.shout(t(this.legend.legend.nameKey), '#c78cff');
+        this.ui.confetti(this.boat.x, boatScreenY - 60, 40);
+        this.cameras.main.flash(500, 255, 240, 200);
+        play('fanfare');
+      } else if (record) {
         this.ui.shout(t('round.record', { depth: Math.round(landed.save.stats.deepestMeters).toLocaleString('de-DE') }));
         this.ui.confetti(this.boat.x, boatScreenY - 60, 28);
         play('fanfare');
       }
       this.refresh(true);
-      this.endRound(landed.firstCatches, completed);
+      if (switched) {
+        // Szene neu aufbauen, damit Himmel und Wasser zur Tageszeit passen
+        const toast = t(isNight(this.save.stats.casts, timeParams) ? 'time.nightfall' : 'time.daybreak');
+        this.endRound(landed.firstCatches, completed, () => this.scene.restart({ toast }));
+      } else this.endRound(landed.firstCatches, completed);
     });
   }
 
-  private endRound(firstCatches: string[], completedSets: SetDef[] = []): void {
+  private endRound(firstCatches: string[], completedSets: SetDef[] = [], after?: () => void): void {
     for (const s of this.fishSprites.values()) s.destroy();
     this.fishSprites.clear();
     this.round = null;
@@ -430,6 +496,10 @@ export class FishingScene extends Phaser.Scene {
       const id = firstCatches.shift();
       if (!id && completedSets.length > 0) {
         this.showSetComplete(completedSets.shift()!, next);
+        return;
+      }
+      if (!id && after) {
+        after();
         return;
       }
       if (!id) {
@@ -485,6 +555,25 @@ export class FishingScene extends Phaser.Scene {
   private zoneName(def: SpeciesDef): string {
     const map = depthMapFor(def.sea);
     return t(map.zones[zoneIndexAt(def.depthMeters[0], map)]!.nameKey);
+  }
+
+  private burst(x: number, y: number, count: number, style: Omit<SparkStyle, 'tint'> & { tint: string }): void {
+    this.sparks.burst(x, y, count, { ...style, tint: color(style.tint) });
+  }
+
+  /** Legende am Haken, aber der Haken ist zu schwach: Leine reißt, sie schwimmt davon. */
+  private snapIfTooWeak(uid: number): boolean {
+    const r = this.round;
+    if (!r || uid !== this.legendUid || !this.legend || hookHolds(this.legend, r.capacity)) return false;
+    releaseFish(r, uid);
+    this.save = markSnapped(this.save, this.save.sea.current);
+    writeSave(this.save);
+    this.cameras.main.shake(400, 0.012);
+    play('wrong');
+    navigator.vibrate?.([60, 40, 60]);
+    this.ui.shout(t('legend.snap'), '#ff6b6b');
+    this.fishSprites.get(uid)?.clearTint();
+    return true;
   }
 
   /** Seltene Art am Haken: Blitz, Schriftzug, heller Ton. */
@@ -575,10 +664,16 @@ export class FishingScene extends Phaser.Scene {
     );
   }
 
+  private timeLabel(): string {
+    const casts = this.save.stats.casts;
+    return t(isNight(casts, timeParams) ? 'hud.night' : 'hud.day', { n: castsUntilSwitch(casts, timeParams) });
+  }
+
   private refresh(bump = false): void {
     const here = speciesIn(this.save.sea.current);
     const known = here.filter((s) => this.save.fishbook[s.id]).length;
     this.ui.update(this.save, known, here.length, bump);
+    this.ui.setTime(this.timeLabel(), isNight(this.save.stats.casts, timeParams));
     this.harbor.refresh();
   }
 
@@ -599,7 +694,9 @@ export class FishingScene extends Phaser.Scene {
 
     if (this.mode === 'round' && this.round) {
       this.keySteer(dt);
-      const steps = this.stepper.advance(dt);
+      const frozen = this.hitstop > 0;
+      this.hitstop = Math.max(0, this.hitstop - dt);
+      const steps = frozen ? 0 : this.stepper.advance(dt);
       for (let i = 0; i < steps && this.round && this.mode === 'round'; i++) {
         this.handle(stepRound(this.round, this.steerX, speciesById, this.depth, params, this.stepper.step));
         if (this.mode === 'round') this.checkZone();
@@ -637,6 +734,12 @@ export class FishingScene extends Phaser.Scene {
         const visible = f.y > cam.scrollY - 80 && f.y < cam.scrollY + cam.height + 80;
         s.setVisible(visible);
         if (!visible) continue;
+        if (f.uid === this.legendUid && !this.legendSeen && f.y < cam.scrollY + cam.height * 0.9) {
+          this.legendSeen = true;
+          this.ui.banner(t('legend.near'));
+          this.cameras.main.shake(500, 0.006);
+          play('bite', 0.5);
+        }
         s.setPosition(Phaser.Math.Linear(f.px, f.x, alpha), Phaser.Math.Linear(f.py, f.y, alpha));
         s.setFlipX(f.caught ? false : f.vx < 0);
         if (f.caught) s.setAngle(Math.sin(r.time * 8 + f.uid) * 25);
@@ -660,6 +763,7 @@ export class FishingScene extends Phaser.Scene {
       this.line.lineBetween(tip.x, tip.y, this.hook.x, this.hook.y - 14);
     }
     this.snow.update(cam, dt);
+    this.sparks.update(dt);
 
     // Crew angelt auch während des Spielens
     this.idleTimer += dt;

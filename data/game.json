@@ -30,12 +30,8 @@
     },
     "requestRequires": "bruno_intro",
     "quizRequires": "qualle_intro",
-    "yarnEveryCasts": 2,
-    "yarnReward": {
-      "base": 10,
-      "perKnown": 2
-    },
-    "yarnRequires": "knut_intro"
+    "legendHintEveryCasts": 2,
+    "legendRequires": "knut_intro"
   },
   "map": {
     "worldSize": 1200,
@@ -73,5 +69,73 @@
   },
   "prestige": {
     "coinBonusPerSea": 0.25
+  },
+  "juice": {
+    "hitstopSeconds": 0.09,
+    "splash": {
+      "tint": "#e8fffb",
+      "speed": [
+        120,
+        320
+      ],
+      "angle": [
+        -160,
+        -20
+      ],
+      "gravity": 900,
+      "life": [
+        0.4,
+        0.8
+      ],
+      "scale": [
+        1,
+        2.5
+      ]
+    },
+    "spark": {
+      "tint": "#ffe27a",
+      "speed": [
+        60,
+        200
+      ],
+      "angle": [
+        -180,
+        180
+      ],
+      "gravity": 0,
+      "life": [
+        0.25,
+        0.5
+      ],
+      "scale": [
+        1,
+        2
+      ]
+    },
+    "coinSpark": {
+      "tint": "#ffd23f",
+      "speed": [
+        80,
+        240
+      ],
+      "angle": [
+        -150,
+        -30
+      ],
+      "gravity": 600,
+      "life": [
+        0.4,
+        0.7
+      ],
+      "scale": [
+        1.5,
+        2.5
+      ]
+    }
+  },
+  "time": {
+    "dayCasts": 4,
+    "nightCasts": 2,
+    "nightGlowBoost": 3
   }
 }

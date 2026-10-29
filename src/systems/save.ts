@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -64,11 +64,17 @@ export interface SaveV8 extends Omit<SaveV7, 'version'> {
   yarn: { nextAtCast: number; asked: number; correct: number };
 }
 
-export type Save = SaveV8;
+export interface SaveV9 extends Omit<SaveV8, 'version' | 'yarn'> {
+  version: 9;
+  /** Legenden: wie viele Hinweise Knut je Meer verraten hat, wann der nächste kommt, wo die Leine schon riss. */
+  legend: { hints: Record<string, number>; hintAtCast: number; snapped: string[] };
+}
+
+export type Save = SaveV9;
 
 export function newSave(now: number): Save {
   return {
-    version: 8,
+    version: 9,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -83,7 +89,7 @@ export function newSave(now: number): Save {
     map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [], bottlesRead: 0 },
     daily: { lastDay: '', streak: 0 },
     sea: { current: 'atlantic', left: [] },
-    yarn: { nextAtCast: 0, asked: 0, correct: 0 },
+    legend: { hints: {}, hintAtCast: 0, snapped: [] },
   };
 }
 
@@ -126,6 +132,11 @@ const migrations: Record<number, Migration> = {
   6: (old) => ({ ...old, sea: { current: 'atlantic', left: [] } }),
   // v7 → v8: Opa Knut und sein Seemannsgarn.
   7: (old) => ({ ...old, yarn: { nextAtCast: 0, asked: 0, correct: 0 } }),
+  // v8 → v9: Knut erzählt jetzt von Legenden statt Seemannsgarn.
+  8: (old) => {
+    const { yarn: _yarn, ...rest } = old;
+    return { ...rest, legend: { hints: {}, hintAtCast: 0, snapped: [] } };
+  },
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

@@ -108,5 +108,45 @@
       "value": "dumbo"
     },
     "requires": "bruno_intro"
+  },
+  {
+    "id": "knut_beard",
+    "npc": "knut",
+    "node": "beard",
+    "trigger": {
+      "type": "casts",
+      "value": 15
+    },
+    "requires": "knut_intro"
+  },
+  {
+    "id": "knut_northsea",
+    "npc": "knut",
+    "node": "northsea",
+    "trigger": {
+      "type": "sea",
+      "value": "northsea"
+    },
+    "requires": "knut_intro"
+  },
+  {
+    "id": "knut_caught_atlantic",
+    "npc": "knut",
+    "node": "caught",
+    "trigger": {
+      "type": "caught",
+      "value": "oarfish"
+    },
+    "requires": "knut_intro"
+  },
+  {
+    "id": "knut_caught_northsea",
+    "npc": "knut",
+    "node": "caught",
+    "trigger": {
+      "type": "caught",
+      "value": "basking_shark"
+    },
+    "requires": "knut_intro"
   }
 ]

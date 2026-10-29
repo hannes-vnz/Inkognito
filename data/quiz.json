@@ -208,5 +208,145 @@
       "quiz.amphipod.a2"
     ],
     "correct": 0
+  },
+  {
+    "species": "brown_shrimp",
+    "questionKey": "quiz.brown_shrimp.q",
+    "answerKeys": [
+      "quiz.brown_shrimp.a0",
+      "quiz.brown_shrimp.a1",
+      "quiz.brown_shrimp.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "moon_jelly",
+    "questionKey": "quiz.moon_jelly.q",
+    "answerKeys": [
+      "quiz.moon_jelly.a0",
+      "quiz.moon_jelly.a1",
+      "quiz.moon_jelly.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "plaice",
+    "questionKey": "quiz.plaice.q",
+    "answerKeys": [
+      "quiz.plaice.a0",
+      "quiz.plaice.a1",
+      "quiz.plaice.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "weever",
+    "questionKey": "quiz.weever.q",
+    "answerKeys": [
+      "quiz.weever.a0",
+      "quiz.weever.a1",
+      "quiz.weever.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "garfish",
+    "questionKey": "quiz.garfish.q",
+    "answerKeys": [
+      "quiz.garfish.a0",
+      "quiz.garfish.a1",
+      "quiz.garfish.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "starfish",
+    "questionKey": "quiz.starfish.q",
+    "answerKeys": [
+      "quiz.starfish.a0",
+      "quiz.starfish.a1",
+      "quiz.starfish.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "gurnard",
+    "questionKey": "quiz.gurnard.q",
+    "answerKeys": [
+      "quiz.gurnard.a0",
+      "quiz.gurnard.a1",
+      "quiz.gurnard.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "edible_crab",
+    "questionKey": "quiz.edible_crab.q",
+    "answerKeys": [
+      "quiz.edible_crab.a0",
+      "quiz.edible_crab.a1",
+      "quiz.edible_crab.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "lumpsucker",
+    "questionKey": "quiz.lumpsucker.q",
+    "answerKeys": [
+      "quiz.lumpsucker.a0",
+      "quiz.lumpsucker.a1",
+      "quiz.lumpsucker.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "catshark",
+    "questionKey": "quiz.catshark.q",
+    "answerKeys": [
+      "quiz.catshark.a0",
+      "quiz.catshark.a1",
+      "quiz.catshark.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "cod",
+    "questionKey": "quiz.cod.q",
+    "answerKeys": [
+      "quiz.cod.a0",
+      "quiz.cod.a1",
+      "quiz.cod.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "turbot",
+    "questionKey": "quiz.turbot.q",
+    "answerKeys": [
+      "quiz.turbot.a0",
+      "quiz.turbot.a1",
+      "quiz.turbot.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "monkfish",
+    "questionKey": "quiz.monkfish.q",
+    "answerKeys": [
+      "quiz.monkfish.a0",
+      "quiz.monkfish.a1",
+      "quiz.monkfish.a2"
+    ],
+    "correct": 0
+  },
+  {
+    "species": "langoustine",
+    "questionKey": "quiz.langoustine.q",
+    "answerKeys": [
+      "quiz.langoustine.a0",
+      "quiz.langoustine.a1",
+      "quiz.langoustine.a2"
+    ],
+    "correct": 0
   }
 ]

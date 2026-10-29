@@ -400,7 +400,7 @@
         "options": [
           {
             "textKey": "npc.knut.hub.opt",
-            "next": "yarn"
+            "next": "legend"
           },
           {
             "textKey": "npc.later",
@@ -408,11 +408,59 @@
           }
         ]
       },
-      "yarn": {
-        "textKey": "npc.knut.yarn",
+      "northsea": {
+        "textKey": "npc.knut.northsea",
+        "options": [
+          {
+            "textKey": "npc.knut.northsea.opt",
+            "next": null
+          }
+        ]
+      },
+      "beard": {
+        "textKey": "npc.knut.beard",
+        "reaction": {
+          "background": "waves",
+          "mood": "shock"
+        },
+        "options": [
+          {
+            "textKey": "npc.knut.beard.opt1",
+            "next": "beard2"
+          },
+          {
+            "textKey": "npc.knut.beard.opt2",
+            "next": "beard2"
+          }
+        ]
+      },
+      "beard2": {
+        "textKey": "npc.knut.beard2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "legend": {
+        "textKey": "npc.knut.legend",
         "action": {
-          "type": "startYarn"
+          "type": "legendHint"
         }
+      },
+      "caught": {
+        "textKey": "npc.knut.caught",
+        "reaction": {
+          "background": "sparkle",
+          "mood": "joy"
+        },
+        "options": [
+          {
+            "textKey": "npc.knut.caught.opt",
+            "next": null
+          }
+        ]
       }
     }
   },

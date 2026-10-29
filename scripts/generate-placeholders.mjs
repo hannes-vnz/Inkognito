@@ -379,6 +379,13 @@ function drawSpecies(def) {
         for (let x = -3; x <= 3; x++) for (let y = -4; y <= 0; y++) if (x * x + y * y * 0.6 < 10) img.blend(ex + x - 1, ey + y - 1, hex('#e8fff8'), 0.55);
         eye(img, ex - 1, ey - 2, 1.5, 1, hex('#8cff5a'));
       } else eye(img, ex, ey, def.id === 'giant_squid' ? 3 : fh >= 12 ? 2 : 1.5, 1, def.id === 'vampire_squid' ? hex('#ff7a7a') : white);
+      if (def.id === 'oarfish') for (let x = fw * 0.15; x < fw * 0.85; x += 2) img.set(ox + x, oy + cy - 3 - ((x + col) % 4 === 0 ? 1 : 0), hex('#e0403a'));
+      if (def.id === 'basking_shark') {
+        // Riesiges offenes Maul und Kiemenspalten
+        for (let y = -3; y <= 3; y++) img.set(ox + cx + fw * 0.3, oy + cy + y, hex('#3a2030'));
+        for (let k = 0; k < 4; k++) for (let y = -5; y <= 5; y++) img.set(ox + cx + fw * 0.1 - k * 3, oy + cy + y, ramp.shadow);
+        for (let y = 0; y < 6; y++) for (let x = 0; x <= 6 - y; x++) img.set(ox + cx + x - 2, oy + cy - fh * 0.4 - y, ramp.base);
+      }
       if (def.id === 'viperfish') for (let i = 0; i < 3; i++) img.set(ex + 2 + i, ey + 3 + (i % 2), white);
       if (def.id === 'anglerfish') {
         const top = Math.max(oy + 2, ey - 7);

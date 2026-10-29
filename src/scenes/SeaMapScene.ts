@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { bottles, homeOf, mapParams, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
+import { bottles, timeParams, homeOf, mapParams, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
+import { isNight } from '../systems/legend';
 import { canMoveOn, knownInSea, moveOn, nextSea } from '../systems/prestige';
 import type { SpotDef } from '../systems/seaMap';
 import { Sheet } from '../ui/Sheet';
@@ -87,6 +88,10 @@ export class SeaMapScene extends Phaser.Scene {
     this.boatSprite = this.add.image(this.boat.x, this.boat.y, 'boat_top').setScale(BOAT_SCALE).setDepth(5);
     this.tweens.add({ targets: this.boatSprite, scale: BOAT_SCALE * 1.04, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
+    if (isNight(this.save.stats.casts, timeParams)) {
+      // Nacht: dunkler Schleier über der Karte, die Bojen-Namen bleiben lesbar
+      this.add.rectangle(0, 0, 4000, 4000, 0x0b1630, 0.5).setOrigin(0).setScrollFactor(0).setDepth(4.5);
+    }
     const cam = this.cameras.main;
     cam.setBackgroundColor('#1f6f9a');
     cam.setBounds(-200, -200, mapParams.worldSize + 400, mapParams.worldSize + 400);

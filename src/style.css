@@ -1592,3 +1592,68 @@ body {
 .map-prestige.ready {
   animation: ready-glow 0.8s ease-in-out infinite alternate;
 }
+
+.zone-banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  padding: 6px 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 6vw, 40px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  background: linear-gradient(90deg, transparent, rgba(14, 26, 43, 0.55) 20%, rgba(14, 26, 43, 0.55) 80%, transparent);
+  pointer-events: none;
+  z-index: 20;
+  animation: zone-sweep 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes zone-sweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  18%,
+  75% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(60%);
+    opacity: 0;
+  }
+}
+
+.time-label {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--paper-dim);
+}
+
+.time-label::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #ffd23f;
+  box-shadow: 0 0 6px #ffd23f;
+  vertical-align: -1px;
+}
+
+.time-label.night::before {
+  background: transparent;
+  box-shadow: inset -3px 1px 0 #fff6d0;
+}
+
+.hud-depth-card:not(.deck-mode) .time-label {
+  display: none;
+}

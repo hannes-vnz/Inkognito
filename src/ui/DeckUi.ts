@@ -15,6 +15,7 @@ export class DeckUi {
   private readonly depthCard: HTMLDivElement;
   private readonly depthValue: HTMLDivElement;
   private readonly depthLabel: HTMLDivElement;
+  private readonly timeLabel: HTMLDivElement;
   private readonly deck: HTMLDivElement;
   private readonly castButton: HTMLButtonElement;
   private readonly upgradeRow: HTMLDivElement;
@@ -43,7 +44,8 @@ export class DeckUi {
     this.depthCard = el('div', 'card hud-depth-card');
     this.depthLabel = el('div', 'label');
     this.depthValue = el('div', 'value');
-    this.depthCard.append(this.depthLabel, this.depthValue);
+    this.timeLabel = el('div', 'time-label');
+    this.depthCard.append(this.depthLabel, this.depthValue, this.timeLabel);
 
     this.deck = el('div', 'deck');
     this.castButton = el('button', 'button primary cast');
@@ -222,6 +224,21 @@ export class DeckUi {
       );
       anim.onfinish = () => c.remove();
     }
+  }
+
+  /** Tageszeit unter dem Rekord: Sonne oder Mond und wann es wechselt. */
+  setTime(text: string, night: boolean): void {
+    this.timeLabel.textContent = text;
+    this.timeLabel.classList.toggle('night', night);
+  }
+
+  /** Zonen-Banner: gleitet beim Eintauchen in eine neue Zone durchs Bild. */
+  banner(text: string): void {
+    this.root.querySelector('.zone-banner')?.remove();
+    const b = el('div', 'zone-banner');
+    b.textContent = text;
+    this.root.append(b);
+    window.setTimeout(() => b.remove(), 1800);
   }
 
   /** Großer Schriftzug mitten im Bild (Rekord, Seltenheit). */

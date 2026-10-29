@@ -92,6 +92,17 @@ Der Hafen ist das Menü der Basis. Hier wohnen die Figuren, die das Spiel tragen
 
 Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 
+## Tag & Nacht, Legenden
+
+**Tag und Nacht** wechseln mit den Würfen (4 Tag, 2 Nacht; Uhr läuft nur beim Angeln, Vorbild Dredge). Nachts ist alles dunkler, leuchtende Arten beißen dreimal so oft an.
+
+**Legenden:** Jedes Meer hat ein sagenhaftes Monster mit einem echten Tier dahinter. Es taucht nur am richtigen Platz, zur richtigen Tageszeit und in passender Tiefe auf; mit zu schwachem Haken reißt die Leine. **Opa Knut** erzählt davon und verrät nach und nach vage Hinweise (alle 2 Würfe einer).
+
+| Meer | Legende | Echtes Tier | Wo und wann |
+| --- | --- | --- | --- |
+| Atlantik | Die Seeschlange | Riemenfisch | Offene See, nachts, 200–500 m, Haken ab 8 |
+| Nordsee | Das Ungeheuer von Stronsay | Riesenhai | Doggerbank, tagsüber, 0–40 m, Haken ab 6 |
+
 ## Prestige: Neue Meere
 
 Kennt Bert genug Arten eines Meeres (Atlantik: 15 von 21), leuchtet auf der Seekarte „Neues Meer“. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde lässt sich „rein zufällig“ mitversetzen.

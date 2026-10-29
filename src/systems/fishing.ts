@@ -55,6 +55,8 @@ export interface RoundFish {
   radius: number;
   caught: boolean;
   timer: number;
+  /** Losgerissen (Leine gerissen): schwimmt davon, kann nicht mehr anbeißen. */
+  escaped?: boolean;
 }
 
 export interface RoundState {
@@ -112,6 +114,8 @@ export function createRound(
   map: DepthMap,
   p: FishingParams,
   current = 0,
+  /** Zusätzliche Fische an fester Tiefe, z. B. eine Legende. */
+  extra: readonly { species: SpeciesDef; meters: number }[] = [],
 ): RoundState {
   const rng = createRng(seed);
   const maxY = metersToY(lineMeters, map);
@@ -133,6 +137,20 @@ export function createRound(
       py: 0,
       vx: dir * BASE_SPEED * s.speed * rng.range(0.7, 1.3),
       radius: (Math.max(s.frame.width, s.frame.height) * p.spriteScale) / 2 * 0.75,
+      caught: false,
+      timer: rng.range(0.5, 2.5),
+    });
+  }
+  for (const e of extra) {
+    fish.push({
+      uid: count + fish.length + 1,
+      speciesId: e.species.id,
+      x: rng.range(40, width - 40),
+      y: metersToY(e.meters, map),
+      px: 0,
+      py: 0,
+      vx: (rng.next() < 0.5 ? -1 : 1) * BASE_SPEED * e.species.speed,
+      radius: (Math.max(e.species.frame.width, e.species.frame.height) * p.spriteScale) / 2 * 0.75,
       caught: false,
       timer: rng.range(0.5, 2.5),
     });
@@ -161,7 +179,17 @@ export function createRound(
 }
 
 const touches = (s: RoundState, f: RoundFish, reach: number): boolean =>
-  !f.caught && Math.hypot(f.x - s.hookX, f.y - s.hookY) <= reach;
+  !f.caught && !f.escaped && Math.hypot(f.x - s.hookX, f.y - s.hookY) <= reach;
+
+/** Fisch reißt sich los (zu schwach für den Haken): frei, flieht und beißt nicht wieder an. */
+export function releaseFish(s: RoundState, uid: number): void {
+  const f = s.fish.find((x) => x.uid === uid);
+  if (!f) return;
+  f.caught = false;
+  f.escaped = true;
+  f.vx = (f.x < s.width / 2 ? -1 : 1) * BASE_SPEED * 4;
+  s.caught = s.caught.filter((x) => x.uid !== uid);
+}
 
 /**
  * Ein Schritt. `steerX`: Zielposition des Hakens (Daumen) oder null.
@@ -204,7 +232,7 @@ export function stepRound(
       f.timer = s.rng.range(0.6, 1.8);
     }
     f.x += f.vx * dt;
-    if (f.x < 10 || f.x > s.width - 10) {
+    if (!f.escaped && (f.x < 10 || f.x > s.width - 10)) {
       f.x = Math.min(s.width - 10, Math.max(10, f.x));
       f.vx = -f.vx;
     }

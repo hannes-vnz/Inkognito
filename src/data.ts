@@ -21,10 +21,10 @@ import type { QuizParams, QuizQuestion } from './systems/quiz';
 import type { RewardParams } from './systems/requests';
 import type { MapParams, SpotDef } from './systems/seaMap';
 import type { DailyParams } from './systems/daily';
+import type { SparkStyle } from './render/Sparks';
 import bottlesJson from '../data/bottles.json';
-import yarnsJson from '../data/yarns.json';
 import gagsJson from '../data/gags.json';
-import type { Yarn, YarnParams } from './systems/yarns';
+import type { HintParams, TimeParams } from './systems/legend';
 
 export interface AnimationDef {
   key: string;
@@ -75,7 +75,7 @@ export const npcs = npcsJson as unknown as NpcDef[];
 export const npcById = new Map(npcs.map((n) => [n.id, n]));
 export const story = storyJson as unknown as StoryBeat[];
 export const quiz = quizJson as QuizQuestion[];
-export const harbor = gameJson.harbor as QuizParams & YarnParams & { requestReward: RewardParams; requestRequires: string };
+export const harbor = gameJson.harbor as QuizParams & HintParams & { requestReward: RewardParams; requestRequires: string };
 export const seas = seasJson as unknown as (SeaDef & { zones: ZoneDef[] })[];
 export const seaById = (id: string) => seas.find((s) => s.id === id) ?? seas[0]!;
 export const prestigeParams = gameJson.prestige as PrestigeParams;
@@ -86,9 +86,11 @@ export const homeOf = (sea: string): SpotDef => spots.find((s) => s.sea === sea 
 export const spotById = (id: string): SpotDef => spots.find((s) => s.id === id) ?? homeOf(seas[0]!.id);
 export const speciesIn = (sea: string): SpeciesDef[] => species.filter((s) => s.sea === sea);
 export const mapParams = gameJson.map as MapParams;
+type JuiceStyle = Omit<SparkStyle, 'tint'> & { tint: string };
+export const juice = gameJson.juice as unknown as { hitstopSeconds: number; splash: JuiceStyle; spark: JuiceStyle; coinSpark: JuiceStyle };
 export const dailyParams = gameJson.daily as DailyParams;
 export const bottles = bottlesJson as string[];
-export const yarns = yarnsJson as Yarn[];
+export const timeParams = gameJson.time as TimeParams;
 export const gags = gagsJson as string[];
 export const texts = textsJson as TextTable;
 

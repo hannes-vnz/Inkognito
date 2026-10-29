@@ -13,6 +13,7 @@ Phaser 3, TypeScript (strict), Vite, Supabase (Auth, Postgres, Realtime). Späte
 - Spiellogik getrennt von Darstellung (src/systems/ ohne Phaser-Imports), damit sie testbar und duell-fähig bleibt.
 - Layout für hochkant UND quer, nach jeder Änderung bei 390x844 und 844x390 prüfen.
 - Platzhaltergrafik in finalen Größen und Dateinamen laut Asset-Regeln in INKOGNITO.md.
+- Optik, UI und Dialoge nach ARTSTIL.md (Stil-Leitfaden).
 - Spielstand versioniert, jede Formatänderung braucht eine Migration.
 - Keine Geheimnisse im Code, Supabase-Keys über .env (und .env in .gitignore).
 

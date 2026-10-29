@@ -55,7 +55,7 @@ Jeder Arm ist ein Gadget-Platz: Was auf den Armen liegt, nimmst du mit in den Ta
 
 ## Riff-Basis: Haus, Jobs & Story-Figuren
 
-Das Riff ist eine begehbare **2,5D-Basis** in der Seitenansicht: mehrere Ebenen in die Tiefe (vorne, Mitte, hinten), Felsvorsprünge und alte Ruinen. Hochkant wirkt es wie ein Wimmelbild mit Etagen übereinander, quer wie ein Panorama.
+Das Riff ist eine **2,5D-Basis im Querschnitt** (Vorbild Tiny Tower und Fallout Shelter, Tiefe wie bei Dave the Diver): eine Felswand mit Grotten, Ruinen und Vorsprüngen. **Man schwimmt im Riff nicht**, man wischt die Kamera und tippt Grotten, Figuren und Gebäude an. Hochkant liegen die Grotten wie Etagen übereinander, quer als Panorama in zwei Reihen. Der Oktopus sitzt in seiner eigenen Grotte, von dort geht es zum Tauchen. Details im Stil-Leitfaden ARTSTIL.md.
 
 **Das alte Haus:** Alle gefangenen Fische schlafen in einem großen, alten Haus (eine versunkene Villa). Seine Ausbaustufe bestimmt, wie viele Fische du halten kannst (**Fischstärke**). Wer keinen Platz hat, wartet vor der Tür, bis ausgebaut oder verkauft wird.
 
@@ -125,6 +125,8 @@ Jeder Spieltag schaltet mindestens eine neue Sache frei, und neue Inhalte verän
 
 ## Art Direction: Pixel-Figuren in gemalter Welt
 
+Verbindlich für alles Optische ist der Stil-Leitfaden **ARTSTIL.md** (Vorbilder, Farben, UI-Bausatz, Dialoge, HUD).
+
 Vorbild ist der Stil von Dave the Diver: Figuren und Fische sind Pixel-Sprites, Unterwasserwelt und Licht sind hochauflösend gemalt (dichte Korallen im Vordergrund, Lichtstrahlen, Ruinen und Dunst in der Tiefe), die UI ist modern und flach. Auch Ablauf, Mechaniken und Dialoge (Figuren-Porträts, kurze Zeilen, Auftrags-Karten) nehmen Dave the Diver als Vorbild. Alle Figuren, Namen und Grafiken sind eigene Designs.
 
 | Ebene | Stil | Details |
@@ -170,7 +172,7 @@ Phaser 3 mit TypeScript und Vite: browserfähig, gut für Sprite-Rendering mit L
 | | Hochkant | Quer |
 | --- | --- | --- |
 | Tauchgang | Kamera folgt nach unten, Abtauchen wird zum Hauptgefühl | Breitere Sicht für Schwärme und Bosse |
-| Riff-Basis | Etagen-Ansicht wie ein Wimmelbild | Panorama, mehr Gebäude gleichzeitig |
+| Riff-Basis | Grotten als Etagen übereinander, senkrecht wischen | Grotten als Panorama in zwei Reihen, waagerecht wischen |
 | Steuerung | Joystick unten, Tippen zum Schießen, Arm-Leiste unten | Joystick links, Zielen und Schießen rechts, Arm-Leiste rechts |
 
 Phaser mit `Scale.RESIZE`, UI an Bildschirmrändern verankert, Safe Areas beachtet. Zuerst als PWA im Browser, später mit Capacitor als App für iOS und Android.

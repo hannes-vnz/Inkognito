@@ -594,6 +594,16 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
           rect(frame, 0, 0, bx - 1, 30, 6, 2, P.boot.shadow);
         }
         if (o.peek) for (let k = 0; k < 4; k++) frame.set(21 + k * 0.6, 25 - k, k === 3 ? hex('#ffd0b0') : P.octo.base);
+        // Unter dem Mantelsaum ringeln sich Tentakel heraus und bewegen sich
+        for (const [bx, dir] of [[8, -1], [24, 1]]) {
+          const ph = col * 1.1 + (dir > 0 ? 1.5 : 0);
+          for (let k = 0; k < 6; k++) {
+            const x = bx + dir * (k * 0.7 + Math.sin(ph + k * 0.8) * 0.8);
+            const y = 26 + k * 0.7 - Math.max(0, k - 3) * 1.4 * Math.abs(Math.sin(ph));
+            frame.set(x, y, P.octo.base);
+            frame.set(x, y + 1, k === 5 ? hex('#ffd0b0') : P.octo.shadow);
+          }
+        }
         // Ölmantel
         poly(frame, 0, 0, [[11 + sx, 14 + b], [21 + sx, 14 + b], [24 + sx, 27], [8 + sx, 27]], (x) => (x < 12 + sx ? P.coat.light : x > 20 + sx ? P.coat.shadow : P.coat.base));
         for (const y of [18, 22]) frame.set(16 + sx, y + b, hex('#7a5a2a'));

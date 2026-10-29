@@ -3,6 +3,7 @@
 // Echte Grafiken ersetzen diese Dateien später 1:1. Aufruf: npm run assets:placeholders
 import { makeCharacters } from './characters.mjs';
 import { makeFish } from './fish.mjs';
+import { makeActing } from './acting.mjs';
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -160,6 +161,8 @@ for (const id of chars.portraitIds) {
   for (const face of chars.faces.slice(1)) save(spritesDir, `portrait_${id}_${face}.png`, chars.portrait(id, face));
 }
 save(bgDir, 'bg_harbor_0.png', chars.town());
+const acting = makeActing({ Image, hex, mix, rampOf, outlineRegion, white });
+for (const name of acting.names) save(spritesDir, `anim_bert_${name}.png`, acting.strip(name));
 
 // ---------------------------------------------------------------- Arten aus data/fish.json
 

@@ -7,7 +7,8 @@
       "figures": [
         {
           "who": "bert",
-          "face": "shock"
+          "face": "shock",
+          "anim": "shock"
         }
       ],
       "fx": [
@@ -53,7 +54,8 @@
       "figures": [
         {
           "who": "bert",
-          "face": "happy"
+          "face": "happy",
+          "anim": "happy"
         }
       ],
       "fx": [
@@ -85,7 +87,8 @@
       "figures": [
         {
           "who": "bert",
-          "face": "happy"
+          "face": "happy",
+          "anim": "happy"
         },
         {
           "who": "bruno",
@@ -108,7 +111,8 @@
       "figures": [
         {
           "who": "bert",
-          "face": "happy"
+          "face": "happy",
+          "anim": "happy"
         }
       ],
       "fx": [
@@ -128,7 +132,8 @@
         },
         {
           "who": "bert",
-          "face": "happy"
+          "face": "happy",
+          "anim": "talk"
         }
       ],
       "captionKey": "cut.set.2"
@@ -155,7 +160,8 @@
       "figures": [
         {
           "who": "bert",
-          "face": "shock"
+          "face": "shock",
+          "anim": "shock"
         }
       ],
       "fx": [
@@ -205,13 +211,31 @@
       "figures": [
         {
           "who": "bert",
-          "face": "shock"
+          "face": "shock",
+          "anim": "busted"
         }
       ],
       "fx": [
         "sweat"
       ],
       "captionKey": "cut.photo.2"
+    }
+  ],
+  "fight": [
+    {
+      "bg": "speedlines",
+      "ms": 1400,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "annoyed",
+          "anim": "reel"
+        }
+      ],
+      "captionKey": "fight.start",
+      "sfx": "reel"
     }
   ]
 }

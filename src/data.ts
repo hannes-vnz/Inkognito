@@ -28,7 +28,8 @@ import baitsJson from '../data/baits.json';
 import harborLifeJson from '../data/harbor_life.json';
 import chatterJson from '../data/chatter.json';
 import cutscenesJson from '../data/cutscenes.json';
-import type { Shot } from './ui/Cutscene';
+import type { ActingAnim, Shot } from './ui/Cutscene';
+import animsJson from '../data/anims.json';
 import type { ChatterGag, LifeDef } from './systems/harborLife';
 import type { BaitDef } from './systems/bait';
 import type { HintParams, TimeParams } from './systems/legend';
@@ -105,6 +106,7 @@ export const baits = baitsJson as BaitDef[];
 export const harborLife = harborLifeJson as unknown as LifeDef[];
 export const chatter = chatterJson as ChatterGag[];
 export const cutscenes = cutscenesJson as unknown as Record<string, Shot[]>;
+export const anims = animsJson as Record<string, ActingAnim>;
 export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;
 export const texts = textsJson as TextTable;
 

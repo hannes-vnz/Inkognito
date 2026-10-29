@@ -1,0 +1,7 @@
+{
+  "bert_talk": { "file": "sprites/anim_bert_talk.png", "frames": 8, "fps": 10, "loop": true },
+  "bert_happy": { "file": "sprites/anim_bert_happy.png", "frames": 8, "fps": 12, "loop": true },
+  "bert_shock": { "file": "sprites/anim_bert_shock.png", "frames": 10, "fps": 12, "loop": false },
+  "bert_busted": { "file": "sprites/anim_bert_busted.png", "frames": 8, "fps": 8, "loop": true },
+  "bert_reel": { "file": "sprites/anim_bert_reel.png", "frames": 6, "fps": 10, "loop": true }
+}

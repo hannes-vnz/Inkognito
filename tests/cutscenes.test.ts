@@ -31,3 +31,19 @@ describe('Zwischensequenzen', () => {
     for (const n of npcsJson) for (const node of Object.values(n.dialog) as { cutscene?: string }[]) if (node.cutscene) expect(scenes).toHaveProperty([node.cutscene]);
   });
 });
+
+describe('Acting-Animationen', () => {
+  it('jede Animation hat einen Bildstreifen mit passender Bildanzahl, Szenen nutzen nur vorhandene', async () => {
+    const { readFileSync } = await import('node:fs');
+    const anims = (await import('../data/anims.json')).default as Record<string, { file: string; frames: number; fps: number }>;
+    for (const [key, a] of Object.entries(anims)) {
+      const buf = readFileSync(`assets/${a.file}`);
+      const w = buf.readUInt32BE(16);
+      const h = buf.readUInt32BE(20);
+      expect(w, key).toBe(h * a.frames);
+      expect(a.fps).toBeGreaterThan(0);
+    }
+    for (const shots of Object.values(scenes))
+      for (const s of shots) for (const f of s.figures ?? []) if (f.anim) expect(anims).toHaveProperty([`${f.who}_${f.anim}`]);
+  });
+});

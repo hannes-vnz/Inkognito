@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { cutscenes, speciesById } from '../data';
+import { anims, cutscenes, speciesById } from '../data';
 import { t } from '../i18n';
 import { playCutscene, type CutsceneArt, type Shot, type ShotBackground } from '../ui/Cutscene';
 
@@ -19,6 +19,7 @@ export function cutsceneArt(scene: Phaser.Scene): CutsceneArt {
       return def ? base64(def.sprite, 0) : undefined;
     },
     text: (key) => t(key),
+    anim: (key) => anims[key],
   };
 }
 

@@ -90,6 +90,8 @@ export class FishingScene extends Phaser.Scene {
   private legend: LegendDef | null = null;
   /** Laufender Kampf mit der Legende (Runde pausiert solange). */
   private fight: FightState | null = null;
+  /** Während der Kampf-Zwischensequenz wartet der Kampf. */
+  private fightHold = false;
   private limitSaid = false;
 
   constructor() {
@@ -677,7 +679,8 @@ export class FishingScene extends Phaser.Scene {
   private startFight(): void {
     const r = this.round!;
     this.fight = createFight(r.hookX, r.rng, fightParams);
-    this.ui.shout(t('fight.start'), '#c78cff');
+    this.fightHold = true;
+    playScene(this, this.uiRoot, 'fight', {}, () => (this.fightHold = false));
     this.ui.setFight(0, this.fight.tension);
     play('bite', 0.6);
     navigator.vibrate?.([30, 30, 30, 30, 30]);
@@ -891,7 +894,7 @@ export class FishingScene extends Phaser.Scene {
       this.keySteer(dt);
       const frozen = this.hitstop > 0;
       this.hitstop = Math.max(0, this.hitstop - dt);
-      if (this.fight && !frozen) this.updateFight(dt);
+      if (this.fight && !frozen && !this.fightHold) this.updateFight(dt);
       const steps = frozen || this.fight ? 0 : this.stepper.advance(dt);
       for (let i = 0; i < steps && this.round && this.mode === 'round'; i++) {
         this.handle(stepRound(this.round, this.steerX, speciesById, this.depth, params, this.stepper.step));

@@ -13,6 +13,15 @@ export interface ShotFigure {
   face?: string;
   /** Im Schatten (dunkel), z. B. wer stumm danebensteht. */
   dim?: boolean;
+  /** Acting-Animation statt Standbild (data/anims.json, Schlüssel `<who>_<anim>`). */
+  anim?: string;
+}
+
+export interface ActingAnim {
+  file: string;
+  frames: number;
+  fps: number;
+  loop: boolean;
 }
 
 export interface Shot {
@@ -35,6 +44,7 @@ export interface Shot {
 export interface CutsceneArt {
   portrait(who: string, face: string): string | undefined;
   speciesImage(id: string): string | undefined;
+  anim(key: string): ActingAnim | undefined;
   text(key: string): string;
 }
 
@@ -219,7 +229,20 @@ function fxLayer(fx: readonly ShotFx[]): HTMLDivElement {
   return layer;
 }
 
-function figure(art: CutsceneArt, f: ShotFigure, cls: string): HTMLImageElement {
+function figure(art: CutsceneArt, f: ShotFigure, cls: string): HTMLElement {
+  const anim = f.anim ? art.anim(`${f.who}_${f.anim}`) : undefined;
+  if (anim) {
+    // Bildstreifen hinter einem quadratischen Fenster, Bild für Bild verschoben
+    const box = el('div', `cut-figure anim ${cls}${f.dim ? ' dim' : ''}`);
+    const strip = el('img', 'cut-strip');
+    strip.src = anim.file;
+    strip.alt = '';
+    box.style.setProperty('--frames', `${anim.frames}`);
+    box.style.setProperty('--dur', `${anim.frames / anim.fps}s`);
+    box.style.setProperty('--iter', anim.loop ? 'infinite' : '1');
+    box.append(strip);
+    return box;
+  }
   const img = el('img', `cut-figure ${cls}${f.dim ? ' dim' : ''}`);
   img.src = art.portrait(f.who, f.face ?? 'normal') ?? '';
   img.alt = '';

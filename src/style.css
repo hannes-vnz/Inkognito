@@ -1883,7 +1883,8 @@ body {
 }
 .cut-figure.solo {
   left: 50%;
-  margin-left: calc(min(70%, 92vw) / -2);
+  /* Eigene translate-Eigenschaft, damit sie sich mit den Pop- und Atem-Animationen verträgt */
+  translate: -50% 0;
 }
 .cut-figure.left {
   left: 2%;
@@ -2190,5 +2191,52 @@ body {
   .cut-panel:nth-child(even) .cut-figure.in-panel {
     margin: 0 0 -12% 6%;
     transform: scaleX(-1);
+  }
+}
+
+/* Acting-Animationen: Bildstreifen hinter quadratischem Fenster */
+.cut-figure.anim {
+  overflow: hidden;
+}
+.cut-strip {
+  display: block;
+  height: 100%;
+  width: calc(var(--frames) * 100%);
+  max-width: none;
+  image-rendering: pixelated;
+  animation: strip-play var(--dur) steps(var(--frames), jump-none) var(--iter) forwards;
+}
+@keyframes strip-play {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc((1 - 1 / var(--frames)) * -100%));
+  }
+}
+
+/* Standbilder atmen leicht, damit niemand wie eingefroren wirkt */
+.cut-figure.solo:not(.anim),
+.cut-figure.right:not(.anim) {
+  animation:
+    fig-pop 0.32s cubic-bezier(0.34, 1.7, 0.64, 1) both,
+    breathe 1.4s ease-in-out 0.32s infinite alternate;
+}
+.cut-figure.left:not(.anim) {
+  animation:
+    fig-pop-flip 0.32s cubic-bezier(0.34, 1.7, 0.64, 1) both,
+    breathe-flip 1.4s ease-in-out 0.32s infinite alternate;
+}
+@keyframes breathe {
+  to {
+    transform: translateY(-1.5%) scale(1.01, 1.025);
+  }
+}
+@keyframes breathe-flip {
+  from {
+    transform: scaleX(-1);
+  }
+  to {
+    transform: scaleX(-1) translateY(-1.5%) scale(1.01, 1.025);
   }
 }

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "y1",
+    "species": "herring",
+    "true": true,
+    "textKey": "yarn.1.q",
+    "explainKey": "yarn.1.a",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/15101430/"
+  },
+  {
+    "id": "y2",
+    "species": "sunfish",
+    "true": false,
+    "textKey": "yarn.2.q",
+    "explainKey": "yarn.2.a",
+    "source": "https://oceanario.pt/en/exhibitions/aquarium/fishes/ocean-sunfish"
+  },
+  {
+    "id": "y3",
+    "species": null,
+    "true": true,
+    "textKey": "yarn.3.q",
+    "explainKey": "yarn.3.a",
+    "source": "https://www.sciencefocus.com/nature/why-does-an-octopus-have-more-than-one-heart"
+  },
+  {
+    "id": "y4",
+    "species": "man_o_war",
+    "true": false,
+    "textKey": "yarn.4.q",
+    "explainKey": "yarn.4.a",
+    "source": "https://www.nationalgeographic.com/animals/invertebrates/p/portuguese-man-of-war/"
+  },
+  {
+    "id": "y5",
+    "species": "garfish",
+    "true": true,
+    "textKey": "yarn.5.q",
+    "explainKey": "yarn.5.a",
+    "source": "https://link.springer.com/article/10.1007/s00217-013-1932-y"
+  },
+  {
+    "id": "y6",
+    "species": "plaice",
+    "true": false,
+    "textKey": "yarn.6.q",
+    "explainKey": "yarn.6.a",
+    "source": "https://www.ecomare.nl/en/in-depth/reading-material/animals/animals-the-mud-flats/flatfish/"
+  },
+  {
+    "id": "y7",
+    "species": "cod",
+    "true": true,
+    "textKey": "yarn.7.q",
+    "explainKey": "yarn.7.a",
+    "source": "https://pure.uhi.ac.uk/en/publications/cutaneous-taste-buds-in-cod/"
+  },
+  {
+    "id": "y8",
+    "species": "gurnard",
+    "true": false,
+    "textKey": "yarn.8.q",
+    "explainKey": "yarn.8.a",
+    "source": "https://epic.awi.de/id/eprint/37179/"
+  },
+  {
+    "id": "y9",
+    "species": "monkfish",
+    "true": true,
+    "textKey": "yarn.9.q",
+    "explainKey": "yarn.9.a",
+    "source": "https://en.wikipedia.org/wiki/Lophius_piscatorius"
+  },
+  {
+    "id": "y10",
+    "species": "moon_jelly",
+    "true": false,
+    "textKey": "yarn.10.q",
+    "explainKey": "yarn.10.a",
+    "source": "https://wildlifetrusts.org/node/3318"
+  }
+]

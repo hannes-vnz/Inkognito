@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { bottles, homeOf, mapParams, player, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
+import { bottles, homeOf, mapParams, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
 import { canMoveOn, knownInSea, moveOn, nextSea } from '../systems/prestige';
 import type { SpotDef } from '../systems/seaMap';
 import { Sheet } from '../ui/Sheet';
@@ -222,7 +222,7 @@ export class SeaMapScene extends Phaser.Scene {
     play('newSpecies');
     let portrait: string | undefined;
     try {
-      portrait = this.textures.getBase64(player.sprite, 0);
+      portrait = this.textures.getBase64('portrait_bert');
     } catch {
       portrait = undefined;
     }

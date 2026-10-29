@@ -21,6 +21,13 @@
         "frames": 4,
         "fps": 8,
         "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
       }
     ],
     "placeholderColor": "#3f6fa8",
@@ -143,6 +150,13 @@
         "frames": 4,
         "fps": 8,
         "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
       }
     ],
     "placeholderColor": "#6f7f8f",
@@ -252,6 +266,13 @@
         "frames": 4,
         "fps": 8,
         "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
       }
     ],
     "placeholderColor": "#c78cff",
@@ -314,6 +335,147 @@
         "textKey": "npc.qualle.quiz",
         "action": {
           "type": "startQuiz"
+        }
+      }
+    }
+  },
+  {
+    "id": "knut",
+    "nameKey": "npc.knut.name",
+    "sprite": "npc_knut",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#ffcf3a",
+    "place": "bench",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.knut.intro",
+        "options": [
+          {
+            "textKey": "npc.knut.intro.opt1",
+            "next": "intro2"
+          },
+          {
+            "textKey": "npc.knut.intro.opt2",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.knut.intro2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.knut.hub",
+        "options": [
+          {
+            "textKey": "npc.knut.hub.opt",
+            "next": "yarn"
+          },
+          {
+            "textKey": "npc.later",
+            "next": null
+          }
+        ]
+      },
+      "yarn": {
+        "textKey": "npc.knut.yarn",
+        "action": {
+          "type": "startYarn"
+        }
+      }
+    }
+  },
+  {
+    "id": "gisela",
+    "nameKey": "npc.gisela.name",
+    "sprite": "npc_gisela",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#f6f8fb",
+    "place": "roof",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.gisela.intro",
+        "reaction": {
+          "background": "burst",
+          "mood": "shock"
+        },
+        "options": [
+          {
+            "textKey": "npc.gisela.intro.opt",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.gisela.intro2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.gisela.hub",
+        "action": {
+          "type": "gag"
         }
       }
     }

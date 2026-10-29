@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -58,11 +58,17 @@ export interface SaveV7 extends Omit<SaveV6, 'version'> {
   sea: { current: string; left: string[] };
 }
 
-export type Save = SaveV7;
+export interface SaveV8 extends Omit<SaveV7, 'version'> {
+  version: 8;
+  /** Opa Knuts Seemannsgarn (wahr oder erfunden?). */
+  yarn: { nextAtCast: number; asked: number; correct: number };
+}
+
+export type Save = SaveV8;
 
 export function newSave(now: number): Save {
   return {
-    version: 7,
+    version: 8,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -77,6 +83,7 @@ export function newSave(now: number): Save {
     map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [], bottlesRead: 0 },
     daily: { lastDay: '', streak: 0 },
     sea: { current: 'atlantic', left: [] },
+    yarn: { nextAtCast: 0, asked: 0, correct: 0 },
   };
 }
 
@@ -117,6 +124,8 @@ const migrations: Record<number, Migration> = {
   }),
   // v6 → v7: mehrere Meere. Bisher gab es nur den Atlantik.
   6: (old) => ({ ...old, sea: { current: 'atlantic', left: [] } }),
+  // v7 → v8: Opa Knut und sein Seemannsgarn.
+  7: (old) => ({ ...old, yarn: { nextAtCast: 0, asked: 0, correct: 0 } }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

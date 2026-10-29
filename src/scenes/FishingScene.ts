@@ -450,7 +450,7 @@ export class FishingScene extends Phaser.Scene {
   private showSetComplete(set: SetDef, done: () => void): void {
     let portrait: string | undefined;
     try {
-      portrait = this.textures.getBase64(player.sprite, 2 * 6);
+      portrait = this.textures.getBase64('portrait_bert');
     } catch {
       portrait = undefined;
     }
@@ -554,7 +554,7 @@ export class FishingScene extends Phaser.Scene {
   private showOffline(coins: number, done: () => void): void {
     let portrait: string | undefined;
     try {
-      portrait = this.textures.getBase64(player.sprite, 0);
+      portrait = this.textures.getBase64('portrait_bert');
     } catch {
       portrait = undefined;
     }

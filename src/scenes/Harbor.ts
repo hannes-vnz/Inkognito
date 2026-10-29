@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { harbor, homeOf, npcById, npcs, quiz, speciesById, speciesIn, spotsIn, story, upgradeById } from '../data';
+import { gags, harbor, homeOf, npcById, npcs, quiz, speciesById, speciesIn, spotsIn, story, upgradeById, yarns } from '../data';
+import { answerYarn, nextYarn, yarnReady } from '../systems/yarns';
 import { reachableMeters } from '../systems/seaMap';
 import { play } from '../audio/sfx';
 import { animKey } from '../entities/Octopus';
@@ -24,13 +25,15 @@ export interface HarborHost {
 const SCALE = 2;
 
 /**
- * Die Figuren am Hafen: Hilde auf dem Steg, Bruno am Fischstand, Professorin Qualle im Wasser.
+ * Der Hafen als kleine Stadt: Häuser und Leuchtturm im Hintergrund, Hilde und Opa Knut auf dem Steg,
+ * Bruno am Fischstand mit Möwe Gisela auf dem Dach, Professorin Qualle im Wasser.
  * Antippen öffnet ihren Dialog, Story-Momente spielen nach jeder Rückkehr an Deck.
  */
 export class Harbor {
   private readonly sprites = new Map<string, Phaser.GameObjects.Sprite>();
   private readonly markers = new Map<string, Phaser.GameObjects.Text>();
   private lastRequest: string | undefined;
+  private gagIndex = 0;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -42,12 +45,17 @@ export class Harbor {
   build(width: number, height: number, surface: number): void {
     // Quer liegen rechts oben Münzen und Konto, unten rechts das Deck: Stand und Qualle rücken nach links.
     const wide = width > height;
+    // Hafenstadt hinter dem Steg (Pixel ×6 im Bild, auf dem Schirm ×2)
+    this.scene.add.image(0, surface + 4, 'bg_harbor_0').setOrigin(0, 1).setScale(1 / 3).setDepth(-18);
+    this.gagIndex = this.host.save.stats.casts;
     const g = this.scene.add.graphics().setDepth(2);
-    // Steg links
+    // Steg links mit Planken und Pfählen
     g.fillStyle(0x6b4a2b, 1);
-    g.fillRect(0, surface - 6, 86, 8);
+    g.fillRect(0, surface - 6, 92, 8);
+    g.fillStyle(0x8a6a3b, 1);
+    for (let x = 0; x < 92; x += 10) g.fillRect(x, surface - 6, 8, 2);
     g.fillStyle(0x4a321d, 1);
-    for (const x of [8, 44, 78]) g.fillRect(x, surface, 6, 40);
+    for (const x of [6, 46, 84]) g.fillRect(x, surface, 6, 40);
     // Fischstand rechts: Markise und Theke
     const sx = wide ? width - 150 : width - 46;
     g.fillStyle(0x8a5a2b, 1);
@@ -60,8 +68,10 @@ export class Harbor {
     for (const x of [sx - 34, sx + 30]) g.fillRect(x, surface - 80, 4, 76);
 
     const spots: Record<NpcDef['place'], { x: number; y: number }> = {
-      pier: { x: 40, y: surface - 6 },
+      pier: { x: 26, y: surface - 6 },
+      bench: { x: 66, y: surface - 4 },
       stall: { x: sx, y: surface - 18 },
+      roof: { x: sx - 16, y: surface - 90 },
       water: wide ? { x: width * 0.3, y: surface + 80 } : { x: width / 2 + 80, y: surface + 96 },
     };
     for (const n of npcs) {
@@ -91,6 +101,7 @@ export class Harbor {
       let mark = '';
       if (met && n.id === 'bruno' && save.story.seen.includes(harbor.requestRequires) && save.request === null) mark = '!';
       if (met && n.id === 'qualle' && quizReady(save, quiz, harbor)) mark = '?';
+      if (met && n.id === 'knut' && yarnReady(save, harbor)) mark = '!';
       this.markers.get(n.id)?.setText(mark).setVisible(mark !== '');
     }
   }
@@ -125,10 +136,14 @@ export class Harbor {
 
   private portrait(npc: NpcDef): string | undefined {
     try {
-      return this.scene.textures.getBase64(npc.sprite, 0);
+      return this.scene.textures.getBase64(`portrait_${npc.id}`);
     } catch {
       return undefined;
     }
+  }
+
+  private anim(npc: NpcDef, key: 'idle' | 'talk' | 'react'): void {
+    this.sprites.get(npc.id)?.play(animKey(npc.sprite, key));
   }
 
   private setTalking(npc: NpcDef, talking: boolean): void {
@@ -150,6 +165,9 @@ export class Harbor {
     const show = () => {
       if (node.action?.type === 'showRequest') return this.showRequest(npc, portrait, done);
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
+      if (node.action?.type === 'startYarn') return this.startYarn(npc, portrait, done);
+      if (node.action?.type === 'gag') return this.gag(npc, portrait, done);
+      this.anim(npc, 'talk');
       this.sheet.show(
         t(npc.nameKey),
         t(node.textKey),
@@ -165,8 +183,56 @@ export class Harbor {
         portrait,
       );
     };
-    if (node.reaction && portrait) playReaction(this.uiRoot, portrait, node.reaction, t(`reaction.${npc.id}.${node.id}`), show);
+    if (node.reaction && portrait) {
+      this.anim(npc, 'react');
+      playReaction(this.uiRoot, portrait, node.reaction, t(`reaction.${npc.id}.${node.id}`), show);
+    }
     else show();
+  }
+
+  /** Möwe Gisela: der Reihe nach ihre Sprüche, mit Gekreische. */
+  private gag(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const key = gags[this.gagIndex++ % gags.length]!;
+    this.anim(npc, 'react');
+    play('bite', 1.6);
+    this.sheet.show(t(npc.nameKey), t(key), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+  }
+
+  /** Opa Knuts Seemannsgarn: wahr oder erfunden? Danach die Auflösung mit Fakt. */
+  private startYarn(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const save = this.host.save;
+    if (!yarnReady(save, harbor)) {
+      this.sheet.show(t(npc.nameKey), t('yarn.notReady'), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+      return;
+    }
+    const yarn = nextYarn(save, yarns);
+    this.anim(npc, 'talk');
+    const answer = (saidTrue: boolean) => {
+      const result = answerYarn(this.host.save, yarn, saidTrue, harbor);
+      this.host.setSave(result.save);
+      play(result.right ? 'fanfare' : 'wrong');
+      this.sheet.close();
+      const text = `${t(result.right ? 'yarn.right' : 'yarn.wrong', { reward: result.reward })} ${t(yarn.explainKey)}`;
+      const after = () => {
+        this.anim(npc, 'talk');
+        this.sheet.show(t(npc.nameKey), text, [{ label: t('quiz.next'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+      };
+      this.anim(npc, 'react');
+      if (portrait) {
+        const reaction = result.right ? ({ background: 'sparkle', mood: 'joy' } as const) : ({ background: 'waves', mood: 'shock' } as const);
+        playReaction(this.uiRoot, portrait, reaction, t(result.right ? 'reaction.right' : 'reaction.wrong'), after);
+      } else after();
+    };
+    this.sheet.show(
+      t('yarn.title'),
+      t(yarn.textKey),
+      [
+        { label: t('yarn.true'), onSelect: () => answer(true) },
+        { label: t('yarn.false'), onSelect: () => answer(false) },
+      ],
+      undefined,
+      portrait,
+    );
   }
 
   private showRequest(npc: NpcDef, portrait: string | undefined, done?: () => void): void {

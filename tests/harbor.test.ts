@@ -10,6 +10,9 @@ import { markSeen, nextBeat, npcMet, type StoryBeat } from '../src/systems/story
 import { fulfillRequest, newRequest } from '../src/systems/requests';
 import { answerQuiz, pickQuiz, quizReady, type QuizParams, type QuizQuestion } from '../src/systems/quiz';
 import { newSave, type Save } from '../src/systems/save';
+import yarnsJson from '../data/yarns.json';
+import gagsJson from '../data/gags.json';
+import { answerYarn, nextYarn, yarnReady, type Yarn, type YarnParams } from '../src/systems/yarns';
 
 const T = 1_700_000_000_000;
 const beats = story as StoryBeat[];
@@ -162,5 +165,36 @@ describe('Quiz', () => {
     const wrong = answerQuiz(s, r, (r.correct + 1) % 3, 10, qp);
     expect(wrong.reward).toBe(0);
     expect(wrong.save.coins).toBe(0);
+  });
+});
+
+describe('Opa Knuts Seemannsgarn', () => {
+  const yarnList = yarnsJson as Yarn[];
+  const yp = game.harbor as YarnParams;
+
+  it('Daten: Texte, Quelle, Mischung aus wahr und Garn, Arten existieren', () => {
+    for (const y of yarnList) {
+      for (const key of [y.textKey, y.explainKey]) expect(texts).toHaveProperty([key]);
+      expect(y.source).toMatch(/^https:\/\//);
+      if (y.species) expect(fish.map((f) => f.id)).toContain(y.species);
+    }
+    const trues = yarnList.filter((y) => y.true).length;
+    expect(trues).toBeGreaterThan(2);
+    expect(yarnList.length - trues).toBeGreaterThan(2);
+    for (const key of gagsJson) expect(texts).toHaveProperty([key]);
+  });
+
+  it('erst nach Knuts Vorstellung, der Reihe nach, mit Pause danach', () => {
+    let s = newSave(T);
+    expect(yarnReady(s, yp)).toBe(false);
+    s = markSeen(s, yp.yarnRequires);
+    expect(yarnReady(s, yp)).toBe(true);
+    const first = nextYarn(s, yarnList);
+    const r = answerYarn(s, first, first.true, yp);
+    expect(r.right).toBe(true);
+    expect(r.reward).toBe(yp.yarnReward.base);
+    expect(yarnReady(r.save, yp)).toBe(false);
+    expect(nextYarn(r.save, yarnList)).not.toBe(first);
+    expect(answerYarn(s, first, !first.true, yp).reward).toBe(0);
   });
 });

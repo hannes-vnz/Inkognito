@@ -26,6 +26,15 @@
     }
   },
   {
+    "id": "gisela_intro",
+    "npc": "gisela",
+    "node": "intro",
+    "trigger": {
+      "type": "casts",
+      "value": 2
+    }
+  },
+  {
     "id": "hilde_map",
     "npc": "hilde",
     "node": "map",
@@ -50,6 +59,15 @@
     "trigger": {
       "type": "species",
       "value": 4
+    }
+  },
+  {
+    "id": "knut_intro",
+    "npc": "knut",
+    "node": "intro",
+    "trigger": {
+      "type": "species",
+      "value": 6
     }
   },
   {

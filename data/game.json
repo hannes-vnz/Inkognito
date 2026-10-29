@@ -29,7 +29,13 @@
       "perValue": 5
     },
     "requestRequires": "bruno_intro",
-    "quizRequires": "qualle_intro"
+    "quizRequires": "qualle_intro",
+    "yarnEveryCasts": 2,
+    "yarnReward": {
+      "base": 10,
+      "perKnown": 2
+    },
+    "yarnRequires": "knut_intro"
   },
   "map": {
     "worldSize": 1200,

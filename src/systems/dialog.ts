@@ -3,8 +3,8 @@ export interface DialogOption {
   next: string | null;
 }
 
-/** Was nach dem Text passiert: Brunos Wunschfisch zeigen oder Professorin Qualles Quiz starten. */
-export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' };
+/** Was nach dem Text passiert: Wunschfisch, Quiz, Seemannsgarn oder ein Möwen-Spruch. */
+export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' } | { type: 'startYarn' } | { type: 'gag' };
 
 /** Weiterleitung abhängig von gesehenen Story-Momenten; die erste passende gewinnt. */
 export interface DialogRedirect {
@@ -24,7 +24,7 @@ export interface DialogNode {
 
 export type Dialog = Record<string, DialogNode>;
 
-export type NpcPlace = 'pier' | 'stall' | 'water';
+export type NpcPlace = 'pier' | 'bench' | 'stall' | 'roof' | 'water';
 
 export interface NpcDef {
   id: string;

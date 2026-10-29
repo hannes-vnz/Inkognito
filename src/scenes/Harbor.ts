@@ -5,7 +5,7 @@ import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters } from '../systems/seaMap';
 import { play } from '../audio/sfx';
 import { animKey } from '../entities/Octopus';
-import { dialogNode, type NpcDef } from '../systems/dialog';
+import { dialogNode, faceOf, type Face, type NpcDef } from '../systems/dialog';
 import { markSeen, nextBeat, npcMet } from '../systems/story';
 import { fulfillRequest, newRequest } from '../systems/requests';
 import { answerQuiz, pickQuiz, quizReady } from '../systems/quiz';
@@ -136,9 +136,9 @@ export class Harbor {
     this.refresh();
   }
 
-  private portrait(npc: NpcDef): string | undefined {
+  private portrait(npc: NpcDef, face: Face = 'normal'): string | undefined {
     try {
-      return this.scene.textures.getBase64(`portrait_${npc.id}`);
+      return this.scene.textures.getBase64(face === 'normal' ? `portrait_${npc.id}` : `portrait_${npc.id}_${face}`);
     } catch {
       return undefined;
     }
@@ -161,7 +161,7 @@ export class Harbor {
 
   private talk(npc: NpcDef, nodeId: string, done?: () => void): void {
     const node = dialogNode(npc.dialog, nodeId, this.host.save.story.seen);
-    const portrait = this.portrait(npc);
+    const portrait = this.portrait(npc, faceOf(node));
     this.setTalking(npc, true);
     play('talk');
     const show = () => {
@@ -169,7 +169,7 @@ export class Harbor {
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       if (node.action?.type === 'legendHint') return this.legendHint(npc, portrait, done);
       if (node.action?.type === 'showBaits') return this.showBaits(npc, portrait, done);
-      if (node.action?.type === 'gag') return this.gag(npc, portrait, done);
+      if (node.action?.type === 'gag') return this.gag(npc, this.portrait(npc, 'annoyed'), done);
       this.anim(npc, 'talk');
       this.sheet.show(
         t(npc.nameKey),
@@ -301,11 +301,12 @@ export class Harbor {
           const text = result.right
             ? `${t('quiz.right', { reward: result.reward })} ${t(def.factKey)}`
             : `${t('quiz.wrong', { answer: t(round.answerKeys[round.correct]!) })} ${t(def.factKey)}`;
-          const after = () => this.sheet.show(t(npc.nameKey), text, [{ label: t('quiz.next'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+          const face = this.portrait(npc, result.right ? 'happy' : 'shock');
+          const after = () => this.sheet.show(t(npc.nameKey), text, [{ label: t('quiz.next'), onSelect: () => this.finish(npc, done) }], undefined, face);
           this.sheet.close();
           if (portrait) {
             const reaction = result.right ? ({ background: 'sparkle', mood: 'joy' } as const) : ({ background: 'waves', mood: 'shock' } as const);
-            playReaction(this.uiRoot, portrait, reaction, t(result.right ? 'reaction.right' : 'reaction.wrong'), after);
+            playReaction(this.uiRoot, face ?? portrait, reaction, t(result.right ? 'reaction.right' : 'reaction.wrong'), after);
           } else after();
         },
       })),

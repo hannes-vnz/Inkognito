@@ -227,7 +227,7 @@ export class SeaMapScene extends Phaser.Scene {
     play('newSpecies');
     let portrait: string | undefined;
     try {
-      portrait = this.textures.getBase64('portrait_bert');
+      portrait = this.textures.getBase64('portrait_bert_shock');
     } catch {
       portrait = undefined;
     }

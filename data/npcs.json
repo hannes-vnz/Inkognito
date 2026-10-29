@@ -40,7 +40,8 @@
             "textKey": "npc.hilde.intro.opt",
             "next": "intro2"
           }
-        ]
+        ],
+        "face": "annoyed"
       },
       "intro2": {
         "textKey": "npc.hilde.intro2",
@@ -58,7 +59,8 @@
             "textKey": "npc.thanks",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "arms": {
         "textKey": "npc.hilde.arms",
@@ -84,7 +86,8 @@
             "textKey": "npc.hilde.arms2.opt",
             "next": null
           }
-        ]
+        ],
+        "face": "annoyed"
       },
       "start": {
         "textKey": "npc.hilde.hub",
@@ -106,7 +109,8 @@
             "textKey": "npc.thanks",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "map": {
         "textKey": "npc.hilde.map",
@@ -124,7 +128,8 @@
             "textKey": "npc.hilde.northsea.opt",
             "next": null
           }
-        ]
+        ],
+        "face": "annoyed"
       }
     }
   },
@@ -186,7 +191,8 @@
             "textKey": "npc.bruno.shark.opt",
             "next": "intro2"
           }
-        ]
+        ],
+        "face": "annoyed"
       },
       "intro2": {
         "textKey": "npc.bruno.intro2",
@@ -195,7 +201,8 @@
             "textKey": "npc.ok",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "start": {
         "textKey": "npc.bruno.hub",
@@ -212,7 +219,8 @@
             "textKey": "npc.bye",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "request": {
         "textKey": "npc.bruno.request",
@@ -308,7 +316,8 @@
             "textKey": "npc.ok",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "twilight": {
         "textKey": "npc.qualle.twilight",
@@ -317,7 +326,8 @@
             "textKey": "npc.wow",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "midnight": {
         "textKey": "npc.qualle.midnight",
@@ -326,7 +336,8 @@
             "textKey": "npc.wow",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "start": {
         "textKey": "npc.qualle.hub",
@@ -339,7 +350,8 @@
             "textKey": "npc.later",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "quiz": {
         "textKey": "npc.qualle.quiz",
@@ -394,7 +406,8 @@
             "textKey": "npc.knut.intro.opt2",
             "next": "intro2"
           }
-        ]
+        ],
+        "face": "annoyed"
       },
       "intro2": {
         "textKey": "npc.knut.intro2",
@@ -425,7 +438,8 @@
             "textKey": "npc.knut.northsea.opt",
             "next": null
           }
-        ]
+        ],
+        "face": "happy"
       },
       "beard": {
         "textKey": "npc.knut.beard",
@@ -451,7 +465,8 @@
             "textKey": "npc.ok",
             "next": null
           }
-        ]
+        ],
+        "face": "annoyed"
       },
       "legend": {
         "textKey": "npc.knut.legend",
@@ -528,7 +543,8 @@
             "textKey": "npc.ok",
             "next": null
           }
-        ]
+        ],
+        "face": "annoyed"
       },
       "start": {
         "textKey": "npc.gisela.hub",

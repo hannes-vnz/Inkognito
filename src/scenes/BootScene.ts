@@ -14,7 +14,10 @@ export class BootScene extends Phaser.Scene {
     for (const n of npcs) this.load.spritesheet(n.sprite, `sprites/${n.sprite}.png`, { frameWidth: n.frame.width, frameHeight: n.frame.height });
     for (const name of ['boat_1', 'boat_top', 'buoy', 'fx_crate', 'fx_bottle', 'hook', 'fx_bubble']) this.load.image(name, `sprites/${name}.png`);
     for (const name of ['bg_sea_0', 'bg_sea_1', 'bg_harbor_0']) this.load.image(name, `backgrounds/${name}.png`);
-    for (const id of [...npcs.map((n) => n.id), 'bert']) this.load.image(`portrait_${id}`, `sprites/portrait_${id}.png`);
+    for (const id of [...npcs.map((n) => n.id), 'bert']) {
+      this.load.image(`portrait_${id}`, `sprites/portrait_${id}.png`);
+      for (const face of ['happy', 'annoyed', 'shock']) this.load.image(`portrait_${id}_${face}`, `sprites/portrait_${id}_${face}.png`);
+    }
   }
 
   create(): void {

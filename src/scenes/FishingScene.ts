@@ -71,6 +71,11 @@ export class FishingScene extends Phaser.Scene {
   private sparks!: Sparks;
   /** Kurzes Einfrieren beim Biss (Sekunden), damit der Treffer sitzt. */
   private hitstop = 0;
+  private sky!: Phaser.GameObjects.TileSprite;
+  private wave!: Phaser.GameObjects.Graphics;
+  private whale!: Phaser.GameObjects.Graphics;
+  private rays!: Phaser.GameObjects.Graphics;
+  private worldTime = 0;
   /** Legende in dieser Runde (uid), ob sie schon gesichtet wurde, und welche Art. */
   private legendUid = -1;
   private legendSeen = false;
@@ -167,8 +172,9 @@ export class FishingScene extends Phaser.Scene {
     this.worldHeight = metersToY(this.spot.maxMeters, this.depth) + 900;
 
     // Himmel und Inseln oberhalb der Wasserlinie
-    const sky = this.add.image(width / 2, surface + 30, 'bg_sea_0').setOrigin(0.5, 1).setDepth(-20);
-    sky.setScale(Math.max(width / sky.width, 1) * 0.6);
+    // Himmel als Kachel, damit die Wolken langsam ziehen
+    const skyScale = Math.max(width / 1920, 1) * 0.6;
+    this.sky = this.add.tileSprite(0, surface + 30, width / skyScale, 1080, 'bg_sea_0').setOrigin(0, 1).setScale(skyScale).setDepth(-20);
     const islands = this.add.image(width / 2, surface + 6, 'bg_sea_1').setOrigin(0.5, 1).setDepth(-19);
     islands.setScale(Math.max(width / islands.width, 0.5) * 0.45);
 
@@ -223,9 +229,17 @@ export class FishingScene extends Phaser.Scene {
       stars.fillStyle(0x0b1630, 1).fillCircle(width * 0.45 + 7, moonY - 4, 14);
     }
     // Wasseroberfläche
-    const wave = this.add.graphics().setDepth(5);
-    wave.fillStyle(0xe8fffb, 0.9);
-    for (let x = 0; x < width; x += 12) wave.fillRect(x, surface - 3 + Math.round(Math.sin(x * 0.05) * 2), 12, 3);
+    // Wasseroberfläche: wird jeden Frame neu gezeichnet und wogt
+    this.wave = this.add.graphics().setDepth(5);
+    // Ferner Wal-Schatten zieht langsam durch die oberen Zonen (Parallaxe)
+    this.whale = this.add.graphics().setDepth(-9.6).setScrollFactor(1, 0.55).setAlpha(0.16);
+    this.whale.fillStyle(0x0b1e45, 1);
+    this.whale.fillEllipse(0, 0, 220, 60);
+    this.whale.fillTriangle(-100, 0, -170, -34, -150, 0);
+    this.whale.fillTriangle(-100, 0, -170, 30, -150, 0);
+    this.whale.fillTriangle(-10, 20, 30, 50, 40, 20);
+    this.whale.setPosition(-200, surface + 700);
+    this.rays = fx;
 
     this.boat = this.add.image(width / 2, surface + 18, 'boat_1').setOrigin(0.5, 1).setScale(3).setDepth(4);
     this.bert = this.add.sprite(width / 2 - 54, surface - 36, player.sprite, 0).setOrigin(0.5, 1).setScale(2).setDepth(3);
@@ -534,7 +548,7 @@ export class FishingScene extends Phaser.Scene {
   private showSetComplete(set: SetDef, done: () => void): void {
     let portrait: string | undefined;
     try {
-      portrait = this.textures.getBase64('portrait_bert');
+      portrait = this.textures.getBase64('portrait_bert_happy');
     } catch {
       portrait = undefined;
     }
@@ -702,7 +716,7 @@ export class FishingScene extends Phaser.Scene {
   private showOffline(coins: number, done: () => void): void {
     let portrait: string | undefined;
     try {
-      portrait = this.textures.getBase64('portrait_bert');
+      portrait = this.textures.getBase64('portrait_bert_happy');
     } catch {
       portrait = undefined;
     }
@@ -721,6 +735,23 @@ export class FishingScene extends Phaser.Scene {
       undefined,
       portrait,
     );
+  }
+
+  /** Wolken ziehen, Wellen wogen, Lichtstrahlen flackern, der Wal zieht vorbei. */
+  private animateWorld(dt: number): void {
+    this.worldTime += dt;
+    const time = this.worldTime;
+    this.sky.tilePositionX += dt * 6;
+    const surface = this.depth.surfaceY;
+    const width = this.scale.width;
+    this.wave.clear();
+    this.wave.fillStyle(0xe8fffb, 0.9);
+    for (let x = 0; x < width; x += 8) this.wave.fillRect(x, surface - 3 + Math.round(Math.sin(x * 0.05 + time * 2) * 2), 8, 3);
+    this.wave.fillStyle(0xffffff, 0.5);
+    for (let x = 0; x < width; x += 48) this.wave.fillRect(x + ((time * 20) % 48), surface + 2 + Math.round(Math.sin(x + time * 3)), 6, 2);
+    this.rays.setAlpha(0.75 + Math.sin(time * 1.3) * 0.25);
+    this.whale.x += dt * 18;
+    if (this.whale.x > width + 260) this.whale.x = -260;
   }
 
   private timeLabel(): string {
@@ -826,6 +857,7 @@ export class FishingScene extends Phaser.Scene {
     }
     this.snow.update(cam, dt);
     this.sparks.update(dt);
+    this.animateWorld(dt);
 
     // Crew angelt auch während des Spielens
     this.idleTimer += dt;

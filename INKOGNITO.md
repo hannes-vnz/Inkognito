@@ -146,7 +146,7 @@ Phaser 3, TypeScript, Vite, Supabase. Spiellogik in `src/systems/` ohne Phaser, 
 2. ✅ **Inhalt Startmeer:** 15–20 echte Arten mit geprüften Fakten, Sammel-Sets, Wissens-Bonus. (21 Arten, 5 Sets, Fakten am 29.10.2026 geprüft, Quelle je Art in data/fish.json)
 3. ✅ **Hafen & Figuren:** Hilde, Bruno, Professorin Qualle mit Dialogen, Reaktions-Szenen, Mini-Quiz. (8 Story-Momente, Brunos Wunschfisch, 21 Quizfragen; Inhalte in data/npcs.json, story.json, quiz.json)
 3b. ✅ **Seekarte:** Angelplätze, Motor, Treibgut; dazu erste Sounds (synthetisiert, data/sounds.json), Münzflug und rollender Zähler.
-4. **Grafik & Juice:** Stil nach ARTSTIL.md, echte Sprites, Animationen.
+4. **Grafik & Juice:** Stil nach ARTSTIL.md, echte Sprites, Animationen. (Teil 1 ✅: alle Fische, Bert, Kutter und Figuren neu gezeichnet, Porträts mit 4 Ausdrücken, ziehende Wolken, Wellen, Wal-Schatten, Spritzer, Hitstop, Funken. Offen: echte gezeichnete Grafik statt Generator, Musik.)
 5. **Online:** Login und Cloud-Spielstand (vorhanden), Freunde und Bestenlisten.
 6. **Prestige:** ✅ System und Nordsee; Korallenriff und Arktis folgen.
 7. **Duelle:** Gleicher Seed, wer angelt in 3 Würfen mehr?

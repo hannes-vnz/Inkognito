@@ -171,3 +171,12 @@ describe('Möwe Gisela', () => {
     for (const key of gagsJson) expect(texts).toHaveProperty([key]);
   });
 });
+
+describe('Porträts', () => {
+  it('jede Figur und Bert haben alle Gesichtsausdrücke als Datei, Knoten nutzen nur bekannte Ausdrücke', async () => {
+    const { existsSync } = await import('node:fs');
+    for (const id of [...people.map((n) => n.id), 'bert'])
+      for (const face of ['', '_happy', '_annoyed', '_shock']) expect(existsSync(`assets/sprites/portrait_${id}${face}.png`), `${id}${face}`).toBe(true);
+    for (const n of people) for (const node of Object.values(n.dialog)) if (node.face) expect(['normal', 'happy', 'annoyed', 'shock']).toContain(node.face);
+  });
+});

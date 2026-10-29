@@ -18,11 +18,19 @@ export interface DialogNode {
   options?: DialogOption[];
   action?: DialogAction;
   redirect?: DialogRedirect[];
+  /** Gesichtsausdruck im Porträt (sonst aus der Reaktions-Stimmung abgeleitet). */
+  face?: Face;
   /** Kurze Reaktions-Szene, bevor der Text erscheint (Hintergrund und Stimmung). */
   reaction?: { background: 'waves' | 'burst' | 'sparkle'; mood: 'shock' | 'joy' | 'smug' };
 }
 
 export type Dialog = Record<string, DialogNode>;
+
+export type Face = 'normal' | 'happy' | 'annoyed' | 'shock';
+
+/** Ausdruck eines Knotens: ausdrücklich gesetzt oder passend zur Reaktion. */
+export const faceOf = (node: DialogNode): Face =>
+  node.face ?? (node.reaction ? ({ shock: 'shock', joy: 'happy', smug: 'annoyed' } as const)[node.reaction.mood] : 'normal');
 
 export type NpcPlace = 'pier' | 'bench' | 'stall' | 'roof' | 'water';
 

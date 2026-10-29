@@ -1,76 +1,12 @@
+import { makeTools } from './pixel-tools.mjs';
+
 /**
  * Hafen-Figuren als Platzhalter-Pixelkunst: Spritesheets 32×32 (idle, talk, react je 4 Frames),
  * Dialog-Porträts 64×64 und die Hafenstadt im Hintergrund.
  * Bekommt die Werkzeuge des Generators übergeben, damit es nur eine PNG-Pipeline gibt.
  */
 export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, createRng }) {
-  const ink = hex('#1b1030');
-  const DARK = hex('#0e1a2b');
-
-  /** Vier Töne mit Licht von oben links, dazu ein Glanzpunkt. */
-  const tone = (ramp, nx, ny) => {
-    const l = -(nx * 0.55 + ny * 0.85);
-    if (l > 0.82) return mix(ramp.light, white, 0.35);
-    if (l > 0.42) return ramp.light;
-    if (l > -0.3) return ramp.base;
-    return ramp.shadow;
-  };
-
-  function blob(img, ox, oy, cx, cy, rx, ry, ramp, alpha = 1, clip) {
-    for (let y = Math.floor(cy - ry); y <= cy + ry; y++)
-      for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
-        const nx = (x + 0.5 - cx) / rx;
-        const ny = (y + 0.5 - cy) / ry;
-        if (nx * nx + ny * ny > 1) continue;
-        if (clip && !clip(x, y)) continue;
-        if (alpha < 1) img.blend(ox + x, oy + y, tone(ramp, nx, ny), alpha);
-        else img.set(ox + x, oy + y, tone(ramp, nx, ny));
-      }
-  }
-
-  function poly(img, ox, oy, pts, color) {
-    const xs = pts.map((p) => p[0]);
-    const ys = pts.map((p) => p[1]);
-    for (let y = Math.floor(Math.min(...ys)); y <= Math.max(...ys); y++)
-      for (let x = Math.floor(Math.min(...xs)); x <= Math.max(...xs); x++) {
-        let inside = false;
-        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-          const [xi, yi] = pts[i];
-          const [xj, yj] = pts[j];
-          if (yi > y + 0.5 !== yj > y + 0.5 && x + 0.5 < ((xj - xi) * (y + 0.5 - yi)) / (yj - yi) + xi) inside = !inside;
-        }
-        if (inside) img.set(ox + x, oy + y, typeof color === 'function' ? color(x, y) : color);
-      }
-  }
-
-  function line(img, ox, oy, x0, y0, x1, y1, color) {
-    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
-    for (let i = 0; i <= n; i++) img.set(ox + x0 + ((x1 - x0) * i) / n, oy + y0 + ((y1 - y0) * i) / n, color);
-  }
-
-  function rect(img, ox, oy, x, y, w, h, color) {
-    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) img.set(ox + x + i, oy + y + j, typeof color === 'function' ? color(i, j) : color);
-  }
-
-  /** Auge mit Iris, Pupille und Glanz; `open` 0 = zu (Strich), 1 = offen. */
-  function eye(img, ox, oy, x, y, r, iris, open = 1, look = -1) {
-    if (open <= 0) {
-      line(img, ox, oy, x - r, y, x + r, y, ink);
-      return;
-    }
-    const h = Math.max(1, Math.round(r * open));
-    for (let j = -h; j <= h; j++) for (let i = -r; i <= r; i++) if ((i * i) / (r * r) + (j * j) / (h * h) <= 1.05) img.set(ox + x + i, oy + y + j, white);
-    const ix = x + look * Math.max(0, r - 2);
-    for (let j = -h; j <= h; j++) for (let i = -1; i <= 1; i++) if (Math.abs(j) <= h) img.set(ox + ix + i, oy + y + j, iris);
-    img.set(ox + ix, oy + y, ink);
-    img.set(ox + ix, oy + y + (h > 1 ? 1 : 0), ink);
-    img.set(ox + ix - 1, oy + y - Math.min(1, h), white);
-    if (open < 1) line(img, ox, oy, x - r, y - h, x + r, y - h, ink);
-  }
-
-  const blush = (img, ox, oy, x, y) => {
-    for (const [dx, dy] of [[0, 0], [1, 0], [2, 0], [1, 1]]) img.blend(ox + x + dx, oy + y + dy, hex('#ff6b8a'), 0.45);
-  };
+  const { ink, DARK, blob, poly, line, rect, eye, blush } = makeTools({ hex, mix, white });
 
   // ------------------------------------------------------------ Paletten
   const P = {
@@ -278,9 +214,58 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     },
   };
 
-  function portrait(id) {
+  /** Wo Augen und Mund sitzen und welche Farbe darunter liegt (für die Gesichtsausdrücke). */
+  const faces = {
+    hilde: { skin: P.skin.base, eyes: [[27, 32, 3], [38, 31, 3]], mouth: [29, 36, 41] },
+    bruno: { skin: P.shark.base, eyes: [[22, 29, 3]] },
+    qualle: { skin: white, eyes: [[24, 29, 3], [40, 29, 3]], mouth: [29, 35, 37], mouthSkin: P.jelly.base },
+    knut: { skin: P.skinRed.base, eyes: [[26, 30, 2], [37, 30, 3]] },
+    gisela: { skin: P.gullWhite.base, eyes: [[26, 25, 2]] },
+    bert: { skin: P.pink.base, eyes: [[25, 31, 5], [40, 31, 5]] },
+  };
+
+  /** Gesichtsausdruck über das neutrale Porträt legen: happy, annoyed, shock. */
+  function expression(img, id, face) {
+    const f = faces[id];
+    for (const [x, y, r] of f.eyes) {
+      const clear = (rr) => {
+        for (let j = -rr; j <= rr; j++) for (let i = -rr; i <= rr; i++) if (i * i + j * j <= rr * rr + 1) img.set(x + i, y + j, f.skin);
+      };
+      if (face === 'happy') {
+        clear(r + 1);
+        for (let i = -r; i <= r; i++) img.set(x + i, y + 1 - Math.round(Math.sqrt(Math.max(0, r * r - i * i)) * 0.7), ink);
+      } else if (face === 'shock') {
+        clear(r + 1);
+        for (let j = -r - 1; j <= r + 1; j++) for (let i = -r - 1; i <= r + 1; i++) if (i * i + j * j <= (r + 1) * (r + 1)) img.set(x + i, y + j, white);
+        rect(img, 0, 0, x - 1, y - 1, 2, 2, ink);
+        for (let k = 0; k < 24; k++) img.set(x + Math.round(Math.cos((k / 24) * Math.PI * 2) * (r + 1.5)), y + Math.round(Math.sin((k / 24) * Math.PI * 2) * (r + 1.5)), ink);
+      } else if (face === 'annoyed') {
+        for (let j = -r - 1; j < 0; j++) for (let i = -r - 1; i <= r + 1; i++) if (i * i + j * j <= (r + 1) * (r + 1)) img.set(x + i, y + j, f.skin);
+        line(img, 0, 0, x - r - 1, y, x + r + 1, y - 1, ink);
+      }
+    }
+    if (face === 'shock') {
+      blob(img, 0, 0, 52, 14, 2.2, 3, rampOf(hex('#9ff0ff')));
+      img.set(51, 12, white);
+    }
+    if (!f.mouth) return;
+    const [x0, x1, y] = f.mouth;
+    const ms = f.mouthSkin ?? f.skin;
+    rect(img, 0, 0, x0 - 1, y - 2, x1 - x0 + 3, 4, ms);
+    if (face === 'happy') {
+      line(img, 0, 0, x0, y - 1, x0 + 1, y, ink);
+      line(img, 0, 0, x0 + 1, y, x1 - 1, y, ink);
+      line(img, 0, 0, x1 - 1, y, x1, y - 1, ink);
+      rect(img, 0, 0, x0 + 2, y + 1, x1 - x0 - 3, 1, hex('#a8505a'));
+    } else if (face === 'shock') blob(img, 0, 0, (x0 + x1) / 2, y, 2, 2, rampOf(hex('#5a2030')));
+    else line(img, 0, 0, x0, y, x1, y - (face === 'annoyed' ? 1 : 0), ink);
+  }
+
+  /** Porträt 64×64; `face`: normal, happy, annoyed oder shock. */
+  function portrait(id, face = 'normal') {
     const img = new Image(64, 64);
     portraits[id](img);
+    if (face !== 'normal') expression(img, id, face);
     outlineRegion(img, 0, 0, 64, 64, DARK);
     return img;
   }
@@ -462,5 +447,122 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     return img;
   }
 
-  return { portrait, sheet, town, ids: Object.keys(sprites), portraitIds: Object.keys(portraits) };
+  // ------------------------------------------------------------ Bert (Spielfigur) 32×32
+
+  /** Reihen: idle (6), cast (4), cheer (4), sweat (4). Rosa Oktopus, Südwester, viel zu großer Fake-Bart. */
+  function bert() {
+    const F = 32;
+    const img = new Image(F * 6, F * 4);
+    const rod = hex('#6b4a2b');
+    const rows = [
+      Array.from({ length: 6 }, (_, f) => ({ bob: f < 3 ? 0 : 1, wig: f, blink: f === 4, rod: -1.15 })),
+      [0, 1, 2, 3].map((f) => ({ bob: 0, wig: f, rod: [-2.3, -1.9, -0.7, -0.2][f], lean: [-1, -1, 1, 1][f] })),
+      [0, 1, 2, 3].map((f) => ({ bob: f % 2 ? -2 : 0, wig: f, cheer: f % 2, rod: -1.6, happy: true })),
+      [0, 1, 2, 3].map((f) => ({ bob: f % 2, wig: f, sweat: f, rod: -0.9, shake: f % 2 ? 1 : -1 })),
+    ];
+    rows.forEach((frames, row) =>
+      frames.forEach((o, col) => {
+        const frame = new Image(F, F);
+        const b = o.bob;
+        const sx = (o.shake ?? 0) + (o.lean ?? 0) * 0.5;
+        // Arme unten: fünf kringelige Tentakel
+        for (let k = 0; k < 5; k++) {
+          const ax = 7 + k * 4.5 + sx;
+          for (let y = 22; y < 31; y++) {
+            const x = ax + Math.sin(y * 0.7 + k + o.wig * 1.2) * 1.1;
+            frame.set(x, y, P.pink.base);
+            frame.set(x + 1, y, y > 27 ? P.pink.shadow : P.pink.base);
+          }
+          frame.set(ax + Math.sin(31 * 0.7 + k + o.wig * 1.2), 30, P.pink.light);
+        }
+        // Kopf mit Flecken
+        blob(frame, 0, 0, 16 + sx, 13 + b, 10, 9, P.pink);
+        for (const [x, y] of [[9, 10], [23, 12], [11, 16]]) frame.set(x + sx, y + b, P.pink.shadow);
+        // Südwester
+        blob(frame, 0, 0, 16 + sx, 6 + b, 13, 2.4, P.sou);
+        blob(frame, 0, 0, 16 + sx, 3.5 + b, 7, 3.4, P.sou);
+        line(frame, 0, 0, 5 + sx, 7 + b, 27 + sx, 7 + b, P.sou.shadow);
+        // Fake-Bart mit Gummiband
+        line(frame, 0, 0, 6 + sx, 13 + b, 10 + sx, 17 + b, hex('#e8e0d0'));
+        line(frame, 0, 0, 26 + sx, 13 + b, 22 + sx, 17 + b, hex('#e8e0d0'));
+        for (const [bx, by, r] of [[11, 18, 3.6], [16, 20, 4.4], [21, 18, 3.6], [13, 22, 3], [19, 22, 3], [16, 24, 2.6]]) blob(frame, 0, 0, bx + sx, by + b, r, r, P.fakeBeard);
+        for (const [x, y] of [[12, 19], [17, 21], [20, 18], [15, 23]]) frame.set(x + sx, y + b, P.fakeBeard.shadow);
+        // Große Kulleraugen (beim Jubeln zufrieden zugekniffen)
+        for (const ex of [12, 20]) {
+          const x = ex + sx;
+          const y = 12 + b;
+          if (o.blink) line(frame, 0, 0, x - 2, y, x + 1, y, ink);
+          else if (o.happy) {
+            line(frame, 0, 0, x - 2, y, x - 1, y - 1, ink);
+            line(frame, 0, 0, x, y - 1, x + 1, y, ink);
+          } else {
+            rect(frame, 0, 0, x - 2, y - 2, 4, 5, white);
+            rect(frame, 0, 0, x, y - 1, 2, 3, ink);
+            frame.set(x - 1, y - 2, white);
+          }
+        }
+        // Jubelarme
+        if (o.cheer !== undefined)
+          for (const s of [-1, 1])
+            for (let i = 0; i < 8; i++) {
+              frame.set(16 + sx + s * (9 + i * 0.4), 15 + b - i - o.cheer, P.pink.base);
+              frame.set(16 + sx + s * (9 + i * 0.4) + s, 15 + b - i - o.cheer, P.pink.shadow);
+            }
+        // Angel in der rechten Hand
+        const hx = 24 + sx;
+        const hy = 20 + b;
+        for (let i = 0; i < 15; i++) frame.set(hx + Math.cos(o.rod) * i, hy + Math.sin(o.rod) * i, rod);
+        blob(frame, 0, 0, hx, hy, 1.6, 1.6, P.pink);
+        if (o.sweat !== undefined) {
+          blob(frame, 0, 0, 27 + sx, 9 + b + (o.sweat % 2) * 2, 1.4, 2, rampOf(hex('#9ff0ff')));
+          frame.set(27 + sx, 7 + b + (o.sweat % 2) * 2, white);
+        }
+        outlineRegion(frame, 0, 0, F, F, DARK);
+        for (let y = 0; y < F; y++)
+          for (let x = 0; x < F; x++) {
+            const a = frame.alphaAt(x, y);
+            if (a <= 0) continue;
+            const k = (y * F + x) * 4;
+            img.set(col * F + x, row * F + y, [frame.px[k], frame.px[k + 1], frame.px[k + 2]], a);
+          }
+      }),
+    );
+    return img;
+  }
+
+  // ------------------------------------------------------------ Kutter 64×32
+
+  function boat() {
+    const img = new Image(64, 32);
+    const hull = rampOf(hex('#d9573b'));
+    const wood = rampOf(hex('#c8a26a'));
+    const cabin = rampOf(hex('#f2ead8'));
+    const roof = rampOf(hex('#3a6a9a'));
+    // Rumpf: Planken, weißer Streifen, dunkler Kiel
+    poly(img, 0, 0, [[1, 19], [63, 17], [58, 29], [8, 30]], (x, y) => (y < 20 ? hull.light : y === 22 ? white : y > 27 ? rampOf(hex('#5a2a2a')).base : (x + y * 3) % 11 === 0 ? hull.shadow : hull.base));
+    line(img, 0, 0, 2, 19, 62, 17, wood.light);
+    for (const x of [14, 24, 52]) blob(img, 0, 0, x, 24.5, 1.4, 1.4, rampOf(hex('#5ce1e6')));
+    // Kajüte mit Dach, Fenstern, Tür und Rettungsring
+    rect(img, 0, 0, 32, 8, 18, 10, (i, j) => (j < 2 ? cabin.light : i === 17 ? cabin.shadow : cabin.base));
+    rect(img, 0, 0, 30, 6, 22, 2, roof.base);
+    rect(img, 0, 0, 30, 6, 22, 1, roof.light);
+    for (const x of [35, 41]) rect(img, 0, 0, x, 10, 4, 3, hex('#5ce1e6'));
+    rect(img, 0, 0, 46, 11, 3, 7, wood.shadow);
+    blob(img, 0, 0, 33.5, 14, 2.2, 2.2, rampOf(hex('#ff6b4a')));
+    img.set(33, 14, cabin.base);
+    // Schornstein mit Rauchwölkchen
+    rect(img, 0, 0, 47, 2, 3, 4, hex('#2a3a4a'));
+    rect(img, 0, 0, 47, 2, 3, 1, hex('#ffd23f'));
+    // Mast mit Wimpel, Tau, Anker am Bug
+    line(img, 0, 0, 22, 1, 22, 18, wood.shadow);
+    poly(img, 0, 0, [[23, 1], [29, 3], [23, 5]], hex('#ffd23f'));
+    line(img, 0, 0, 22, 2, 4, 18, hex('#e8e0d0'));
+    blob(img, 0, 0, 10, 17, 3, 1.4, wood);
+    line(img, 0, 0, 59, 19, 59, 23, hex('#5a5a6a'));
+    line(img, 0, 0, 57, 23, 61, 23, hex('#5a5a6a'));
+    outlineRegion(img, 0, 0, 64, 32, DARK);
+    return img;
+  }
+
+  return { portrait, faces: ['normal', 'happy', 'annoyed', 'shock'], sheet, town, bert, boat, ids: Object.keys(sprites), portraitIds: Object.keys(portraits) };
 }

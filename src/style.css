@@ -1273,3 +1273,105 @@ body {
 .hint {
   bottom: calc(var(--safe-bottom) + 190px);
 }
+
+.fact-group {
+  padding: 1px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  background: #dfeaf5;
+}
+
+.fact-group.not-fish {
+  background: var(--coral);
+  color: #fff;
+  transform: rotate(-2deg);
+}
+
+.book-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.book-overlay .book-grid {
+  overflow: visible;
+}
+
+.set-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.set-chip {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: var(--edge);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.set-chip.done {
+  background: var(--signal);
+  color: var(--ink);
+}
+
+.set-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.set-bar {
+  height: 8px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.set-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--kelp);
+}
+
+.set-meta {
+  font-weight: 800;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .fact .fact-card {
+    gap: 4px;
+    padding: 12px 16px;
+  }
+
+  .fact-pic {
+    height: 64px;
+  }
+
+  .fact-pic img {
+    max-height: 48px;
+    min-height: 32px;
+  }
+
+  .fact-name {
+    font-size: 20px;
+  }
+
+  .fact-text {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .fact .button {
+    min-height: 44px;
+  }
+}

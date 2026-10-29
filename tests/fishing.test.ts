@@ -39,16 +39,19 @@ describe('Arten', () => {
       expect(species.some((s) => mid >= s.depthMeters[0] && mid <= s.depthMeters[1]), z.id).toBe(true);
     }
   });
-  it('tiefer ist wertvoller (im Schnitt je Zone)', () => {
-    const avg = map.zones.map((z) => {
-      const list = species.filter((s) => s.depthMeters[0] >= z.depthMeters[0] && s.depthMeters[0] < z.depthMeters[1]);
-      return list.reduce((n, s) => n + s.value, 0) / list.length;
+  it('tiefer ist wertvoller: erwarteter Wert eines Fangs in der Mitte jeder Zone steigt', () => {
+    const expected = map.zones.map((z) => {
+      const m = (z.depthMeters[0] + z.depthMeters[1]) / 2;
+      const here = species.filter((s) => m >= s.depthMeters[0] && m <= s.depthMeters[1]);
+      const w = here.reduce((n, s) => n + s.weight, 0);
+      return here.reduce((n, s) => n + s.value * s.weight, 0) / w;
     });
-    for (let i = 1; i < avg.length; i++) expect(avg[i]).toBeGreaterThan(avg[i - 1]!);
+    for (let i = 1; i < expected.length; i++) expect(expected[i], map.zones[i]!.id).toBeGreaterThan(expected[i - 1]!);
   });
   it('würfelt nur Arten, die in der Tiefe leben', () => {
     const rng = createRng(1);
-    for (let i = 0; i < 200; i++) expect(['herring', 'mackerel']).toContain(pickSpecies(10, species, rng)!.id);
+    const shallow = species.filter((s) => s.depthMeters[0] <= 10).map((s) => s.id);
+    for (let i = 0; i < 200; i++) expect(shallow).toContain(pickSpecies(10, species, rng)!.id);
   });
 });
 

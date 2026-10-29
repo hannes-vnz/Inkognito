@@ -228,8 +228,8 @@ function drawSpecies(def) {
           for (let y = -h; y <= h; y++) img.set(ox + tx - i, oy + cy + y + Math.round(wag * (i / len)), ramp.shadow);
         }
       };
-      switch (def.id) {
-        case 'sunfish': {
+      switch (def.shape) {
+        case 'round': {
           ellipse(img, ox, oy, cx, cy, (fw * 0.38) * squash, fh * 0.36, ramp);
           for (let i = 0; i < 7; i++) {
             img.set(ox + cx - 1, oy + 2 + i * 0.6 - wag, ramp.shadow);
@@ -238,7 +238,7 @@ function drawSpecies(def) {
           for (let y = -4; y <= 4; y++) img.set(ox + cx - fw * 0.38 * squash, oy + cy + y, ramp.light);
           break;
         }
-        case 'gulper': {
+        case 'eel': {
           for (let i = 0; i < fw * 0.6; i++) {
             const y = cy + Math.sin(i * 0.5 + col) * 1.5;
             img.set(ox + fw * 0.6 - i, oy + y, ramp.base);
@@ -254,16 +254,62 @@ function drawSpecies(def) {
           for (let k = 0; k < 4; k++) for (let y = 0; y < 4; y++) img.set(ox + fw * 0.3 + k * 3, oy + fh * 0.7 + y, ramp.shadow);
           break;
         }
-        case 'sea_pig': {
+        case 'pig': {
           ellipse(img, ox, oy, fw / 2, fh * 0.5, fw * 0.42 * squash, fh * 0.3, ramp);
           for (let k = 0; k < 5; k++) for (let y = 0; y < 3; y++) img.set(ox + 4 + k * 3, oy + fh * 0.76 + y + (k % 2 === col % 2 ? 0 : -1), ramp.shadow);
           for (let k = 0; k < 3; k++) img.set(ox + 5 + k * 2, oy + fh * 0.2, ramp.light);
           break;
         }
-        case 'amphipod': {
+        case 'shrimp': {
           for (let k = 0; k < 4; k++) ellipse(img, ox, oy, 4 + k * 3, cy, 2.3, fh * 0.32, ramp);
           for (let k = 0; k < 4; k++) for (let y = 0; y < 3; y++) img.set(ox + 3 + k * 3 + (col % 2), oy + cy + 3 + y, ramp.shadow);
           for (let i = 0; i < 4; i++) img.set(ox + 14 + i * 0.4, oy + cy - 2 - i, ramp.shadow);
+          break;
+        }
+        case 'jelly': {
+          // Gasblase oben, Tentakel nach unten
+          ellipse(img, ox, oy, fw / 2, fh * 0.3, fw * 0.42 * squash, fh * 0.24, ramp);
+          for (let k = 0; k < 4; k++) for (let y = fh * 0.5; y < fh - 1; y++) img.set(ox + 4 + k * 3 + Math.round(Math.sin(y * 0.6 + col + k) * 1), oy + y, k % 2 ? ramp.shadow : hex('#5ce1e6'));
+          for (let x = 3; x < fw - 3; x++) img.set(ox + x, oy + fh * 0.12 + Math.round(Math.sin(x) * 1), ramp.light);
+          break;
+        }
+        case 'squid': {
+          // Mantel hinten (links), Kopf, Arme nach rechts, große Augen
+          ellipse(img, ox, oy, fw * 0.3, cy, fw * 0.24 * squash, fh * 0.3, ramp);
+          for (let x = 2; x < fw * 0.12; x++) for (let y = -2; y <= 2; y++) if (Math.abs(y) < x * 0.6) img.set(ox + x, oy + cy + y, ramp.shadow);
+          for (let k = 0; k < 5; k++) for (let x = 0; x < fw * 0.42; x++) img.set(ox + fw * 0.55 + x, oy + cy - 4 + k * 2 + Math.round(Math.sin(x * 0.4 + col + k) * (x / 12)), k % 2 ? ramp.shadow : ramp.base);
+          break;
+        }
+        case 'vampire': {
+          // Glocke mit Hautschirm zwischen den Armen, dunkelrot
+          ellipse(img, ox, oy, fw * 0.42, fh * 0.42, fw * 0.3 * squash, fh * 0.32, ramp);
+          for (let y = fh * 0.55; y < fh - 1; y++) for (let x = fw * 0.15; x < fw * 0.85; x++) if (Math.abs(x - fw / 2) < (fh - y) * 0.9 + 2) img.set(ox + x, oy + y, ramp.shadow);
+          for (const side of [-1, 1]) ellipse(img, ox, oy, fw * 0.42 + side * fw * 0.28, fh * 0.22, 2, 3, ramp);
+          break;
+        }
+        case 'wings': {
+          tail(Math.max(3, Math.round(fw * 0.2)), fh * 0.3);
+          ellipse(img, ox, oy, cx, cy + 1, (fw * 0.36) * squash, fh * 0.3, ramp);
+          // große Brustflossen als Flügel
+          for (let i = 0; i < fw * 0.4; i++) for (let y = 0; y < 3; y++) img.set(ox + cx - i * 0.6, oy + cy - 2 - y - Math.round(i * 0.25 * (col % 2 ? 1 : 0.6)), mix(ramp.light, white, 0.3));
+          break;
+        }
+        case 'belly': {
+          tail(4, fh * 0.25);
+          ellipse(img, ox, oy, cx - 1, cy - 2, (fw * 0.34) * squash, fh * 0.26, ramp);
+          ellipse(img, ox, oy, cx - 2, cy + 3, (fw * 0.24) * squash, fh * 0.28, rampOf(hex('#4a3f5a')));
+          break;
+        }
+        case 'fangs': {
+          tail(4, fh * 0.3);
+          ellipse(img, ox, oy, cx, cy, (fw * 0.36) * squash, fh * 0.42, ramp);
+          for (let i = 0; i < 3; i++) for (let y = 0; y < 3 + (i % 2); y++) img.set(ox + cx + fw * 0.26 + i * 1.5, oy + cy + 1 + y, white);
+          break;
+        }
+        case 'stilts': {
+          tail(5, fh * 0.2);
+          ellipse(img, ox, oy, cx, fh * 0.32, (fw * 0.38) * squash, fh * 0.2, ramp);
+          for (const sx of [0.2, 0.5, 0.75]) for (let y = fh * 0.45; y < fh - 1; y++) img.set(ox + fw * sx, oy + y, ramp.shadow);
           break;
         }
         default: {
@@ -274,13 +320,22 @@ function drawSpecies(def) {
       }
       outlineRegion(img, ox, oy, fw, fh, ramp.outline);
       // Augen und Merkmale
-      const ex = Math.round(ox + (def.id === 'dumbo' || def.id === 'sea_pig' ? fw * 0.6 : def.id === 'amphipod' ? 14 : cx + fw * 0.24 * squash));
-      const ey = Math.round(oy + (def.id === 'dumbo' ? fh * 0.42 : cy - 1));
+      const eyeAt = {
+        dumbo: [fw * 0.6, fh * 0.42],
+        pig: [fw * 0.6, cy - 1],
+        shrimp: [14, cy - 1],
+        jelly: [fw * 0.62, fh * 0.3],
+        squid: [fw * 0.5, cy - 1],
+        vampire: [fw * 0.55, fh * 0.4],
+        stilts: [cx + fw * 0.24 * squash, fh * 0.3],
+      }[def.shape] ?? [cx + fw * 0.24 * squash, cy - 1];
+      const ex = Math.round(ox + eyeAt[0]);
+      const ey = Math.round(oy + eyeAt[1]);
       if (def.id === 'barreleye') {
         // durchsichtige Kuppel mit grünen Augen darin
         for (let x = -3; x <= 3; x++) for (let y = -4; y <= 0; y++) if (x * x + y * y * 0.6 < 10) img.blend(ex + x - 1, ey + y - 1, hex('#e8fff8'), 0.55);
         eye(img, ex - 1, ey - 2, 1.5, 1, hex('#8cff5a'));
-      } else eye(img, ex, ey, fh >= 12 ? 2 : 1.5, 1);
+      } else eye(img, ex, ey, def.id === 'giant_squid' ? 3 : fh >= 12 ? 2 : 1.5, 1, def.id === 'vampire_squid' ? hex('#ff7a7a') : white);
       if (def.id === 'viperfish') for (let i = 0; i < 3; i++) img.set(ex + 2 + i, ey + 3 + (i % 2), white);
       if (def.id === 'anglerfish') {
         const top = Math.max(oy + 2, ey - 7);

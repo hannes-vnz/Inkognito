@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { depthMap, fixedStepHz, params, player, species, speciesById, upgradeById, upgrades, zones } from '../data';
+import { depthMap, fixedStepHz, params, player, sets, species, speciesById, upgradeById, upgrades, zones } from '../data';
+import { newlyCompleted, setBonus, type SetDef } from '../systems/sets';
+import { playReaction } from '../ui/ReactionShot';
 import { animKey } from '../entities/Octopus';
 import { MarineSnow } from '../render/MarineSnow';
 import { BubbleTrail } from '../render/BubbleTrail';
@@ -82,7 +84,7 @@ export class FishingScene extends Phaser.Scene {
     this.refresh();
 
     // Crew-Einnahmen seit dem letzten Besuch (Offline-Pop-up wie bei den Idle-Vorbildern).
-    const idle = collectIdle(this.save, now, upgradeById('crew'), params);
+    const idle = collectIdle(this.save, now, upgradeById('crew'), params, setBonus(this.save, sets, 'crew'));
     this.save = idle.save;
     writeSave(this.save);
     if (idle.coins >= 1) this.time.delayedCall(400, () => this.showOffline(idle.coins));
@@ -348,21 +350,27 @@ export class FishingScene extends Phaser.Scene {
         speciesById,
         params,
         Date.now(),
+        setBonus(this.save, sets, 'coins'),
       );
+      const completed = newlyCompleted(this.save, landed.save, sets);
       this.save = landed.save;
       writeSave(this.save);
       if (landed.coins > 0) this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, depthMap.surfaceY - this.cameras.main.scrollY - 90, '#ffd23f');
       this.refresh(true);
-      this.endRound(landed.firstCatches);
+      this.endRound(landed.firstCatches, completed);
     });
   }
 
-  private endRound(firstCatches: string[]): void {
+  private endRound(firstCatches: string[], completedSets: SetDef[] = []): void {
     for (const s of this.fishSprites.values()) s.destroy();
     this.fishSprites.clear();
     this.round = null;
     const next = () => {
       const id = firstCatches.shift();
+      if (!id && completedSets.length > 0) {
+        this.showSetComplete(completedSets.shift()!, next);
+        return;
+      }
       if (!id) {
         this.mode = 'deck';
         this.ui.setMode('deck');
@@ -373,6 +381,29 @@ export class FishingScene extends Phaser.Scene {
       this.showFact(speciesById.get(id)!, true, next);
     };
     this.time.delayedCall(500, next);
+  }
+
+  /** Set komplett: Reaktions-Szene mit Bert, dann Karte mit dem dauerhaften Bonus. */
+  private showSetComplete(set: SetDef, done: () => void): void {
+    let portrait: string | undefined;
+    try {
+      portrait = this.textures.getBase64(player.sprite, 2 * 6);
+    } catch {
+      portrait = undefined;
+    }
+    const bonus = t(`set.bonus.${set.bonus.type}`, { value: Math.round(set.bonus.value * 100) });
+    const card = () =>
+      this.sheet.show(t('set.complete.title'), t('set.complete.text', { name: t(set.nameKey), bonus }), [
+        {
+          label: t('fact.next'),
+          onSelect: () => {
+            this.sheet.close();
+            done();
+          },
+        },
+      ], undefined, portrait);
+    if (portrait) playReaction(this.uiRoot, portrait, { background: 'burst', mood: 'joy' }, t('reaction.set'), card);
+    else card();
   }
 
   private showFact(def: SpeciesDef, isNew: boolean, done: () => void): void {
@@ -392,7 +423,7 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private openFishbook(): void {
-    showFishbook(this.uiRoot, species, this.save, (s) => this.imageOf(s), (s) => this.zoneName(s), (s) => this.showFact(s, false, () => this.openFishbook()));
+    showFishbook(this.uiRoot, species, sets, this.save, (s) => this.imageOf(s), (s) => this.zoneName(s), (s) => this.showFact(s, false, () => this.openFishbook()));
   }
 
   private buy(u: UpgradeDef): void {
@@ -511,7 +542,7 @@ export class FishingScene extends Phaser.Scene {
     this.idleTimer += dt;
     if (this.idleTimer >= 1) {
       this.idleTimer = 0;
-      const idle = collectIdle(this.save, Date.now(), upgradeById('crew'), params);
+      const idle = collectIdle(this.save, Date.now(), upgradeById('crew'), params, setBonus(this.save, sets, 'crew'));
       if (idle.coins > 0) {
         this.save = idle.save;
         writeSave(this.save);

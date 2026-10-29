@@ -33,6 +33,8 @@ describe('Daten und Assets', () => {
     for (const f of fish) {
       for (const key of [f.nameKey, f.factKey, f.commentKey]) expect(texts, key).toHaveProperty([key]);
       expect(f.source).toMatch(/^https:\/\//);
+      expect(f.factChecked, `${f.id}: Fakt nicht geprüft`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(texts).toHaveProperty([`group.${f.group}`]);
       expect(f.sprite).toBe(`fish_${f.id}`);
       expect(f.frame.width).toBeGreaterThanOrEqual(16);
       expect(f.frame.width).toBeLessThanOrEqual(64);

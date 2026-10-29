@@ -32,9 +32,12 @@ export function buyUpgrade(save: Save, def: UpgradeDef, now: number): Save {
   return { ...save, coins: save.coins - cost, upgrades: { ...save.upgrades, [def.id]: level + 1 }, updatedAt: now };
 }
 
-/** Wert eines Fangs: bekannte Arten bringen mehr (Wissen zahlt sich aus), angetippte im Flug doppelt. */
-export function fishValue(def: SpeciesDef, known: boolean, combo: boolean, p: EconomyParams): number {
-  return Math.round(def.value * (known ? 1 + p.knowledgeBonus : 1) * (combo ? p.comboMultiplier : 1));
+/**
+ * Wert eines Fangs: bekannte Arten bringen mehr (Wissen zahlt sich aus), angetippte im Flug doppelt,
+ * `bonus` aus fertigen Sammel-Sets (0.1 = +10 %).
+ */
+export function fishValue(def: SpeciesDef, known: boolean, combo: boolean, p: EconomyParams, bonus = 0): number {
+  return Math.round(def.value * (known ? 1 + p.knowledgeBonus : 1) * (combo ? p.comboMultiplier : 1) * (1 + bonus));
 }
 
 /**
@@ -48,6 +51,7 @@ export function landCatch(
   species: ReadonlyMap<string, SpeciesDef>,
   p: EconomyParams,
   now: number,
+  bonus = 0,
 ): { save: Save; coins: number; firstCatches: string[] } {
   const fishbook = { ...save.fishbook };
   const firstCatches: string[] = [];
@@ -57,7 +61,7 @@ export function landCatch(
     if (!def) continue;
     const entry = fishbook[c.speciesId];
     // Wissen gilt erst ab dem zweiten Fang: beim ersten lernt man die Art gerade kennen.
-    coins += fishValue(def, entry !== undefined, c.combo, p);
+    coins += fishValue(def, entry !== undefined, c.combo, p, bonus);
     if (entry) fishbook[c.speciesId] = { ...entry, count: entry.count + 1 };
     else {
       fishbook[c.speciesId] = { count: 1, firstAt: now };
@@ -77,11 +81,11 @@ export function landCatch(
   };
 }
 
-/** Crew-Einnahmen seit dem letzten Abrechnen (auch offline, gedeckelt). */
-export function collectIdle(save: Save, now: number, crew: UpgradeDef, p: EconomyParams): { save: Save; coins: number } {
+/** Crew-Einnahmen seit dem letzten Abrechnen (auch offline, gedeckelt), `bonus` aus Sammel-Sets. */
+export function collectIdle(save: Save, now: number, crew: UpgradeDef, p: EconomyParams, bonus = 0): { save: Save; coins: number } {
   const from = Math.max(save.lastTick, now - p.maxOfflineHours * 3600e3);
   const minutes = Math.max(0, (now - from) / 60000);
-  const exact = save.idleCarry + minutes * upgradeValue(crew, save.upgrades.crew);
+  const exact = save.idleCarry + minutes * upgradeValue(crew, save.upgrades.crew) * (1 + bonus);
   const coins = Math.floor(exact);
   return { coins, save: { ...save, coins: save.coins + coins, idleCarry: exact - coins, lastTick: now, updatedAt: coins > 0 ? now : save.updatedAt } };
 }

@@ -2,12 +2,14 @@ import playerJson from '../data/player.json';
 import fishJson from '../data/fish.json';
 import zonesJson from '../data/zones.json';
 import upgradesJson from '../data/upgrades.json';
+import setsJson from '../data/sets.json';
 import gameJson from '../data/game.json';
 import textsJson from '../data/texts.de.json';
 import type { TextTable } from './systems/texts';
 import type { FishingParams, SpeciesDef } from './systems/fishing';
 import type { EconomyParams, UpgradeDef } from './systems/economy';
 import type { DepthMap } from './systems/depthMap';
+import type { SetDef } from './systems/sets';
 
 export interface AnimationDef {
   key: string;
@@ -48,6 +50,7 @@ export const species = fishJson as unknown as SpeciesDef[];
 export const speciesById = new Map(species.map((s) => [s.id, s]));
 export const zones = zonesJson as unknown as ZoneDef[];
 export const upgrades = upgradesJson as UpgradeDef[];
+export const sets = setsJson as SetDef[];
 export const params = gameJson.fishing as GameParams;
 export const fixedStepHz = gameJson.fixedStepHz;
 export const texts = textsJson as TextTable;

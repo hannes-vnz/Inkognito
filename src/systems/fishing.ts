@@ -18,7 +18,13 @@ export interface SpeciesDef {
   sprite: string;
   frame: { width: number; height: number };
   placeholderColor: string;
+  /** Tiergruppe (Fisch, Kopffüßer, Nesseltier …), für die Fakt-Karte. */
+  group: string;
+  /** Form des Platzhalters. */
+  shape: string;
   source: string;
+  /** Datum, an dem der Fakt gegen die Quelle geprüft wurde. */
+  factChecked: string;
 }
 
 export interface FishingParams {

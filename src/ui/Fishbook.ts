@@ -2,11 +2,13 @@ import { el } from './dom';
 import { t } from '../i18n';
 import type { SpeciesDef } from '../systems/fishing';
 import type { Save } from '../systems/save';
+import { setProgress, type SetDef } from '../systems/sets';
 
 /** Fischbuch: alle Arten als Karten, unbekannte als Silhouette mit Zonen-Hinweis. */
 export function showFishbook(
   root: HTMLElement,
   species: readonly SpeciesDef[],
+  sets: readonly SetDef[],
   save: Save,
   imageOf: (s: SpeciesDef) => string | undefined,
   zoneOf: (s: SpeciesDef) => string,
@@ -26,6 +28,21 @@ export function showFishbook(
   close.setAttribute('aria-label', t('riff.close'));
   close.addEventListener('click', () => overlay.remove());
   head.append(title, progress, close);
+  // Sammel-Sets mit Fortschritt und Bonus
+  const setList = el('div', 'set-list');
+  for (const p of setProgress(save, sets)) {
+    const chip = el('div', p.complete ? 'set-chip done' : 'set-chip');
+    const name = el('span', 'set-name');
+    name.textContent = t(p.def.nameKey);
+    const bar = el('span', 'set-bar');
+    const fill = el('span', '');
+    fill.style.width = `${(p.known / p.total) * 100}%`;
+    bar.append(fill);
+    const meta = el('span', 'set-meta');
+    meta.textContent = `${t('set.progress', { known: p.known, total: p.total })} · ${t(`set.bonus.${p.def.bonus.type}`, { value: Math.round(p.def.bonus.value * 100) })}`;
+    chip.append(name, bar, meta);
+    setList.append(chip);
+  }
   const grid = el('div', 'book-grid');
   for (const s of species) {
     const entry = save.fishbook[s.id];
@@ -48,7 +65,9 @@ export function showFishbook(
     else cell.disabled = true;
     grid.append(cell);
   }
-  panel.append(head, grid);
+  const scroller = el('div', 'book-scroll');
+  scroller.append(setList, grid);
+  panel.append(head, scroller);
   overlay.append(panel);
   overlay.addEventListener('pointerdown', (e) => e.stopPropagation());
   overlay.addEventListener('click', (e) => e.target === overlay && overlay.remove());

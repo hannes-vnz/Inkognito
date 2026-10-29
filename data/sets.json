@@ -1,0 +1,76 @@
+[
+  {
+    "id": "surface",
+    "nameKey": "set.surface.name",
+    "species": [
+      "flying_fish",
+      "herring",
+      "mackerel",
+      "tuna",
+      "sunfish"
+    ],
+    "bonus": {
+      "type": "crew",
+      "value": 0.15
+    }
+  },
+  {
+    "id": "glow",
+    "nameKey": "set.glow.name",
+    "species": [
+      "hatchetfish",
+      "lanternfish",
+      "viperfish",
+      "vampire_squid",
+      "anglerfish"
+    ],
+    "bonus": {
+      "type": "coins",
+      "value": 0.1
+    }
+  },
+  {
+    "id": "teeth",
+    "nameKey": "set.teeth.name",
+    "species": [
+      "viperfish",
+      "fangtooth",
+      "black_swallower",
+      "anglerfish"
+    ],
+    "bonus": {
+      "type": "coins",
+      "value": 0.1
+    }
+  },
+  {
+    "id": "not_fish",
+    "nameKey": "set.not_fish.name",
+    "species": [
+      "man_o_war",
+      "giant_squid",
+      "vampire_squid",
+      "sea_pig",
+      "dumbo",
+      "amphipod"
+    ],
+    "bonus": {
+      "type": "coins",
+      "value": 0.15
+    }
+  },
+  {
+    "id": "legends",
+    "nameKey": "set.legends.name",
+    "species": [
+      "giant_squid",
+      "dumbo",
+      "snailfish",
+      "amphipod"
+    ],
+    "bonus": {
+      "type": "coins",
+      "value": 0.25
+    }
+  }
+]

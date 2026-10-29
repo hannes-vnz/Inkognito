@@ -472,6 +472,48 @@ function drawBoat() {
   return img;
 }
 
+/** Kutter von oben (32×32), Bug zeigt nach rechts; Phaser dreht ihn in Fahrtrichtung. */
+function drawBoatTop() {
+  const img = new Image(32, 32);
+  const hull = rampOf(hex('#d9503f'));
+  const deck = rampOf(hex('#c8a26a'));
+  for (let y = 9; y < 23; y++)
+    for (let x = 3; x < 30; x++) {
+      const ny = Math.abs(y - 15.5) / 7;
+      const bow = x > 20 ? (x - 20) / 10 : 0;
+      if (ny > 1 - bow * bow * 0.9) continue;
+      img.set(x, y, ny > 0.75 ? hull.shadow : hull.base);
+    }
+  for (let y = 11; y < 21; y++) for (let x = 6; x < 22; x++) if (Math.abs(y - 15.5) < 4) img.set(x, y, (x + y) % 4 === 0 ? deck.shadow : deck.base);
+  for (let y = 12; y < 20; y++) for (let x = 8; x < 14; x++) img.set(x, y, hex('#f4f1e8'));
+  for (let y = 13; y < 15; y++) for (let x = 9; x < 13; x++) img.set(x, y, hex('#5cd6e6'));
+  img.set(17, 15, hex('#ffd23f'));
+  img.set(17, 16, hex('#ec5a84'));
+  outlineRegion(img, 0, 0, 32, 32, hull.outline);
+  return img;
+}
+
+/** Boje für Angelplätze (16×24): rot-weiß mit gelber Fahne. */
+function drawBuoy() {
+  const img = new Image(16, 24);
+  for (let y = 0; y < 8; y++) for (let x = 8; x < 8 + (8 - y) / 1.6; x++) img.set(x, y + 1, hex('#ffd23f'));
+  for (let y = 0; y < 14; y++) img.set(7, y, hex('#3a2a20'));
+  ellipse(img, 0, 0, 8, 17, 6, 5, rampOf(hex('#d9503f')));
+  for (let x = 2; x < 14; x++) img.set(x, 17, white);
+  outlineRegion(img, 0, 0, 16, 24, hex('#1b1030'));
+  return img;
+}
+
+/** Treibgut-Kiste (16×16). */
+function drawCrate() {
+  const img = new Image(16, 16);
+  const wood = rampOf(hex('#b07a3a'));
+  for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) img.set(x, y, y === 3 || x === 3 ? wood.light : (x + y) % 5 === 0 ? wood.shadow : wood.base);
+  for (let i = 3; i < 13; i++) { img.set(i, i, wood.shadow); img.set(i, 15 - i, wood.shadow); }
+  outlineRegion(img, 0, 0, 16, 16, wood.outline);
+  return img;
+}
+
 function drawHook() {
   const img = new Image(8, 12);
   const steel = hex('#cfd8e3');
@@ -485,6 +527,9 @@ function drawHook() {
 console.log('Boot und Haken:');
 save(spritesDir, 'boat_1.png', drawBoat());
 save(spritesDir, 'hook.png', drawHook());
+save(spritesDir, 'boat_top.png', drawBoatTop());
+save(spritesDir, 'buoy.png', drawBuoy());
+save(spritesDir, 'fx_crate.png', drawCrate());
 
 const bubble = new Image(8, 8);
 for (let y = 0; y < 8; y++)
@@ -520,6 +565,12 @@ save(spritesDir, 'icon_book.png', icon((img) => {
   const r = rampOf(hex('#5ce1e6'));
   for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) img.set(x, y, x < 5 ? r.shadow : y < 5 ? r.light : r.base);
   for (let y = 4; y < 12; y++) img.set(8, y, r.outline);
+}));
+save(spritesDir, 'icon_map.png', icon((img) => {
+  const paper = rampOf(hex('#f2e2b6'));
+  for (let y = 3; y < 13; y++) for (let x = 2; x < 14; x++) img.set(x, y, Math.floor((x - 2) / 4) % 2 ? paper.shadow : paper.base);
+  for (const [x, y] of [[4, 10], [5, 9], [6, 9], [7, 8], [8, 7], [9, 7]]) img.set(x, y, hex('#d9503f'));
+  for (const [x, y] of [[10, 5], [11, 6], [10, 7], [11, 4], [12, 5]]) img.set(x, y, hex('#d9503f'));
 }));
 
 // ---------------------------------------------------------------- Hintergründe (1920×1080)

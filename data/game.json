@@ -29,5 +29,17 @@
     },
     "requestRequires": "bruno_intro",
     "quizRequires": "qualle_intro"
+  },
+  "map": {
+    "worldSize": 1200,
+    "boatSpeed": 220,
+    "spotRadius": 70,
+    "boostWeight": 3,
+    "flotsamCount": 6,
+    "flotsamRadius": 36,
+    "flotsamCoins": {
+      "base": 4,
+      "perUnit": 0.03
+    }
   }
 }

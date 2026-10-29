@@ -4,6 +4,7 @@ import { setRichText } from './rich';
 import { t } from '../i18n';
 import { isMaxed, upgradeCost, upgradeValue, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
+import { isMuted, play, setMuted } from '../audio/sfx';
 
 /**
  * Oberfläche des Angel-Spiels: Münzen oben rechts, Tiefe oben links, unten das Deck mit
@@ -19,17 +20,22 @@ export class DeckUi {
   private readonly upgradeRow: HTMLDivElement;
   private readonly bookButton: HTMLButtonElement;
   private readonly bookCount: HTMLSpanElement;
+  private readonly mapButton: HTMLButtonElement;
   private readonly hint: HTMLDivElement;
   private readonly toast: Toast;
   private readonly cards = new Map<string, { root: HTMLButtonElement; level: HTMLSpanElement; effect: HTMLSpanElement; cost: HTMLSpanElement }>();
   private lastCoins = -1;
+  private shownCoins = 0;
+  private roll = 0;
+  private readonly coinCard: HTMLDivElement;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly upgrades: readonly UpgradeDef[],
-    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void },
+    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void; map: () => void },
   ) {
     const coinCard = el('div', 'card hud-coins');
+    this.coinCard = coinCard;
     coinCard.setAttribute('aria-label', t('hud.coins'));
     this.coins = el('div', 'value');
     coinCard.append(iconImg('icon_coin'), this.coins);
@@ -76,9 +82,30 @@ export class DeckUi {
       handlers.book();
     });
 
-    this.deck.append(this.upgradeRow, this.bookButton, this.castButton);
+    this.mapButton = el('button', 'button book map-button');
+    this.mapButton.type = 'button';
+    const mapLabel = el('span', '');
+    mapLabel.textContent = t('map.open');
+    this.mapButton.append(iconImg('icon_map'), mapLabel);
+    this.mapButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handlers.map();
+    });
+
+    this.deck.append(this.upgradeRow, this.mapButton, this.bookButton, this.castButton);
+    const sound = el('button', 'button sound-button');
+    sound.type = 'button';
+    const label = () => (sound.textContent = t(isMuted() ? 'hud.soundOff' : 'hud.soundOn'));
+    label();
+    sound.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setMuted(!isMuted());
+      label();
+      play('tap');
+    });
+
     this.hint = el('div', 'card hint hidden');
-    root.append(coinCard, this.depthCard, this.deck, this.hint);
+    root.append(coinCard, this.depthCard, sound, this.deck, this.hint);
     this.toast = new Toast(root);
   }
 
@@ -97,17 +124,17 @@ export class DeckUi {
   update(save: Save, knownSpecies: number, totalSpecies: number, bump = false): void {
     const coins = Math.floor(save.coins);
     if (coins !== this.lastCoins) {
-      this.coins.textContent = coins.toLocaleString('de-DE');
-      if (bump && this.lastCoins >= 0) {
-        this.coins.classList.remove('bump');
-        void this.coins.offsetWidth;
-        this.coins.classList.add('bump');
+      if (bump && this.lastCoins >= 0) this.rollTo(coins);
+      else {
+        this.shownCoins = coins;
+        this.coins.textContent = coins.toLocaleString('de-DE');
       }
       this.lastCoins = coins;
     }
     const started = save.stats.casts > 0;
     this.upgradeRow.hidden = !started;
     this.bookButton.hidden = knownSpecies === 0;
+    this.mapButton.hidden = !started;
     this.bookCount.textContent = `${knownSpecies}/${totalSpecies}`;
     for (const u of this.upgrades) {
       const c = this.cards.get(u.id)!;
@@ -121,6 +148,56 @@ export class DeckUi {
       c.cost.textContent = maxed ? t('upgrade.max') : cost.toLocaleString('de-DE');
       c.root.disabled = maxed || coins < cost;
       c.root.classList.toggle('ready', !maxed && coins >= cost);
+    }
+  }
+
+  /** Zähler rollt hoch statt zu springen, mit Plopp am Ende. */
+  private rollTo(target: number): void {
+    cancelAnimationFrame(this.roll);
+    const from = this.shownCoins;
+    const start = performance.now();
+    const ms = Math.min(900, 250 + Math.abs(target - from) * 8);
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - start) / ms);
+      this.shownCoins = Math.round(from + (target - from) * (1 - Math.pow(1 - k, 3)));
+      this.coins.textContent = this.shownCoins.toLocaleString('de-DE');
+      if (k < 1) this.roll = requestAnimationFrame(tick);
+      else {
+        this.coins.classList.remove('bump');
+        void this.coins.offsetWidth;
+        this.coins.classList.add('bump');
+      }
+    };
+    this.roll = requestAnimationFrame(tick);
+  }
+
+  /** Münzen fliegen vom Bildschirmpunkt zum Zähler, jede mit kleinem Klimpern. */
+  coinBurst(x: number, y: number, count: number): void {
+    const box = this.coinCard.getBoundingClientRect();
+    const tx = box.left + 24;
+    const ty = box.top + box.height / 2;
+    const n = Math.min(14, Math.max(3, count));
+    for (let i = 0; i < n; i++) {
+      const c = iconImg('icon_coin');
+      c.className = 'flying-coin';
+      const angle = (i / n) * Math.PI * 2;
+      const sx = x + Math.cos(angle) * 30;
+      const sy = y + Math.sin(angle) * 20;
+      c.style.left = `${sx}px`;
+      c.style.top = `${sy}px`;
+      this.root.append(c);
+      const anim = c.animate(
+        [
+          { transform: 'translate(-50%, -50%) scale(0.4)' },
+          { transform: `translate(calc(-50% + ${Math.cos(angle) * 40}px), calc(-50% + ${Math.sin(angle) * 40 - 30}px)) scale(1.4)`, offset: 0.3 },
+          { transform: `translate(calc(-50% + ${tx - sx}px), calc(-50% + ${ty - sy}px)) scale(0.8)` },
+        ],
+        { duration: 650 + i * 45, easing: 'cubic-bezier(0.5, 0, 0.75, 0)' },
+      );
+      anim.onfinish = () => {
+        c.remove();
+        play('coin', 1 + i * 0.04);
+      };
     }
   }
 
@@ -148,6 +225,7 @@ export class DeckUi {
   }
 
   destroy(): void {
+    cancelAnimationFrame(this.roll);
     this.toast.destroy();
     this.root.replaceChildren();
   }

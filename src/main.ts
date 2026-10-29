@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import './style.css';
 import { BootScene } from './scenes/BootScene';
 import { FishingScene } from './scenes/FishingScene';
+import { SeaMapScene } from './scenes/SeaMapScene';
+import { unlockAudio } from './audio/sfx';
 import { t } from './i18n';
 import { pushOnHide } from './online/sync';
 
@@ -22,7 +24,7 @@ const game = new Phaser.Game({
   input: {
     activePointers: 3,
   },
-  scene: [BootScene, FishingScene],
+  scene: [BootScene, FishingScene, SeaMapScene],
 });
 
 // iOS meldet die neue Größe nach dem Drehen verspätet: mehrfach nachmessen und Scroll-Versatz zurücksetzen.
@@ -39,3 +41,4 @@ window.visualViewport?.addEventListener('resize', onViewportChange);
 
 // Spielstand beim Schließen oder Wechsel in den Hintergrund online sichern.
 pushOnHide();
+unlockAudio();

@@ -47,7 +47,7 @@ describe('Sammel-Sets', () => {
     const tuna = species.find((s) => s.id === 'tuna')!;
     expect(fishValue(tuna, false, false, p, 0.5)).toBe(Math.round(tuna.value * 1.5));
     const crew = (upgradesJson as UpgradeDef[]).find((u) => u.id === 'crew')!;
-    const s: Save = { ...newSave(T), upgrades: { line: 0, hook: 0, crew: 4 } };
+    const s: Save = { ...newSave(T), upgrades: { line: 0, hook: 0, crew: 4, engine: 0 } };
     const plain = collectIdle(s, T + 60 * 60000, crew, p).coins;
     const boosted = collectIdle(s, T + 60 * 60000, crew, p, 0.15).coins;
     expect(boosted).toBe(Math.floor(plain * 1.15));

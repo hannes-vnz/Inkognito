@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { depthMap, fixedStepHz, params, player, sets, species, speciesById, upgradeById, upgrades, zones } from '../data';
+import { depthMap, fixedStepHz, mapParams, params, player, sets, species, speciesById, spotById, upgradeById, upgrades, zones } from '../data';
+import { spotSpecies, type SpotDef } from '../systems/seaMap';
+import { play } from '../audio/sfx';
 import { newlyCompleted, setBonus, type SetDef } from '../systems/sets';
 import { playReaction } from '../ui/ReactionShot';
 import { animKey } from '../entities/Octopus';
@@ -56,6 +58,8 @@ export class FishingScene extends Phaser.Scene {
   private idleTimer = 0;
   private uiRoot!: HTMLElement;
   private harbor!: Harbor;
+  private spot!: SpotDef;
+  private limitSaid = false;
 
   constructor() {
     super('Fishing');
@@ -68,14 +72,17 @@ export class FishingScene extends Phaser.Scene {
     this.keys = [];
     this.fishSprites = new Map();
     this.save = loadSave(now);
+    this.spot = spotById(this.save.map.spot);
+    this.limitSaid = false;
 
     this.uiRoot = document.getElementById('ui') as HTMLElement;
     this.uiRoot.replaceChildren();
     this.uiRoot.className = 'fishing';
-    this.ui = new DeckUi(this.uiRoot, upgrades, {
+    this.ui = new DeckUi(this.uiRoot, upgrades.filter((u) => u.id !== 'engine'), {
       cast: () => this.cast(),
       buy: (u) => this.buy(u),
       book: () => this.openFishbook(),
+      map: () => this.openMap(),
     });
     this.sheet = new Sheet(this.uiRoot);
     this.account = new AccountMenu(this.uiRoot, this.sheet, (r) => this.applySync(r), (text) => this.ui.say(text, 3));
@@ -103,7 +110,11 @@ export class FishingScene extends Phaser.Scene {
     this.save = idle.save;
     writeSave(this.save);
     this.refresh();
-    const story = () => this.harbor.playNext(() => this.save.stats.casts === 0 && this.ui.showHint(t('ui.hint.cast')));
+    const intro = () => this.save.stats.casts === 0 && this.ui.showHint(t('ui.hint.cast'));
+    const story = () => {
+      if (this.spot.harbor) this.harbor.playNext(intro);
+      else this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
+    };
     this.time.delayedCall(400, () => (idle.coins >= 1 ? this.showOffline(idle.coins, story) : story()));
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
@@ -183,7 +194,8 @@ export class FishingScene extends Phaser.Scene {
     this.boat = this.add.image(width / 2, surface + 18, 'boat_1').setOrigin(0.5, 1).setScale(3).setDepth(4);
     this.bert = this.add.sprite(width / 2 - 54, surface - 36, player.sprite, 0).setOrigin(0.5, 1).setScale(2).setDepth(3);
     this.bert.play(animKey(player.id, 'idle'));
-    this.harbor.build(width, this.scale.height, surface);
+    if (this.spot.harbor) this.harbor.build(width, this.scale.height, surface);
+    else islands.setVisible(false);
     this.tweens.add({ targets: [this.boat, this.bert], y: '-=4', duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
     this.glow = this.add.graphics().setDepth(6).setBlendMode(Phaser.BlendModes.ADD);
@@ -255,9 +267,16 @@ export class FishingScene extends Phaser.Scene {
   private cast(): void {
     if (this.mode !== 'deck') return;
     this.ui.hideHint();
-    const line = upgradeValue(upgradeById('line'), this.save.upgrades.line);
+    const fullLine = upgradeValue(upgradeById('line'), this.save.upgrades.line);
+    const line = Math.min(fullLine, this.spot.maxMeters);
+    if (fullLine > line && !this.limitSaid) {
+      this.limitSaid = true;
+      this.ui.say(t('spot.limit', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 4);
+    }
     const hooks = upgradeValue(upgradeById('hook'), this.save.upgrades.hook);
-    this.round = createRound(`${this.save.createdAt}-${this.save.stats.casts}`, this.scale.width, line, hooks, species, depthMap, params);
+    const pool = spotSpecies(species, this.spot, mapParams.boostWeight);
+    this.round = createRound(`${this.save.createdAt}-${this.save.stats.casts}`, this.scale.width, line, hooks, pool, depthMap, params);
+    play('splash');
     this.round.hookX = this.rodTip().x;
     this.steerX = null;
     this.zoneShown = -1;
@@ -285,6 +304,7 @@ export class FishingScene extends Phaser.Scene {
       switch (e.type) {
         case 'bite':
           this.cameras.main.shake(120, 0.006);
+          play('bite');
           this.ui.floater(t('round.bite'), r.hookX, screen(r.hookY) - 30, '#ffd23f');
           navigator.vibrate?.(25);
           this.ui.hideHint();
@@ -295,12 +315,15 @@ export class FishingScene extends Phaser.Scene {
         case 'catch': {
           const s = this.fishSprites.get(e.uid);
           if (s) this.tweens.add({ targets: s, scale: params.spriteScale * 1.4, duration: 90, yoyo: true });
+          play('catch', 1 + r.caught.length * 0.08);
+          this.ui.floater(`${r.caught.length}`, r.hookX + 26, screen(r.hookY) - 10, '#ffffff');
           this.bubbles.burst(r.hookX, r.hookY, 5);
           navigator.vibrate?.(12);
           break;
         }
         case 'full':
           this.ui.floater(t('round.full'), r.hookX, screen(r.hookY) - 40, '#7bd88f');
+          play('full');
           break;
         case 'landed':
           this.finale(e.species, e.deepestMeters);
@@ -334,6 +357,8 @@ export class FishingScene extends Phaser.Scene {
       s.once(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
         combos.add(i);
         s.setTint(0xffe27a);
+        play('coin', 1 + combos.size * 0.1);
+        this.cameras.main.shake(60, 0.004);
         this.ui.floater(t('round.combo'), s.x, s.y - this.cameras.main.scrollY - 20, '#ffd23f');
         this.bubbles.burst(s.x, s.y, 6);
       });
@@ -372,7 +397,11 @@ export class FishingScene extends Phaser.Scene {
       this.save = landed.save;
       writeSave(this.save);
       this.harbor.landed(caught);
-      if (landed.coins > 0) this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, depthMap.surfaceY - this.cameras.main.scrollY - 90, '#ffd23f');
+      const boatScreenY = depthMap.surfaceY - this.cameras.main.scrollY;
+      if (landed.coins > 0) {
+        this.ui.floater(t('round.summary', { coins: landed.coins }), this.boat.x, boatScreenY - 90, '#ffd23f');
+        this.ui.coinBurst(this.boat.x, boatScreenY - 40, Math.ceil(landed.coins / 10));
+      }
       this.refresh(true);
       this.endRound(landed.firstCatches, completed);
     });
@@ -396,6 +425,7 @@ export class FishingScene extends Phaser.Scene {
         this.harbor.playNext(() => undefined);
         return;
       }
+      play('newSpecies');
       this.showFact(speciesById.get(id)!, true, next);
     };
     this.time.delayedCall(500, next);
@@ -420,6 +450,7 @@ export class FishingScene extends Phaser.Scene {
           },
         },
       ], undefined, portrait);
+    play('fanfare');
     if (portrait) playReaction(this.uiRoot, portrait, { background: 'burst', mood: 'joy' }, t('reaction.set'), card);
     else card();
   }
@@ -440,6 +471,13 @@ export class FishingScene extends Phaser.Scene {
     return t(zones[zoneIndexAt(def.depthMeters[0], depthMap)]!.nameKey);
   }
 
+  private openMap(): void {
+    if (this.mode !== 'deck' || this.overlayOpen()) return;
+    play('tap');
+    this.cameras.main.fadeOut(250, 11, 53, 80);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('SeaMap'));
+  }
+
   private openFishbook(): void {
     showFishbook(this.uiRoot, species, sets, this.save, (s) => this.imageOf(s), (s) => this.zoneName(s), (s) => this.showFact(s, false, () => this.openFishbook()));
   }
@@ -451,6 +489,7 @@ export class FishingScene extends Phaser.Scene {
     this.save = buyUpgrade(this.save, u, Date.now());
     writeSave(this.save);
     this.bert.play(animKey(player.id, 'cheer'));
+    play('upgrade');
     this.time.delayedCall(700, () => this.mode === 'deck' && this.bert.play(animKey(player.id, 'idle')));
     this.bubbles.burst(this.boat.x, depthMap.surfaceY, 10);
     this.refresh(true);

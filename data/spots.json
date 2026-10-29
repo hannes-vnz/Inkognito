@@ -1,0 +1,67 @@
+[
+  {
+    "id": "harbor",
+    "nameKey": "spot.harbor.name",
+    "descKey": "spot.harbor.desc",
+    "x": 200,
+    "y": 1000,
+    "maxMeters": 200,
+    "boost": [
+      "herring",
+      "mackerel"
+    ],
+    "harbor": true
+  },
+  {
+    "id": "shelf",
+    "nameKey": "spot.shelf.name",
+    "descKey": "spot.shelf.desc",
+    "x": 520,
+    "y": 760,
+    "maxMeters": 1000,
+    "boost": [
+      "lanternfish",
+      "hatchetfish"
+    ],
+    "harbor": false
+  },
+  {
+    "id": "open",
+    "nameKey": "spot.open.name",
+    "descKey": "spot.open.desc",
+    "x": 420,
+    "y": 420,
+    "maxMeters": 4000,
+    "boost": [
+      "giant_squid",
+      "viperfish"
+    ],
+    "harbor": false
+  },
+  {
+    "id": "plain",
+    "nameKey": "spot.plain.name",
+    "descKey": "spot.plain.desc",
+    "x": 860,
+    "y": 380,
+    "maxMeters": 6000,
+    "boost": [
+      "dumbo",
+      "sea_pig"
+    ],
+    "harbor": false
+  },
+  {
+    "id": "trench",
+    "nameKey": "spot.trench.name",
+    "descKey": "spot.trench.desc",
+    "x": 1000,
+    "y": 120,
+    "maxMeters": 11000,
+    "boost": [
+      "snailfish",
+      "amphipod"
+    ],
+    "harbor": false
+  }
+]

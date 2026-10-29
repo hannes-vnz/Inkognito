@@ -6,6 +6,7 @@ import setsJson from '../data/sets.json';
 import npcsJson from '../data/npcs.json';
 import storyJson from '../data/story.json';
 import quizJson from '../data/quiz.json';
+import spotsJson from '../data/spots.json';
 import gameJson from '../data/game.json';
 import textsJson from '../data/texts.de.json';
 import type { TextTable } from './systems/texts';
@@ -17,6 +18,7 @@ import type { NpcDef } from './systems/dialog';
 import type { StoryBeat } from './systems/story';
 import type { QuizParams, QuizQuestion } from './systems/quiz';
 import type { RewardParams } from './systems/requests';
+import type { MapParams, SpotDef } from './systems/seaMap';
 
 export interface AnimationDef {
   key: string;
@@ -65,6 +67,10 @@ export const npcById = new Map(npcs.map((n) => [n.id, n]));
 export const story = storyJson as unknown as StoryBeat[];
 export const quiz = quizJson as QuizQuestion[];
 export const harbor = gameJson.harbor as QuizParams & { requestReward: RewardParams; requestRequires: string };
+export const spots = spotsJson as SpotDef[];
+export const homeSpot = spots.find((s) => s.harbor)!;
+export const spotById = (id: string): SpotDef => spots.find((s) => s.id === id) ?? homeSpot;
+export const mapParams = gameJson.map as MapParams;
 export const texts = textsJson as TextTable;
 
 export const depthMap: DepthMap = { zones, unitsPerZone: params.unitsPerZone, surfaceY: params.surfaceY };

@@ -69,5 +69,19 @@
       450,
       620
     ]
+  },
+  {
+    "id": "engine",
+    "nameKey": "upgrade.engine.name",
+    "effectKey": "upgrade.engine.effect",
+    "costBase": 60,
+    "costGrowth": 5,
+    "values": [
+      300,
+      520,
+      760,
+      1000,
+      1250
+    ]
   }
 ]

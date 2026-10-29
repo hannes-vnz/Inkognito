@@ -17,6 +17,15 @@
     }
   },
   {
+    "id": "hilde_map",
+    "npc": "hilde",
+    "node": "map",
+    "trigger": {
+      "type": "casts",
+      "value": 3
+    }
+  },
+  {
     "id": "bruno_intro",
     "npc": "bruno",
     "node": "intro",

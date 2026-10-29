@@ -41,6 +41,20 @@ Inkognito ist ein lustiges Angel-Incremental für Mobile: Ein Oktopus mit Fake-B
 
 Kosten steigen exponentiell, so abgestimmt, dass das nächste Upgrade immer erreichbar ist und das übernächste knapp nicht.
 
+## Seekarte & Angelplätze
+
+Kleine Karte von oben, kein Open World: Bert fährt den Kutter frei (Daumen ziehen), Bojen markieren Angelplätze. Jeder Platz hat eine maximale Tiefe und Lieblingsarten, die dort öfter anbeißen. Der **Motor** (Boot-Upgrade) bestimmt die Reichweite um den Hafen, jede Stufe schaltet einen Platz frei. Unterwegs treibt Treibgut mit Münzen, nach jedem Wurf neu. Figuren gibt es nur im Hafen.
+
+| Platz | Bis | Motor |
+| --- | --- | --- |
+| Hafenbucht | 200 m | Start |
+| Schelfkante | 1000 m | Stufe 2 |
+| Offene See | 4000 m | Stufe 3 |
+| Tiefsee-Ebene | 6000 m | Stufe 4 |
+| Tiefseegraben | 11000 m | Stufe 5 |
+
+Daten in data/spots.json, Werte in data/game.json (map). Später: weitere Boot-Upgrades (Licht, Rumpf, Laderaum), Ereignisse auf der Fahrt.
+
 ## Zonen & Arten (Startmeer)
 
 Echte Meereszonen. Pro Zone 3–6 Arten, alle echt, jede mit Fakt.
@@ -118,6 +132,7 @@ Phaser 3, TypeScript, Vite, Supabase. Spiellogik in `src/systems/` ohne Phaser, 
 1. ✅ **Prototyp Angel-Runde:** Auswerfen, Abstieg, Aufstieg, Finale, drei Upgrades, Offline-Einnahmen, Fakt-Karte beim Erstfang, Fischbuch-Liste. Fertig, wenn eine Runde am Handy Spaß macht und die ersten 10 Minuten ein Upgrade nach dem anderen ermöglichen.
 2. ✅ **Inhalt Startmeer:** 15–20 echte Arten mit geprüften Fakten, Sammel-Sets, Wissens-Bonus. (21 Arten, 5 Sets, Fakten am 29.10.2026 geprüft, Quelle je Art in data/fish.json)
 3. ✅ **Hafen & Figuren:** Hilde, Bruno, Professorin Qualle mit Dialogen, Reaktions-Szenen, Mini-Quiz. (8 Story-Momente, Brunos Wunschfisch, 21 Quizfragen; Inhalte in data/npcs.json, story.json, quiz.json)
+3b. ✅ **Seekarte:** Angelplätze, Motor, Treibgut; dazu erste Sounds (synthetisiert, data/sounds.json), Münzflug und rollender Zähler.
 4. **Grafik & Juice:** Stil nach ARTSTIL.md, echte Sprites, Animationen.
 5. **Online:** Login und Cloud-Spielstand (vorhanden), Freunde und Bestenlisten.
 6. **Prestige:** weitere Meere.

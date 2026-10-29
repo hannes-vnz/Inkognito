@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { harbor, npcById, npcs, quiz, species, speciesById, story, upgradeById } from '../data';
+import { harbor, homeSpot, npcById, npcs, quiz, species, speciesById, spots, story, upgradeById } from '../data';
+import { reachableMeters } from '../systems/seaMap';
+import { play } from '../audio/sfx';
 import { animKey } from '../entities/Octopus';
 import { dialogNode, type NpcDef } from '../systems/dialog';
 import { markSeen, nextBeat, npcMet } from '../systems/story';
@@ -116,6 +118,7 @@ export class Harbor {
     if (!r.speciesId) return;
     this.lastRequest = r.speciesId;
     this.host.setSave(r.save);
+    play('fanfare');
     this.host.say(t('request.done', { fish: t(speciesById.get(r.speciesId)!.nameKey), reward: r.reward }));
     this.refresh();
   }
@@ -143,13 +146,21 @@ export class Harbor {
     const node = dialogNode(npc.dialog, nodeId, this.host.save.story.seen);
     const portrait = this.portrait(npc);
     this.setTalking(npc, true);
+    play('talk');
     const show = () => {
       if (node.action?.type === 'showRequest') return this.showRequest(npc, portrait, done);
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       this.sheet.show(
         t(npc.nameKey),
         t(node.textKey),
-        node.options.map((o) => ({ label: t(o.textKey), onSelect: () => (o.next ? this.talk(npc, o.next, done) : this.finish(npc, done)) })),
+        node.options.map((o) => ({
+          label: t(o.textKey),
+          onSelect: () => {
+            play('tap');
+            if (o.next) this.talk(npc, o.next, done);
+            else this.finish(npc, done);
+          },
+        })),
         undefined,
         portrait,
       );
@@ -161,7 +172,12 @@ export class Harbor {
   private showRequest(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
     let save = this.host.save;
     if (!save.request) {
-      const line = upgradeValue(upgradeById('line'), save.upgrades.line);
+      const line = reachableMeters(
+        upgradeValue(upgradeById('line'), save.upgrades.line),
+        spots,
+        homeSpot,
+        upgradeValue(upgradeById('engine'), save.upgrades.engine),
+      );
       const request = newRequest(`${save.createdAt}-request-${save.stats.casts}`, species, line, harbor.requestReward, this.lastRequest);
       save = { ...save, request };
       this.host.setSave(save);
@@ -190,6 +206,7 @@ export class Harbor {
         onSelect: () => {
           const result = answerQuiz(this.host.save, round, i, def.value, harbor);
           this.host.setSave(result.save);
+          play(result.right ? 'fanfare' : 'wrong');
           const text = result.right
             ? `${t('quiz.right', { reward: result.reward })} ${t(def.factKey)}`
             : `${t('quiz.wrong', { answer: t(round.answerKeys[round.correct]!) })} ${t(def.factKey)}`;

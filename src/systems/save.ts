@@ -2,9 +2,9 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
-export type UpgradeId = 'line' | 'hook' | 'crew';
+export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
 export interface FishbookEntry {
   count: number;
@@ -39,15 +39,21 @@ export interface SaveV4 extends Omit<SaveV3, 'version'> {
   quiz: { nextAtCast: number; correct: number; asked: number };
 }
 
-export type Save = SaveV4;
+export interface SaveV5 extends Omit<SaveV4, 'version'> {
+  version: 5;
+  /** Seekarte: aktueller Angelplatz und eingesammeltes Treibgut (gilt bis zum nächsten Wurf). */
+  map: { spot: string; flotsamCast: number; flotsamTaken: number[] };
+}
+
+export type Save = SaveV5;
 
 export function newSave(now: number): Save {
   return {
-    version: 4,
+    version: 5,
     createdAt: now,
     updatedAt: now,
     coins: 0,
-    upgrades: { line: 0, hook: 0, crew: 0 },
+    upgrades: { line: 0, hook: 0, crew: 0, engine: 0 },
     fishbook: {},
     stats: { casts: 0, deepestMeters: 0 },
     lastTick: now,
@@ -55,6 +61,7 @@ export function newSave(now: number): Save {
     story: { seen: [] },
     request: null,
     quiz: { nextAtCast: 0, correct: 0, asked: 0 },
+    map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [] },
   };
 }
 
@@ -80,6 +87,12 @@ const migrations: Record<number, Migration> = {
     story: { seen: [] },
     request: null,
     quiz: { nextAtCast: 0, correct: 0, asked: 0 },
+  }),
+  // v4 → v5: Seekarte. Alle starten in der Hafenbucht mit kleinem Motor.
+  4: (old) => ({
+    ...old,
+    upgrades: { ...(old.upgrades as Record<string, number>), engine: 0 },
+    map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [] },
   }),
 };
 

@@ -1,0 +1,35 @@
+{
+  "fixedStepHz": 60,
+  "camera": {
+    "followRate": 6,
+    "lookAhead": {
+      "portrait": { "x": 0.25, "y": 0.75 },
+      "landscape": { "x": 0.6, "y": 0.35 }
+    },
+    "maxLookAheadFraction": 0.28,
+    "lookAheadRate": 2.5
+  },
+  "joystick": {
+    "radius": 56,
+    "deadzone": 0.12,
+    "followFactor": 1,
+    "restMargin": 96
+  },
+  "juice": {
+    "bubbles": {
+      "maxCount": 40,
+      "perSecondAtMaxSpeed": 18,
+      "riseSpeed": 70,
+      "lifeSeconds": 1.6
+    },
+    "marineSnow": {
+      "count": 70,
+      "parallax": 0.8,
+      "driftSpeed": 8
+    }
+  },
+  "ui": {
+    "margin": 16,
+    "fontFamily": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+  }
+}

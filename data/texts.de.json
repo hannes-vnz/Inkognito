@@ -1,0 +1,13 @@
+{
+  "game.title": "Inkognito",
+  "zone.kelp.name": "Kelpwald",
+  "hud.depth": "{depth} m",
+  "hud.depthLabel": "Tiefe",
+  "hud.fps": "{fps} fps",
+  "ui.paused": "Pause",
+  "ui.pausedOrientation": "Bildschirm gedreht",
+  "ui.tapToContinue": "Tippen zum Weiterschwimmen",
+  "ui.loading": "Abtauchen …",
+  "ui.hint.touch": "Daumen aufsetzen und ziehen",
+  "ui.hint.keys": "WASD oder Pfeiltasten"
+}

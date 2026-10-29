@@ -1,1 +1,27 @@
 # Inkognito
+
+Mobile-first Unterwasser-Spiel mit Phaser 3, TypeScript und Vite. Konzept: [INKOGNITO.md](INKOGNITO.md), Regeln für die Umsetzung: [CLAUDE.md](CLAUDE.md).
+
+## Loslegen
+
+```bash
+npm install
+npm run dev        # Dev-Server, auch im WLAN erreichbar
+npm test           # Unit-Tests für src/systems/
+npm run build      # Typecheck + Produktions-Build nach dist/
+```
+
+Platzhaltergrafiken neu erzeugen (überschreibt `assets/sprites` und `assets/backgrounds`):
+
+```bash
+npm run assets:placeholders
+```
+
+## Auf dem Handy testen
+
+1. Handy und Rechner ins selbe WLAN.
+2. `npm run dev` starten. Vite zeigt neben `Local` auch eine `Network`-Adresse, z. B. `http://192.168.0.23:5173/`.
+3. Diese Adresse im Handy-Browser öffnen. Mit `?debug` hinten dran (`http://192.168.0.23:5173/?debug`) erscheint oben rechts die FPS-Anzeige.
+4. Für Vollbild: im Browser-Menü „Zum Home-Bildschirm“ wählen und von dort starten.
+
+Steuerung: Daumen irgendwo in der unteren Hälfte (hochkant) bzw. linken Hälfte (quer) aufsetzen und ziehen. Am Desktop WASD oder Pfeiltasten.

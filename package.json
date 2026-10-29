@@ -1,0 +1,25 @@
+{
+  "name": "inkognito",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mobile-first Unterwasser-Spiel: Oktopus fängt Fische lebend und baut sein Riff zur WG-Basis aus.",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "assets:placeholders": "node scripts/generate-placeholders.mjs"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

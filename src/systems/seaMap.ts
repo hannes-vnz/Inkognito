@@ -27,6 +27,8 @@ export interface MapParams {
   flotsamCount: number;
   flotsamRadius: number;
   flotsamCoins: { base: number; perUnit: number };
+  bottleChance: number;
+  bottleCoins: number;
 }
 
 export const distance = (a: Point, b: Point): number => Math.hypot(a.x - b.x, a.y - b.y);
@@ -85,16 +87,22 @@ export function reachableMeters(line: number, spots: readonly SpotDef[], home: P
 export interface Flotsam extends Point {
   id: number;
   coins: number;
+  /** Flaschenpost statt Kiste: zeigt den nächsten Brief. */
+  bottle: boolean;
 }
 
 /** Treibgut innerhalb der Reichweite auf der Seeseite (oben rechts vom Hafen), neu nach jedem Wurf. Weiter draußen ist mehr wert. */
 export function flotsam(seed: string, home: Point, range: number, p: MapParams): Flotsam[] {
   const rng = createRng(seed);
+  const withBottle = rng.next() < p.bottleChance;
   return Array.from({ length: p.flotsamCount }, (_, id) => {
     const r = range * Math.sqrt(rng.range(0.08, 0.95));
     const a = rng.range(-1.75, 0.17);
     const pos = clampToRange({ x: home.x + Math.cos(a) * r, y: home.y + Math.sin(a) * r }, home, range, p.worldSize);
-    return { id, x: pos.x, y: pos.y, coins: Math.round(p.flotsamCoins.base + p.flotsamCoins.perUnit * distance(pos, home)) };
+    // Gibt es diesmal Flaschenpost, ist es das letzte Stück.
+    const bottle = withBottle && id === p.flotsamCount - 1;
+    const coins = bottle ? p.bottleCoins : Math.round(p.flotsamCoins.base + p.flotsamCoins.perUnit * distance(pos, home));
+    return { id, x: pos.x, y: pos.y, coins, bottle };
   });
 }
 
@@ -105,7 +113,12 @@ export function takeFlotsam(save: Save, piece: Flotsam): Save {
   return {
     ...save,
     coins: save.coins + piece.coins,
-    map: { ...save.map, flotsamCast: save.stats.casts, flotsamTaken: [...fresh, piece.id] },
+    map: {
+      ...save.map,
+      flotsamCast: save.stats.casts,
+      flotsamTaken: [...fresh, piece.id],
+      bottlesRead: save.map.bottlesRead + (piece.bottle ? 1 : 0),
+    },
   };
 }
 

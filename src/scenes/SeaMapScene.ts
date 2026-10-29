@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { homeSpot, mapParams, spotById, spots, upgradeById } from '../data';
+import { bottles, homeSpot, mapParams, player, spotById, spots, upgradeById } from '../data';
+import { Sheet } from '../ui/Sheet';
 import { clampToRange, flotsam, flotsamTaken, spotAt, spotUnlocked, stepBoat, takeFlotsam, type Boat, type Flotsam, type Point } from '../systems/seaMap';
 import { buyUpgrade, isMaxed, upgradeCost, upgradeValue } from '../systems/economy';
 import { createRng } from '../systems/rng';
@@ -18,6 +19,7 @@ const BOAT_SCALE = 2;
 export class SeaMapScene extends Phaser.Scene {
   private save!: Save;
   private ui!: MapUi;
+  private sheet!: Sheet;
   private boat!: Boat;
   private boatSprite!: Phaser.GameObjects.Image;
   private wake!: Phaser.GameObjects.Graphics;
@@ -59,6 +61,7 @@ export class SeaMapScene extends Phaser.Scene {
       buyEngine: () => this.buyEngine(),
     });
 
+    this.sheet = new Sheet(root);
     this.drawSea();
     this.rangeRing = this.add.graphics().setDepth(2);
     this.drawRange();
@@ -84,7 +87,7 @@ export class SeaMapScene extends Phaser.Scene {
 
     const input = this.input;
     const aim = (p: Phaser.Input.Pointer) => {
-      if (p.isDown) this.target = { x: p.worldX, y: p.worldY };
+      if (p.isDown && !this.sheet.open) this.target = { x: p.worldX, y: p.worldY };
     };
     input.on(Phaser.Input.Events.POINTER_DOWN, aim);
     input.on(Phaser.Input.Events.POINTER_MOVE, aim);
@@ -152,7 +155,7 @@ export class SeaMapScene extends Phaser.Scene {
     this.crates.clear();
     for (const piece of flotsam(`${this.save.createdAt}-flotsam-${this.save.stats.casts}`, homeSpot, this.range, mapParams)) {
       if (flotsamTaken(this.save, piece.id)) continue;
-      const sprite = this.add.image(piece.x, piece.y, 'fx_crate').setScale(2).setDepth(3);
+      const sprite = this.add.image(piece.x, piece.y, piece.bottle ? 'fx_bottle' : 'fx_crate').setScale(2).setDepth(3);
       this.tweens.add({ targets: sprite, y: piece.y - 4, angle: 8, duration: 1100 + piece.id * 90, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       this.crates.set(piece.id, { piece, sprite });
     }
@@ -198,6 +201,18 @@ export class SeaMapScene extends Phaser.Scene {
     }
   }
 
+  private readBottle(letter: string, coins: number): void {
+    this.target = null;
+    play('newSpecies');
+    let portrait: string | undefined;
+    try {
+      portrait = this.textures.getBase64(player.sprite, 0);
+    } catch {
+      portrait = undefined;
+    }
+    this.sheet.show(t('bottle.title'), `${t(letter)} ${t('bottle.reward', { coins })}`, [{ label: t('bottle.ok'), onSelect: () => this.sheet.close() }], undefined, portrait);
+  }
+
   private leave(spotId: string): void {
     this.save = { ...this.save, map: { ...this.save.map, spot: spotId } };
     writeSave(this.save);
@@ -239,6 +254,7 @@ export class SeaMapScene extends Phaser.Scene {
     // Treibgut einsammeln
     for (const [id, c] of this.crates) {
       if (Math.hypot(c.piece.x - this.boat.x, c.piece.y - this.boat.y) > mapParams.flotsamRadius) continue;
+      const letter = bottles[this.save.map.bottlesRead % bottles.length]!;
       this.save = takeFlotsam(this.save, c.piece);
       writeSave(this.save);
       this.crates.delete(id);
@@ -246,6 +262,7 @@ export class SeaMapScene extends Phaser.Scene {
       const cam = this.cameras.main;
       this.ui.floater(t('map.flotsam', { coins: c.piece.coins }), c.piece.x - cam.worldView.x, c.piece.y - cam.worldView.y - 20, '#ffd23f');
       this.tweens.add({ targets: c.sprite, scale: 0, angle: 180, duration: 250, onComplete: () => c.sprite.destroy() });
+      if (c.piece.bottle) this.readBottle(letter, c.piece.coins);
       this.refresh();
     }
 

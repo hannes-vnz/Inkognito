@@ -1510,3 +1510,61 @@ body {
     opacity: 0;
   }
 }
+
+/* Tagesbonus */
+.daily-card {
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100vw - 24px));
+  animation: card-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.overlay .daily-card {
+  padding: 18px 14px;
+}
+
+.daily-text {
+  margin: 0;
+  font-size: 15px;
+}
+
+.daily-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.daily-day {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 0;
+  border-radius: 8px;
+  background: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--paper-dim);
+}
+
+.daily-day .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.daily-day.done {
+  opacity: 0.45;
+}
+
+.daily-day.today {
+  background: var(--signal);
+  color: var(--ink);
+  transform: scale(1.12);
+  animation: ready-glow 0.8s ease-in-out infinite alternate;
+}
+
+.daily-card .button {
+  min-height: 52px;
+  font-size: 20px;
+  font-weight: 800;
+}

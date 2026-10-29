@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
-import { depthMap, fixedStepHz, mapParams, params, player, sets, species, speciesById, spotById, upgradeById, upgrades, zones } from '../data';
+import { dailyParams, depthMap, fixedStepHz, mapParams, params, player, sets, species, speciesById, spotById, upgradeById, upgrades, zones } from '../data';
 import { spotSpecies, type SpotDef } from '../systems/seaMap';
 import { play } from '../audio/sfx';
+import { claimDaily, dailyReward, dailyStreak, dayKey } from '../systems/daily';
+import { showDailyCard } from '../ui/DailyCard';
 import { newlyCompleted, setBonus, type SetDef } from '../systems/sets';
 import { playReaction } from '../ui/ReactionShot';
 import { animKey } from '../entities/Octopus';
@@ -115,7 +117,8 @@ export class FishingScene extends Phaser.Scene {
       if (this.spot.harbor) this.harbor.playNext(intro);
       else this.ui.say(t('spot.arrive', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 2.5);
     };
-    this.time.delayedCall(400, () => (idle.coins >= 1 ? this.showOffline(idle.coins, story) : story()));
+    const daily = () => this.showDaily(story);
+    this.time.delayedCall(400, () => (idle.coins >= 1 ? this.showOffline(idle.coins, daily) : daily()));
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -513,6 +516,32 @@ export class FishingScene extends Phaser.Scene {
     this.time.delayedCall(700, () => this.mode === 'deck' && this.bert.play(animKey(player.id, 'idle')));
     this.bubbles.burst(this.boat.x, depthMap.surfaceY, 10);
     this.refresh(true);
+  }
+
+  /** Tagesbonus einmal pro Kalendertag, erst ab dem zweiten Wurf (der Anfang gehört Hilde). */
+  private showDaily(done: () => void): void {
+    const now = new Date();
+    const today = dayKey(now.getTime(), now.getTimezoneOffset());
+    const streak = dailyStreak(this.save, today);
+    if (streak === null || this.save.stats.casts < 2) {
+      done();
+      return;
+    }
+    const crew = upgradeValue(upgradeById('crew'), this.save.upgrades.crew);
+    const rewards = dailyParams.base.map((_, i) => dailyReward(i + 1, crew, dailyParams));
+    const reset = this.save.daily.streak > 0 && streak === 1;
+    play('newSpecies');
+    showDailyCard(this.uiRoot, streak, rewards, reset, (x, y) => {
+      const r = claimDaily(this.save, today, crew, dailyParams);
+      if (r) {
+        this.save = r.save;
+        writeSave(this.save);
+        this.ui.coinBurst(x, y, Math.ceil(r.coins / 8));
+        this.ui.confetti(x, y);
+        this.refresh(true);
+      }
+      this.time.delayedCall(900, done);
+    });
   }
 
   private showOffline(coins: number, done: () => void): void {

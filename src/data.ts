@@ -19,6 +19,8 @@ import type { StoryBeat } from './systems/story';
 import type { QuizParams, QuizQuestion } from './systems/quiz';
 import type { RewardParams } from './systems/requests';
 import type { MapParams, SpotDef } from './systems/seaMap';
+import type { DailyParams } from './systems/daily';
+import bottlesJson from '../data/bottles.json';
 
 export interface AnimationDef {
   key: string;
@@ -73,6 +75,8 @@ export const spots = spotsJson as SpotDef[];
 export const homeSpot = spots.find((s) => s.harbor)!;
 export const spotById = (id: string): SpotDef => spots.find((s) => s.id === id) ?? homeSpot;
 export const mapParams = gameJson.map as MapParams;
+export const dailyParams = gameJson.daily as DailyParams;
+export const bottles = bottlesJson as string[];
 export const texts = textsJson as TextTable;
 
 export const depthMap: DepthMap = { zones, unitsPerZone: params.unitsPerZone, surfaceY: params.surfaceY };

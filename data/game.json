@@ -41,6 +41,28 @@
     "flotsamCoins": {
       "base": 4,
       "perUnit": 0.03
-    }
+    },
+    "bottleChance": 0.5,
+    "bottleCoins": 25
+  },
+  "daily": {
+    "base": [
+      20,
+      30,
+      45,
+      60,
+      80,
+      110,
+      200
+    ],
+    "crewMinutes": [
+      10,
+      15,
+      20,
+      30,
+      40,
+      60,
+      120
+    ]
   }
 }

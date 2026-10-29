@@ -504,6 +504,19 @@ function drawBuoy() {
   return img;
 }
 
+/** Flaschenpost (16×16): grüne Flasche mit Brief und Korken, schräg. */
+function drawBottle() {
+  const img = new Image(16, 16);
+  const glass = rampOf(hex('#5fbf7a'));
+  for (let i = 0; i < 10; i++) for (let w = -2; w <= 2; w++) img.set(3 + i + w * 0.5, 12 - i * 0.8 + w, i > 7 ? glass.shadow : glass.base);
+  for (let i = 2; i < 7; i++) img.set(4 + i, 11 - i * 0.8, hex('#f2e2b6'));
+  img.set(13, 3, hex('#8a5a2b'));
+  img.set(14, 2, hex('#8a5a2b'));
+  img.set(5, 9, white);
+  outlineRegion(img, 0, 0, 16, 16, glass.outline);
+  return img;
+}
+
 /** Treibgut-Kiste (16×16). */
 function drawCrate() {
   const img = new Image(16, 16);
@@ -530,6 +543,7 @@ save(spritesDir, 'hook.png', drawHook());
 save(spritesDir, 'boat_top.png', drawBoatTop());
 save(spritesDir, 'buoy.png', drawBuoy());
 save(spritesDir, 'fx_crate.png', drawCrate());
+save(spritesDir, 'fx_bottle.png', drawBottle());
 
 const bubble = new Image(8, 8);
 for (let y = 0; y < 8; y++)

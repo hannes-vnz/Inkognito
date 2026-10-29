@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -45,11 +45,18 @@ export interface SaveV5 extends Omit<SaveV4, 'version'> {
   map: { spot: string; flotsamCast: number; flotsamTaken: number[] };
 }
 
-export type Save = SaveV5;
+export interface SaveV6 extends Omit<SaveV5, 'version' | 'map'> {
+  version: 6;
+  map: SaveV5['map'] & { bottlesRead: number };
+  /** Tagesbonus: zuletzt abgeholter Tag (JJJJ-MM-TT, Ortszeit) und Serie. */
+  daily: { lastDay: string; streak: number };
+}
+
+export type Save = SaveV6;
 
 export function newSave(now: number): Save {
   return {
-    version: 5,
+    version: 6,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -61,7 +68,8 @@ export function newSave(now: number): Save {
     story: { seen: [] },
     request: null,
     quiz: { nextAtCast: 0, correct: 0, asked: 0 },
-    map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [] },
+    map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [], bottlesRead: 0 },
+    daily: { lastDay: '', streak: 0 },
   };
 }
 
@@ -93,6 +101,12 @@ const migrations: Record<number, Migration> = {
     ...old,
     upgrades: { ...(old.upgrades as Record<string, number>), engine: 0 },
     map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [] },
+  }),
+  // v5 → v6: Tagesbonus und Flaschenpost.
+  5: (old) => ({
+    ...old,
+    map: { ...(old.map as Record<string, unknown>), bottlesRead: 0 },
+    daily: { lastDay: '', streak: 0 },
   }),
 };
 

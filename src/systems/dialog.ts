@@ -17,6 +17,8 @@ export interface DialogNode {
   options?: DialogOption[];
   action?: DialogAction;
   redirect?: DialogRedirect[];
+  /** Kurze Reaktions-Szene, bevor der Text erscheint (Hintergrund und Stimmung). */
+  reaction?: { background: 'waves' | 'burst' | 'sparkle'; mood: 'shock' | 'joy' | 'smug' };
 }
 
 export type Dialog = Record<string, DialogNode>;
@@ -27,8 +29,6 @@ export interface NpcDef {
   sprite: string;
   frame: { width: number; height: number };
   placeholderColor: string;
-  /** Platz auf einem Podest im Riff; `layer` 0 = vorn. */
-  podest: { x: number; y: number; layer: number };
   /** Leer = von Anfang an da, sonst nach erledigtem Auftrag. */
   unlock: { questDone?: string };
   dialog: Dialog;

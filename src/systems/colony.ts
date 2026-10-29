@@ -13,8 +13,6 @@ export interface BuildingDef {
   nameKey: string;
   sprite: string;
   frame: { width: number; height: number };
-  position: { x: number; y: number };
-  interactOffsetY: number;
   levels: BuildingLevel[];
   placeholderColor: string;
 }

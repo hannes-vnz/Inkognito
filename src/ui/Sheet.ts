@@ -1,4 +1,5 @@
 import { el } from './Hud';
+import { setRichText, typeRichText } from './rich';
 
 export interface SheetInput {
   id: string;
@@ -14,6 +15,8 @@ export interface SheetOption {
   label: string;
   /** Farbpunkt vor der Antwort (z. B. Fischfarbe). */
   color?: string;
+  /** Kleiner Zusatz rechts (Preis, Werte). */
+  meta?: string;
   onSelect: () => void;
 }
 
@@ -24,6 +27,7 @@ export interface SheetOption {
 export class Sheet {
   private readonly node: HTMLDivElement;
   private input: HTMLInputElement | null = null;
+  private finishTyping: (() => void) | null = null;
 
   constructor(root: HTMLElement) {
     this.node = el('div', 'sheet');
@@ -42,21 +46,28 @@ export class Sheet {
 
   /** `portrait`: Bild-URL der sprechenden Figur (Dialog wie bei Dave the Diver). */
   show(title: string, text: string, options: readonly SheetOption[], input?: SheetInput, portrait?: string): void {
+    this.finishTyping?.();
     const card = el('div', 'card sheet-card');
     const body = el('div', 'sheet-body');
-    const head = el('div', 'sheet-head');
     if (portrait) {
       const img = el('img', 'sheet-portrait');
       img.src = portrait;
       img.alt = '';
-      head.append(img);
+      card.append(img);
     }
     const h = el('div', 'sheet-title');
     h.textContent = title;
-    head.append(h);
     const p = el('p', 'sheet-text');
-    p.textContent = text;
-    body.append(head, p);
+    body.append(h, p);
+    this.node.classList.toggle('dialog', Boolean(portrait));
+    if (portrait) {
+      // Figur spricht: Text tippt sich, Antippen zeigt alles sofort.
+      this.finishTyping = typeRichText(p, text);
+      card.addEventListener('pointerdown', () => this.finishTyping?.());
+    } else {
+      this.finishTyping = null;
+      setRichText(p, text);
+    }
     this.input = null;
     if (input) {
       const field = el('input', 'sheet-input');
@@ -86,6 +97,11 @@ export class Sheet {
       const label = el('span', '');
       label.textContent = o.label;
       b.append(label);
+      if (o.meta) {
+        const meta = el('span', 'meta');
+        meta.textContent = o.meta;
+        b.append(meta);
+      }
       b.addEventListener('click', (e) => {
         e.stopPropagation();
         o.onSelect();
@@ -99,11 +115,14 @@ export class Sheet {
 
   /** Nur den Text der offenen Karte ändern (z. B. „Einen Moment …“ oder Fehler). */
   setText(text: string): void {
-    const p = this.node.querySelector('.sheet-text');
-    if (p) p.textContent = text;
+    this.finishTyping?.();
+    const p = this.node.querySelector<HTMLElement>('.sheet-text');
+    if (p) setRichText(p, text);
   }
 
   close(): void {
+    this.finishTyping?.();
+    this.finishTyping = null;
     this.input = null;
     this.node.hidden = true;
     this.node.replaceChildren();

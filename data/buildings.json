@@ -7,11 +7,6 @@
       "width": 96,
       "height": 80
     },
-    "position": {
-      "x": 1200,
-      "y": 1430
-    },
-    "interactOffsetY": -140,
     "levels": [
       {
         "capacity": 4
@@ -39,11 +34,6 @@
       "width": 64,
       "height": 32
     },
-    "position": {
-      "x": 560,
-      "y": 1430
-    },
-    "interactOffsetY": -70,
     "levels": [
       {
         "slots": 2
@@ -67,11 +57,6 @@
       "width": 48,
       "height": 24
     },
-    "position": {
-      "x": 1840,
-      "y": 1430
-    },
-    "interactOffsetY": -60,
     "levels": [
       {
         "slots": 2

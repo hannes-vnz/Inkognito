@@ -24,6 +24,7 @@ import type { CurrentParams } from './systems/current';
 import type { BuildingDef, ColonyDefs, EconomyParams, JobDef } from './systems/colony';
 import type { NpcDef } from './systems/dialog';
 import type { QuestDef } from './systems/quests';
+import type { GrottoDef, GrottoParams } from './systems/riffLayout';
 
 export interface AnimationDef {
   key: string;
@@ -127,10 +128,12 @@ export function zoneById(id: string): ZoneDef {
 export interface ReefDef {
   id: string;
   nameKey: string;
-  world: { width: number; height: number; floorY: number };
-  spawn: { x: number; y: number };
-  diveEntrance: { x: number; y: number; radius: number };
-  interactRadius: number;
+  /** Figuren und Gebäude im Riff werden kleiner gezeichnet als im Tauchgang, damit eine Grotte aufs Handy passt. */
+  spriteScale: number;
+  grotto: GrottoParams;
+  grottos: GrottoDef[];
+  wall: { rock: string; rockLight: string; rockDark: string; grottoShadow: string; sand: string; sandShadow: string };
+  drag: { tapMaxMove: number; friction: number };
   waitingCapacity: number;
   economy: EconomyParams;
   podestSprite: string;

@@ -9,7 +9,6 @@ export class Hud {
   private readonly hint: HTMLDivElement;
   private readonly carry: HTMLDivElement;
   private readonly oxygen: HTMLDivElement;
-  private readonly oxygenFill: HTMLDivElement;
   private lastOxygen = -1;
   private readonly toast: Toast;
   private lastDepth = -1;
@@ -21,16 +20,14 @@ export class Hud {
     debug: boolean,
   ) {
     const depth = el('div', 'card hud-depth');
+    this.oxygen = el('div', 'o2-ring');
+    this.oxygen.setAttribute('aria-label', t('hud.oxygen'));
     this.depthLabel = el('div', 'label');
-    this.depthLabel.textContent = `${t(zoneNameKey)} · ${t('hud.depthLabel')}`;
+    this.depthLabel.textContent = t(zoneNameKey);
     this.depthValue = el('div', 'value');
     this.carry = el('div', 'carry');
     this.carry.setAttribute('aria-label', t('hud.carry'));
-    this.oxygen = el('div', 'oxygen');
-    this.oxygen.setAttribute('aria-label', t('hud.oxygen'));
-    this.oxygenFill = el('div', '');
-    this.oxygen.append(this.oxygenFill);
-    depth.append(this.depthLabel, this.depthValue, this.oxygen, this.carry);
+    depth.append(this.oxygen, this.depthLabel, this.depthValue, this.carry);
     root.append(depth);
 
     this.toast = new Toast(root);
@@ -49,12 +46,14 @@ export class Hud {
     this.depthValue.textContent = t('hud.depth', { depth: rounded });
   }
 
-  /** Luftbalken, `ratio` in 0..1; blinkt orange, wenn es knapp wird. */
-  setOxygen(ratio: number, low: boolean): void {
+  /** Luft-Ring wie bei Dave the Diver: Anteil als Ring, Restsekunden in der Mitte, pulsiert rot, wenn es knapp wird. */
+  setOxygen(ratio: number, low: boolean, seconds: number): void {
     const r = Math.round(ratio * 200) / 200;
-    if (r === this.lastOxygen) return;
+    const secs = Math.ceil(seconds);
+    if (r === this.lastOxygen && this.oxygen.dataset.value === String(secs)) return;
     this.lastOxygen = r;
-    this.oxygenFill.style.transform = `scaleX(${r})`;
+    this.oxygen.style.setProperty('--o2', String(r));
+    this.oxygen.dataset.value = String(secs);
     this.oxygen.classList.toggle('low', low);
   }
 

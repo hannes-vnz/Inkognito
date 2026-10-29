@@ -1,21 +1,6 @@
 {
   "id": "reef",
   "nameKey": "zone.reef.name",
-  "world": {
-    "width": 2400,
-    "height": 1600,
-    "floorY": 1440
-  },
-  "spawn": {
-    "x": 1200,
-    "y": 900
-  },
-  "diveEntrance": {
-    "x": 2180,
-    "y": 360,
-    "radius": 120
-  },
-  "interactRadius": 150,
   "water": {
     "deep": "#1d6f8f"
   },
@@ -68,5 +53,105 @@
       "giant": 1.4
     }
   },
-  "podestSprite": "prop_podest"
+  "podestSprite": "prop_podest",
+  "spriteScale": 2,
+  "grotto": {
+    "width": 340,
+    "height": 250,
+    "gap": 36,
+    "margin": 24,
+    "top": 200
+  },
+  "grottos": [
+    {
+      "id": "home",
+      "kind": "home",
+      "portrait": [
+        0,
+        0
+      ],
+      "landscape": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "house",
+      "kind": "building",
+      "building": "house",
+      "npc": "kalle",
+      "portrait": [
+        0,
+        1
+      ],
+      "landscape": [
+        1,
+        0
+      ]
+    },
+    {
+      "id": "farm",
+      "kind": "building",
+      "building": "seaweed_farm",
+      "npc": "gisela",
+      "portrait": [
+        0,
+        2
+      ],
+      "landscape": [
+        2,
+        0
+      ]
+    },
+    {
+      "id": "shells",
+      "kind": "building",
+      "building": "shell_bed",
+      "portrait": [
+        0,
+        3
+      ],
+      "landscape": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "wreck",
+      "kind": "npc",
+      "npc": "bruno",
+      "portrait": [
+        0,
+        4
+      ],
+      "landscape": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "workshop",
+      "kind": "locked",
+      "portrait": [
+        0,
+        5
+      ],
+      "landscape": [
+        2,
+        1
+      ]
+    }
+  ],
+  "wall": {
+    "rock": "#3b3550",
+    "rockLight": "#55496e",
+    "rockDark": "#262238",
+    "grottoShadow": "#0e1a2b",
+    "sand": "#e6d29a",
+    "sandShadow": "#c2aa6d"
+  },
+  "drag": {
+    "tapMaxMove": 10,
+    "friction": 5
+  }
 }

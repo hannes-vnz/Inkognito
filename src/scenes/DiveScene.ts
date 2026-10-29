@@ -122,6 +122,7 @@ export class DiveScene extends Phaser.Scene {
 
     const uiRoot = document.getElementById('ui') as HTMLElement;
     uiRoot.replaceChildren();
+    uiRoot.className = 'dive';
     this.hud = new Hud(uiRoot, this.zone.nameKey, debug);
     this.hud.setCarry([], this.cfg.carry.capacity);
     this.joystick = new TouchJoystick(this, new JoystickView(uiRoot, game.joystick.radius), game.joystick);
@@ -292,7 +293,7 @@ export class DiveScene extends Phaser.Scene {
 
     this.updateCamera(pos, dt);
     const lowAir = oxygenRatio(s.oxygen, this.cfg.oxygen) <= this.cfg.oxygen.warnRatio;
-    this.hud.setOxygen(oxygenRatio(s.oxygen, this.cfg.oxygen), lowAir);
+    this.hud.setOxygen(oxygenRatio(s.oxygen, this.cfg.oxygen), lowAir, s.oxygen);
     this.exitMarker.update(this.cameras.main, dt, lowAir || s.carried.length >= this.cfg.carry.capacity);
 
     // Ziellinie beim Zielen im Querformat.

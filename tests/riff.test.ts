@@ -219,8 +219,9 @@ describe('Story', () => {
     for (const npc of npcs) {
       expect(validateDialog(npc.dialog), npc.id).toEqual([]);
       expect(texts).toHaveProperty([npc.nameKey]);
-      for (const node of Object.values(npc.dialog)) {
+      for (const [nodeId, node] of Object.entries(npc.dialog)) {
         expect(texts).toHaveProperty([node.textKey]);
+        if (node.reaction) expect(texts).toHaveProperty([`reaction.${npc.id}.${nodeId}`]);
         for (const o of node.options ?? []) expect(texts).toHaveProperty([o.textKey]);
         if (node.action?.type === 'startQuest') expect(quests.map((q) => q.id)).toContain(node.action.quest);
       }

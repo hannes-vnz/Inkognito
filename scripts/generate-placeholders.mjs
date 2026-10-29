@@ -725,3 +725,32 @@ coralLayer('bg_reef_2.png', { count: 16, colors: ['#e88aa0', '#f2a65a', '#b48be0
   }
   save(bgDir, 'bg_reef_3.png', img);
 }
+
+// ---------------------------------------------------------------- UI-Icons (16×16, 2× in der UI)
+
+function icon(draw) {
+  const img = new Image(16, 16);
+  draw(img);
+  outlineRegion(img, 0, 0, 16, 16, hex('#0e1a2b'));
+  return img;
+}
+console.log('Icons:');
+save(spritesDir, 'icon_shell.png', icon((img) => {
+  const light = hex('#ffd1dc'), mid = hex('#f29bb2'), dark = hex('#c9678a');
+  for (let y = 2; y < 14; y++) for (let x = 2; x < 14; x++) {
+    const nx = (x + 0.5 - 8) / 6, ny = (y + 0.5 - 9) / 5.5;
+    if (nx * nx + ny * ny <= 1 && y < 13) img.set(x, y, (x % 3 === 0) ? dark : y < 7 ? light : mid);
+  }
+  for (let x = 6; x < 10; x++) img.set(x, 13, dark);
+}));
+save(spritesDir, 'icon_food.png', icon((img) => {
+  const g = hex('#3f9a55'), l = hex('#7fd17a');
+  for (const bx of [5, 8, 11]) for (let i = 0; i < 11; i++) img.set(bx + Math.round(Math.sin(i * 0.6 + bx) * 1), 13 - i, i > 7 ? l : g);
+  for (let x = 3; x < 13; x++) img.set(x, 14, hex('#6b5638'));
+}));
+save(spritesDir, 'icon_fish.png', icon((img) => {
+  const o = hex('#ff7a1a'), l = hex('#ffb070');
+  for (let y = 4; y < 12; y++) for (let x = 4; x < 14; x++) { const nx = (x + 0.5 - 9) / 5, ny = (y + 0.5 - 8) / 3.6; if (nx * nx + ny * ny <= 1) img.set(x, y, y < 7 ? l : o); }
+  for (let i = 0; i < 4; i++) for (let y = 8 - i - 1; y <= 8 + i; y++) img.set(4 - i + 1, y, o);
+  img.set(11, 7, white); img.set(11, 8, pupil);
+}));

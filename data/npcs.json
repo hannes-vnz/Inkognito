@@ -8,11 +8,6 @@
       "height": 32
     },
     "placeholderColor": "#e88a3a",
-    "podest": {
-      "x": 1500,
-      "y": 1180,
-      "layer": 0
-    },
     "unlock": {},
     "dialog": {
       "start": {
@@ -61,7 +56,11 @@
             "textKey": "npc.kalle.opt_ok",
             "next": null
           }
-        ]
+        ],
+        "reaction": {
+          "background": "sparkle",
+          "mood": "joy"
+        }
       },
       "first_fish_wait": {
         "textKey": "npc.kalle.first_fish_wait",
@@ -114,11 +113,6 @@
       "height": 32
     },
     "placeholderColor": "#a35fb8",
-    "podest": {
-      "x": 360,
-      "y": 1250,
-      "layer": 0
-    },
     "unlock": {
       "questDone": "first_fish"
     },
@@ -153,7 +147,11 @@
             "textKey": "npc.gisela.opt_work",
             "next": "intro"
           }
-        ]
+        ],
+        "reaction": {
+          "background": "waves",
+          "mood": "shock"
+        }
       },
       "intro": {
         "textKey": "npc.gisela.intro",
@@ -197,11 +195,6 @@
       "height": 32
     },
     "placeholderColor": "#8a95a3",
-    "podest": {
-      "x": 2150,
-      "y": 1150,
-      "layer": 0
-    },
     "unlock": {
       "questDone": "first_job"
     },
@@ -240,7 +233,11 @@
             "textKey": "npc.bruno.opt_bye",
             "next": null
           }
-        ]
+        ],
+        "reaction": {
+          "background": "burst",
+          "mood": "smug"
+        }
       },
       "regular": {
         "textKey": "npc.bruno.regular",

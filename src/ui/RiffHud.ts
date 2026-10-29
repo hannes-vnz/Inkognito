@@ -2,36 +2,46 @@ import { el } from './Hud';
 import { Toast } from './Toast';
 import { t } from '../i18n';
 
-/** Oberfläche im Riff: Riffname und wartende Fische oben links, Muscheln oben rechts, Aktionsknopf unten rechts. */
+const iconImg = (name: string): HTMLImageElement => {
+  const img = el('img', 'icon');
+  img.src = `sprites/${name}.png`;
+  img.alt = '';
+  return img;
+};
+
+/**
+ * Oberfläche im Riff: Fische und Futter oben links, Muscheln oben rechts,
+ * großer Tauchen-Knopf unten rechts, aufsteigende Zahlen bei Erträgen.
+ */
 export class RiffHud {
   private readonly shells: HTMLDivElement;
+  private readonly fishCount: HTMLSpanElement;
+  private readonly food: HTMLSpanElement;
+  private readonly foodRow: HTMLDivElement;
   private readonly holding: HTMLDivElement;
-  private readonly status: HTMLDivElement;
-  private lastStatus = '';
   private readonly action: HTMLButtonElement;
   private readonly toast: Toast;
   private readonly hint: HTMLDivElement;
   private onAction: (() => void) | null = null;
   private lastShells = -1;
   private lastHolding = '';
-  private lastAction = '';
 
-  constructor(
-    private readonly root: HTMLElement,
-    titleKey: string,
-  ) {
-    const left = el('div', 'card hud-depth');
-    const label = el('div', 'label');
-    label.textContent = t(titleKey);
-    this.status = el('div', 'sub-label');
+  constructor(private readonly root: HTMLElement) {
+    const left = el('div', 'card hud-riff');
+    const fishRow = el('div', 'stat-row');
+    this.fishCount = el('span', '');
+    fishRow.append(iconImg('icon_fish'), this.fishCount);
+    this.foodRow = el('div', 'stat-row');
+    this.food = el('span', '');
+    this.foodRow.append(iconImg('icon_food'), this.food);
     this.holding = el('div', 'carry');
-    left.append(label, this.status, this.holding);
+    left.append(fishRow, this.foodRow, this.holding);
+    left.setAttribute('aria-label', `${t('hud.fishCount', { count: '', capacity: '' })}`);
 
     const right = el('div', 'card hud-shells');
-    const sl = el('div', 'label');
-    sl.textContent = t('hud.shells');
+    right.setAttribute('aria-label', t('hud.shells'));
     this.shells = el('div', 'value');
-    right.append(sl, this.shells);
+    right.append(iconImg('icon_shell'), this.shells);
 
     this.action = el('button', 'action-button');
     this.action.type = 'button';
@@ -45,12 +55,10 @@ export class RiffHud {
     this.toast = new Toast(root);
   }
 
-  /** Zeile unter dem Riffnamen, z. B. „Fische 3/4 · Futter 12“. */
-  setStatus(text: string, warn: boolean): void {
-    if (text === this.lastStatus) return;
-    this.lastStatus = text;
-    this.status.textContent = text;
-    this.status.classList.toggle('warn', warn);
+  setColony(fish: number, capacity: number, food: number): void {
+    this.fishCount.textContent = `${fish}/${capacity}`;
+    this.food.textContent = String(food);
+    this.foodRow.classList.toggle('warn', food <= 0 && fish > 0);
   }
 
   setShells(n: number, bump = false): void {
@@ -77,13 +85,21 @@ export class RiffHud {
     );
   }
 
-  /** Zeigt den Aktionsknopf (z. B. „Reden“) oder blendet ihn mit `null` aus. */
   setAction(label: string | null, onAction: (() => void) | null): void {
     this.onAction = onAction;
-    if (label === this.lastAction) return;
-    this.lastAction = label ?? '';
     this.action.hidden = label === null;
-    this.action.textContent = label ?? '';
+    if (label !== null && this.action.textContent !== label) this.action.textContent = label;
+  }
+
+  /** Aufsteigende Zahl an einer Bildschirmposition, z. B. „+3“ über der Muschelbank. */
+  floater(text: string, x: number, y: number, color?: string): void {
+    const f = el('div', 'floater');
+    f.textContent = text;
+    f.style.left = `${x}px`;
+    f.style.top = `${y}px`;
+    if (color) f.style.color = color;
+    this.root.append(f);
+    window.setTimeout(() => f.remove(), 1300);
   }
 
   showHint(text: string, top: number): void {

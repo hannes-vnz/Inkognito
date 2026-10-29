@@ -1,15 +1,9 @@
 import Phaser from 'phaser';
 import { buildings, colonyDefs, fishById, game, jobs, npcs, player, quests, reef } from '../data';
-import { animKey, Octopus } from '../entities/Octopus';
+import { animKey } from '../entities/Octopus';
 import { Parallax } from '../render/Parallax';
-import { drawFloor } from '../render/WorldDecor';
 import { MarineSnow } from '../render/MarineSnow';
 import { BubbleTrail } from '../render/BubbleTrail';
-import { ExitMarker } from '../render/ExitMarker';
-import { TouchJoystick } from '../input/TouchJoystick';
-import { KeyboardControls } from '../input/Keyboard';
-import { createSwimmer, FixedStepper, stepSwimmer, type Bounds, type SwimmerState } from '../systems/movement';
-import { approachFactor, targetLookAhead } from '../systems/camera';
 import { orientationOf, type Orientation } from '../systems/joystick';
 import { createRng } from '../systems/rng';
 import {
@@ -31,69 +25,55 @@ import {
 } from '../systems/colony';
 import { completeQuests, startQuest } from '../systems/quests';
 import { dialogNode, npcUnlocked, type NpcDef } from '../systems/dialog';
+import { clampScroll, grottoAt, layoutGrottos, type GrottoDef, type Rect, type RiffLayout } from '../systems/riffLayout';
 import type { OwnedFish, Save } from '../systems/save';
 import type { Vec2 } from '../systems/vector';
 import { loadSave, writeSave } from '../storage';
 import { t } from '../i18n';
-import { JoystickView } from '../ui/JoystickView';
-import { PauseOverlay } from '../ui/PauseOverlay';
 import { RiffHud } from '../ui/RiffHud';
 import { Sheet, type SheetOption } from '../ui/Sheet';
+import { playReaction } from '../ui/ReactionShot';
 import { AccountMenu } from '../ui/AccountMenu';
 import { syncNow, type SyncResult } from '../online/sync';
 import { onAuthChange } from '../online/cloud';
-import { readSafeArea } from '../ui/safeArea';
 
 interface RiffData {
   /** Fische, die gerade vom Tauchgang mitgebracht wurden. */
   returned?: string[];
 }
 
-type Interactable =
-  | { kind: 'npc'; npc: NpcDef; x: number; y: number }
-  | { kind: 'building'; building: BuildingDef; x: number; y: number }
-  | { kind: 'dive'; x: number; y: number };
-
-/** 2,5D: Ebene 0 vorn, höhere Ebenen weiter hinten (kleiner, dunstiger, langsamer). */
-const LAYER = [
-  { scroll: 1, scale: 1, tint: 0xffffff, depth: 6 },
-  { scroll: 0.82, scale: 0.8, tint: 0xb8d8e8, depth: 3 },
-  { scroll: 0.65, scale: 0.62, tint: 0x8fb8d0, depth: 1 },
-] as const;
-
+const color = (hex: string): number => Phaser.Display.Color.HexStringToColor(hex).color;
 const TICK_SECONDS = 1;
+const FLOOR = 28;
 
-/** Riff-Basis in 2,5D: altes Haus, Jobs, Story-Figuren auf Podesten, Einstieg zum Tauchen. */
+/**
+ * Riff-Basis als 2,5D-Querschnitt (Vorbild Tiny Tower / Fallout Shelter, Tiefe wie Dave the Diver):
+ * Felswand mit Grotten, durch die man die Riff-Kulisse sieht. Wischen bewegt die Kamera, Antippen wählt aus.
+ */
 export class RiffScene extends Phaser.Scene {
   private save!: Save;
-  private octopus!: Octopus;
-  private swimmer!: SwimmerState;
-  private prevSwimmer!: SwimmerState;
-  private bounds!: Bounds;
-  private stepper!: FixedStepper;
+  private layout!: RiffLayout;
+  private orientation: Orientation = 'portrait';
   private parallax!: Parallax;
   private snow!: MarineSnow;
   private bubbles!: BubbleTrail;
-  private entrance!: ExitMarker;
-  private joystick!: TouchJoystick;
-  private keyboard!: KeyboardControls;
   private hud!: RiffHud;
   private sheet!: Sheet;
-  private pause!: PauseOverlay;
   private account!: AccountMenu;
-  private interactables: Interactable[] = [];
-  private npcLayer = new Map<string, number>();
+  private npcSprites = new Map<string, Phaser.GameObjects.Sprite>();
   private fishSprites = new Map<number, Phaser.GameObjects.Sprite>();
-  private camCenter: Vec2 = { x: 0, y: 0 };
-  private lookAhead: Vec2 = { x: 0, y: 0 };
-  private orientation: Orientation = 'portrait';
-  private tickTimer = 0;
+  private octopus!: Phaser.GameObjects.Sprite;
+  private scale_ = 2;
   private clock = 0;
-  private paused = false;
-  private moved = false;
+  private tickTimer = 0;
   private hungryWarned = false;
-  /** Welt fertig aufgebaut (vorher keine Figuren nachsetzen). */
+  private shellCarry = 0;
   private ready = false;
+  private interacted = false;
+
+  // Wischen mit Schwung
+  private drag: { id: number; start: Vec2; last: Vec2; moved: number; time: number } | null = null;
+  private velocity: Vec2 = { x: 0, y: 0 };
 
   constructor() {
     super('Riff');
@@ -102,20 +82,21 @@ export class RiffScene extends Phaser.Scene {
   create(data: RiffData): void {
     const now = Date.now();
     this.ready = false;
-    this.paused = false;
-    this.moved = false;
+    this.interacted = false;
     this.hungryWarned = false;
-    this.lookAhead = { x: 0, y: 0 };
+    this.shellCarry = 0;
+    this.drag = null;
+    this.velocity = { x: 0, y: 0 };
+    this.npcSprites = new Map();
     this.fishSprites = new Map();
-    this.interactables = [];
-    this.npcLayer = new Map();
+    this.scale_ = reef.spriteScale;
     this.save = loadSave(now);
 
     const uiRoot = document.getElementById('ui') as HTMLElement;
     uiRoot.replaceChildren();
-    this.hud = new RiffHud(uiRoot, reef.nameKey);
+    uiRoot.className = 'riff';
+    this.hud = new RiffHud(uiRoot);
     this.sheet = new Sheet(uiRoot);
-    this.pause = new PauseOverlay(uiRoot);
     this.account = new AccountMenu(uiRoot, this.sheet, (r) => this.applySync(r, true), (text) => this.hud.say(text, 3));
 
     // Erst die Zeit seit dem letzten Besuch verrechnen, dann den neuen Fang aufnehmen.
@@ -135,38 +116,29 @@ export class RiffScene extends Phaser.Scene {
     this.commit(this.save);
     if (messages.length > 0) this.hud.say(messages.join(' · '), 4);
 
+    const { width, height } = this.scale;
+    this.orientation = orientationOf(width, height);
+    this.layout = layoutGrottos(reef.grottos, this.orientation, width, height, reef.grotto);
     this.buildWorld();
 
-    this.stepper = new FixedStepper(game.fixedStepHz);
-    const half = (player.frameWidth * player.scale) / 2;
-    const { world } = reef;
-    this.bounds = { minX: half, minY: half, maxX: world.width - half, maxY: world.floorY - half * 0.6 };
-    this.swimmer = createSwimmer(reef.spawn.x, reef.spawn.y);
-    this.prevSwimmer = this.swimmer;
-    this.octopus = new Octopus(this, reef.spawn.x, reef.spawn.y, player, this.stepper.step);
-    this.octopus.sprite.setDepth(10);
     const fxRng = createRng(`${reef.seed}-fx`);
     this.bubbles = new BubbleTrail(this, fxRng, game.juice.bubbles, 'fx_bubble');
     this.snow = new MarineSnow(this, fxRng, game.juice.marineSnow.count, game.juice.marineSnow.parallax, game.juice.marineSnow.driftSpeed);
 
     const cam = this.cameras.main;
-    cam.setBounds(0, 0, world.width, world.height);
+    cam.setBounds(0, 0, this.layout.width, this.layout.height);
     cam.setBackgroundColor(reef.water.deep);
-    this.camCenter = { ...reef.spawn };
-    cam.centerOn(reef.spawn.x, reef.spawn.y);
+    cam.setScroll(0, 0);
 
-    this.joystick = new TouchJoystick(this, new JoystickView(uiRoot, game.joystick.radius), game.joystick);
-    this.joystick.onTap = (p) => this.tapInteract(p);
-    this.keyboard = new KeyboardControls(this);
+    this.hud.setAction(t('riff.dive'), () => this.startDive());
+    this.hud.showHint(t('ui.hint.riff'), height * 0.58);
+    this.setupInput();
 
-    this.orientation = orientationOf(this.scale.width, this.scale.height);
-    this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
       this.hud.destroy();
     });
-    this.hud.showHint(t('ui.hint.riff'), this.scale.height * 0.62);
     this.ready = true;
 
     void syncNow().then((r) => this.applySync(r, false));
@@ -183,84 +155,292 @@ export class RiffScene extends Phaser.Scene {
     }
   }
 
-  /** Hintergrund, Boden, Ruinen-Kulisse, Gebäude, Podeste mit Figuren, Vordergrund-Korallen. */
+  // ---------------------------------------------------------------- Welt
+
+  private grottoDef(id: string): GrottoDef {
+    return reef.grottos.find((g) => g.id === id)!;
+  }
+
+  private rect(id: string): Rect {
+    return this.layout.grottos.get(id)!;
+  }
+
+  /** Kulisse, Felswand mit ausgeschnittenen Grotten, Grotten-Inhalt, Vordergrund-Korallen. */
   private buildWorld(): void {
-    const { world } = reef;
-    this.parallax = new Parallax(this, reef.background, world.height);
-    drawFloor(this, world.width, world.height, world.floorY, reef.floor, createRng(reef.seed));
+    const { width, height, wallTop } = this.layout;
+    const w = reef.wall;
+    this.parallax = new Parallax(this, reef.background, height);
 
-    for (const b of buildings) {
-      this.add.image(b.position.x, b.position.y, b.sprite).setOrigin(0.5, 1).setScale(game.spriteScale).setDepth(4);
-      this.interactables.push({ kind: 'building', building: b, x: b.position.x, y: b.position.y + b.interactOffsetY });
+    // Felswand als Textur, Grotten werden herausgeschnitten: dahinter sieht man die Riff-Kulisse (2,5D).
+    const wall = this.add.renderTexture(0, 0, width, height).setOrigin(0, 0).setDepth(0);
+    const g = this.make.graphics({}, false);
+    const rng = createRng(reef.seed);
+    g.fillStyle(color(w.rock), 1);
+    const top: Phaser.Types.Math.Vector2Like[] = [{ x: 0, y: height }];
+    for (let x = 0; x <= width + 40; x += 40) top.push({ x, y: wallTop + Math.sin(x * 0.02) * 14 + rng.range(-10, 10) });
+    top.push({ x: width, y: height });
+    g.fillPoints(top, true);
+    for (let i = 0; i < (width * height) / 9000; i++) {
+      g.fillStyle(color(rng.next() < 0.5 ? w.rockLight : w.rockDark), rng.range(0.25, 0.6));
+      g.fillCircle(rng.range(0, width), rng.range(wallTop + 20, height), rng.range(6, 26));
     }
+    wall.draw(g);
+    g.clear();
+    g.fillStyle(0xffffff, 1);
+    for (const r of this.layout.grottos.values()) g.fillRoundedRect(r.x, r.y, r.width, r.height, 28);
+    wall.erase(g);
+    g.destroy();
 
-    this.spawnUnlockedNpcs(false);
+    const deco = this.add.graphics().setDepth(1);
+    for (const def of reef.grottos) this.decorateGrotto(deco, def, this.rect(def.id), rng);
 
-    const d = reef.diveEntrance;
-    this.entrance = new ExitMarker(this, d.x, d.y, d.radius);
-    this.interactables.push({ kind: 'dive', x: d.x, y: d.y });
+    for (const def of reef.grottos) this.fillGrotto(def, this.rect(def.id));
 
-    // Vordergrund: Korallen, die vor dem Oktopus vorbeiziehen (schneller als die Welt, daher 2,5D).
-    const fg = this.add.graphics().setScrollFactor(1.18, 1.05).setDepth(30);
-    const rng = createRng(`${reef.seed}-fg`);
+    // Vordergrund: Korallen am unteren Rand, schneller als die Welt (Tiefe).
+    const fg = this.add.graphics().setScrollFactor(1.15, 1.08).setDepth(30);
     const colors = [0xe86a8a, 0xf2a65a, 0xb48be0, 0x6cc4a1];
-    for (let i = 0; i < 9; i++) {
-      const cx = rng.range(0, world.width * 1.2);
-      const color = rng.pick(colors);
-      for (let b = 0; b < 5; b++) {
-        fg.fillStyle(color, 0.85);
-        fg.fillCircle(cx + rng.range(-50, 50), world.height + 40 - rng.range(0, 110), rng.range(22, 46));
+    for (let i = 0; i < Math.ceil(width / 140); i++) {
+      const cx = rng.range(0, width * 1.2);
+      const c = rng.pick(colors);
+      for (let b = 0; b < 4; b++) {
+        fg.fillStyle(c, 0.9);
+        fg.fillCircle(cx + rng.range(-40, 40), height * 1.08 + 30 - rng.range(0, 90), rng.range(18, 40));
       }
     }
   }
 
-  /** Setzt alle freigeschalteten Figuren, die noch fehlen, auf ihr Podest. */
-  private spawnUnlockedNpcs(announce: boolean): void {
-    for (const npc of npcs) {
-      if (this.npcLayer.has(npc.id) || !npcUnlocked(npc, this.save.quests)) continue;
-      const L = LAYER[Math.min(npc.podest.layer, LAYER.length - 1)]!;
-      const scale = game.spriteScale * L.scale;
-      this.add.image(npc.podest.x, npc.podest.y, reef.podestSprite).setOrigin(0.5, 0).setScale(scale).setScrollFactor(L.scroll).setDepth(L.depth).setTint(L.tint);
-      const sprite = this.add
-        .sprite(npc.podest.x, npc.podest.y + 2, npc.sprite, 0)
-        .setOrigin(0.5, 1)
-        .setScale(scale)
-        .setScrollFactor(L.scroll)
-        .setDepth(L.depth + 0.5)
-        .setTint(L.tint)
-        .play(animKey(npc.sprite, 'idle'));
-      this.npcLayer.set(npc.id, L.scroll);
-      this.interactables.push({ kind: 'npc', npc, x: npc.podest.x, y: npc.podest.y - 50 });
-      if (announce) {
-        // Neue Figur zieht ein: kurz von oben einschweben.
-        sprite.setAlpha(0).y -= 80;
-        this.tweens.add({ targets: sprite, alpha: 1, y: npc.podest.y + 2, duration: 700, ease: 'Back.Out' });
-        this.bubbles.burst(npc.podest.x, npc.podest.y - 40, 12);
+  /** Innenschatten, Sandboden und Korallenbüschel einer Grotte; verschüttete Grotten mit Felsbrocken. */
+  private decorateGrotto(g: Phaser.GameObjects.Graphics, def: GrottoDef, r: Rect, rng: ReturnType<typeof createRng>): void {
+    const w = reef.wall;
+    const locked = this.isLocked(def);
+    g.fillStyle(color(w.sandShadow), 1);
+    g.fillRoundedRect(r.x + 6, r.y + r.height - FLOOR - 4, r.width - 12, FLOOR + 4, { tl: 0, tr: 0, bl: 24, br: 24 });
+    g.fillStyle(color(w.sand), 1);
+    g.fillRoundedRect(r.x + 6, r.y + r.height - FLOOR, r.width - 12, FLOOR - 6, { tl: 0, tr: 0, bl: 20, br: 20 });
+    for (const side of [0, 1]) {
+      const x = side === 0 ? r.x + 18 : r.x + r.width - 18;
+      const c = rng.pick([0xe86a8a, 0xf2a65a, 0x6cc4a1, 0xb48be0]);
+      for (let k = 0; k < 3; k++) {
+        g.fillStyle(c, 1);
+        g.fillCircle(x + rng.range(-8, 8), r.y + r.height - FLOOR - rng.range(2, 18), rng.range(6, 11));
       }
+    }
+    if (locked) {
+      for (let k = 0; k < 14; k++) {
+        g.fillStyle(color(k % 3 === 0 ? w.rockLight : w.rock), 1);
+        g.fillCircle(r.x + rng.range(30, r.width - 30), r.y + r.height - rng.range(30, r.height * 0.75), rng.range(24, 46));
+      }
+    }
+    g.lineStyle(10, color(w.grottoShadow), 0.45);
+    g.strokeRoundedRect(r.x + 4, r.y + 4, r.width - 8, r.height - 8, 24);
+    g.lineStyle(3, color(w.rockDark), 1);
+    g.strokeRoundedRect(r.x, r.y, r.width, r.height, 28);
+  }
+
+  private isLocked(def: GrottoDef): boolean {
+    if (def.kind === 'locked') return true;
+    if (def.kind === 'npc' && def.npc) return !npcUnlocked(npcs.find((n) => n.id === def.npc)!, this.save.quests);
+    return false;
+  }
+
+  private floorY(r: Rect): number {
+    return r.y + r.height - FLOOR + 6;
+  }
+
+  /** Gebäude, Figur und Oktopus in ihre Grotten setzen. */
+  private fillGrotto(def: GrottoDef, r: Rect): void {
+    const s = this.scale_;
+    if (def.kind === 'home') {
+      // Ausrüstungsständer und Oktopus, der auf den nächsten Tauchgang wartet.
+      const g = this.add.graphics().setDepth(2);
+      g.fillStyle(0x6b5638, 1);
+      g.fillRect(r.x + r.width - 90, this.floorY(r) - 70, 8, 70);
+      g.fillRect(r.x + r.width - 110, this.floorY(r) - 70, 48, 6);
+      this.add.image(r.x + r.width - 86, this.floorY(r) - 86, 'fx_catch_bubble').setScale(s).setDepth(2);
+      this.octopus = this.add.sprite(r.x + r.width * 0.38, this.floorY(r), player.sprite, 0).setOrigin(0.5, 1).setScale(s + 1).setDepth(5);
+      this.octopus.play(animKey(player.id, 'idle'));
+      return;
+    }
+    if (def.building) {
+      const b = buildings.find((x) => x.id === def.building)!;
+      const x = def.npc ? r.x + r.width * 0.4 : r.x + r.width / 2;
+      this.add.image(x, this.floorY(r), b.sprite).setOrigin(0.5, 1).setScale(s).setDepth(3);
+    }
+    if (def.npc) this.placeNpc(def, r, false);
+  }
+
+  private placeNpc(def: GrottoDef, r: Rect, announce: boolean): void {
+    const npc = npcs.find((n) => n.id === def.npc)!;
+    if (this.npcSprites.has(npc.id) || !npcUnlocked(npc, this.save.quests)) return;
+    const s = this.scale_;
+    const x = def.building ? r.x + r.width - 52 : r.x + r.width / 2;
+    const y = this.floorY(r) - 8;
+    this.add.image(x, y, reef.podestSprite).setOrigin(0.5, 0).setScale(s * 0.8).setDepth(4);
+    const sprite = this.add.sprite(x, y + 2, npc.sprite, 0).setOrigin(0.5, 1).setScale(s).setDepth(4.5).play(animKey(npc.sprite, 'idle'));
+    this.npcSprites.set(npc.id, sprite);
+    if (announce) {
+      sprite.setAlpha(0).y -= 60;
+      this.tweens.add({ targets: sprite, alpha: 1, y: y + 2, duration: 700, ease: 'Back.Out' });
+      this.bubbles.burst(x, y - 30, 12);
     }
   }
 
-  /** Für Tests und Debug: aktueller Stand. */
+  /** Neue Figuren nach erledigten Aufträgen: verschüttete Grotte wird frei, Figur zieht ein. */
+  private spawnUnlocked(): void {
+    let reopened = false;
+    for (const def of reef.grottos) {
+      if (!def.npc || this.npcSprites.has(def.npc)) continue;
+      const npc = npcs.find((n) => n.id === def.npc)!;
+      if (!npcUnlocked(npc, this.save.quests)) continue;
+      if (def.kind === 'npc') reopened = true;
+      else this.placeNpc(def, this.rect(def.id), true);
+    }
+    // Verschüttete Grotten brauchen eine neu gezeichnete Wand: kurz neu aufbauen.
+    if (reopened) this.time.delayedCall(900, () => !this.sheet.open && this.scene.restart({}));
+  }
+
+  // ---------------------------------------------------------------- Eingabe: wischen und tippen
+
+  private setupInput(): void {
+    const input = this.input;
+    input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => {
+      if (this.drag || this.sheet.open) return;
+      this.velocity = { x: 0, y: 0 };
+      this.drag = { id: p.id, start: { x: p.x, y: p.y }, last: { x: p.x, y: p.y }, moved: 0, time: this.time.now };
+    });
+    input.on(Phaser.Input.Events.POINTER_MOVE, (p: Phaser.Input.Pointer) => {
+      const d = this.drag;
+      if (!d || d.id !== p.id) return;
+      const dx = p.x - d.last.x;
+      const dy = p.y - d.last.y;
+      d.moved = Math.max(d.moved, Math.hypot(p.x - d.start.x, p.y - d.start.y));
+      const dt = Math.max(1, this.time.now - d.time) / 1000;
+      if (d.moved > reef.drag.tapMaxMove) {
+        this.scrollBy(-dx, -dy);
+        this.velocity = { x: -dx / dt, y: -dy / dt };
+        this.markInteracted();
+      }
+      d.last = { x: p.x, y: p.y };
+      d.time = this.time.now;
+    });
+    const end = (p: Phaser.Input.Pointer) => {
+      const d = this.drag;
+      if (!d || d.id !== p.id) return;
+      this.drag = null;
+      if (d.moved <= reef.drag.tapMaxMove) {
+        this.velocity = { x: 0, y: 0 };
+        this.tapWorld(p.worldX, p.worldY);
+      }
+    };
+    input.on(Phaser.Input.Events.POINTER_UP, end);
+    input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, end);
+    input.on(Phaser.Input.Events.POINTER_WHEEL, (_p: unknown, _o: unknown, dx: number, dy: number) => {
+      if (!this.sheet.open) this.scrollBy(dx, dy);
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      input.off(Phaser.Input.Events.POINTER_DOWN);
+      input.off(Phaser.Input.Events.POINTER_MOVE);
+      input.off(Phaser.Input.Events.POINTER_UP);
+      input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE);
+      input.off(Phaser.Input.Events.POINTER_WHEEL);
+    });
+    const kb = this.input.keyboard;
+    kb?.on('keydown', (e: KeyboardEvent) => {
+      if (this.sheet.open) return;
+      const step = 120;
+      const map: Record<string, Vec2> = {
+        ArrowUp: { x: 0, y: -step },
+        KeyW: { x: 0, y: -step },
+        ArrowDown: { x: 0, y: step },
+        KeyS: { x: 0, y: step },
+        ArrowLeft: { x: -step, y: 0 },
+        KeyA: { x: -step, y: 0 },
+        ArrowRight: { x: step, y: 0 },
+        KeyD: { x: step, y: 0 },
+      };
+      const v = map[e.code];
+      if (v) this.scrollBy(v.x, v.y);
+    });
+  }
+
+  private scrollBy(dx: number, dy: number): void {
+    const cam = this.cameras.main;
+    cam.scrollX = clampScroll(cam.scrollX + dx, cam.width, this.layout.width);
+    cam.scrollY = clampScroll(cam.scrollY + dy, cam.height, this.layout.height);
+  }
+
+  private markInteracted(): void {
+    if (this.interacted) return;
+    this.interacted = true;
+    this.hud.hideHint();
+  }
+
+  /** Antippen an einer Weltposition: Figur vor Gebäude, sonst die Grotte. Auch für Tests. */
+  tapWorld(x: number, y: number): void {
+    this.markInteracted();
+    const id = grottoAt(this.layout, x, y);
+    if (!id) return;
+    const def = this.grottoDef(id);
+    if (this.isLocked(def)) {
+      this.hud.say(t('riff.locked'));
+      return;
+    }
+    const npcSprite = def.npc ? this.npcSprites.get(def.npc) : undefined;
+    const onNpc = npcSprite?.getBounds().contains(x, y);
+    if (def.npc && npcSprite && (onNpc || !def.building)) {
+      npcSprite.setScale(this.scale_ * 1.1);
+      this.tweens.add({ targets: npcSprite, scale: this.scale_, duration: 200 });
+      this.openDialog(npcs.find((n) => n.id === def.npc)!, 'start');
+      return;
+    }
+    if (def.kind === 'home') {
+      this.tweens.add({ targets: this.octopus, y: this.octopus.y - 16, yoyo: true, duration: 140 });
+      this.sheet.show(t(reef.nameKey), t('riff.home'), [
+        { label: t('riff.dive'), onSelect: () => this.startDive() },
+        this.close(),
+      ]);
+      return;
+    }
+    if (def.building === 'house') this.openHouse();
+    else if (def.building) this.openStation(buildings.find((b) => b.id === def.building)!);
+  }
+
+  /** Mitte einer Grotte in Weltkoordinaten (für Tests). */
+  grottoCenter(id: string): Vec2 {
+    const r = this.rect(id);
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  }
+
+  /** Weltposition der Figur (für Tests). */
+  npcPosition(id: string): Vec2 | null {
+    const s = this.npcSprites.get(id);
+    return s ? { x: s.x, y: s.y - s.displayHeight / 2 } : null;
+  }
+
+  private startDive(): void {
+    writeSave(this.save);
+    this.scene.start('Dive', { zoneId: 'kelp', diveNumber: this.save.diveCount + 1 });
+  }
+
+  // ---------------------------------------------------------------- Stand
+
   get state(): Save {
     return this.save;
   }
 
-  /** Neuen Stand übernehmen: Aufträge prüfen, speichern, Anzeige aktualisieren. */
   private commit(next: Save, bump = false): void {
     const q = completeQuests(next, quests, Date.now());
     this.save = q.save;
     for (const done of q.completed) this.hud.say(t(done.doneTextKey), 3.5);
     writeSave(this.save);
     this.refreshHud(bump || q.completed.length > 0);
-    // Neue Figuren kommen mit erledigten Aufträgen dazu (erst wenn die Welt steht).
-    if (q.completed.length > 0 && this.ready) this.spawnUnlockedNpcs(true);
+    if (q.completed.length > 0 && this.ready) this.spawnUnlocked();
   }
 
   private refreshHud(bump: boolean): void {
-    this.hud.setShells(Math.floor(this.save.shells), bump);
     const cap = houseCapacity(this.save, colonyDefs);
-    const food = Math.floor(this.save.food);
-    this.hud.setStatus(`${t('hud.fishCount', { count: this.save.fish.length, capacity: cap })} · ${t('hud.food', { food })}`, food <= 0 && this.save.fish.length > 0);
+    this.hud.setShells(Math.floor(this.save.shells), bump);
+    this.hud.setColony(this.save.fish.length, cap, Math.floor(this.save.food));
     this.hud.setHolding(
       this.save.fish.map((f) => fishById.get(f.fishId)!.placeholderColor),
       cap,
@@ -281,83 +461,11 @@ export class RiffScene extends Phaser.Scene {
   }
 
   private onResize(): void {
-    this.layout();
     const next = orientationOf(this.scale.width, this.scale.height);
-    if (next !== this.orientation) {
-      this.orientation = next;
-      if (this.sys.game.device.input.touch && !this.sheet.open) {
-        this.paused = true;
-        this.joystick.release();
-        this.pause.show('ui.pausedOrientation', () => {
-          this.paused = false;
-          this.stepper.reset();
-        });
-      }
-    }
-  }
-
-  private layout(): void {
-    const { width, height } = this.scale;
-    this.cameras.main.setSize(width, height);
-    this.joystick.layout(width, height, readSafeArea());
-  }
-
-  /** Position eines Ziels so, wie es auf dem Bildschirm erscheint (hintere Ebenen scrollen langsamer). */
-  private apparent(it: Interactable): Vec2 {
-    const f = it.kind === 'npc' ? (this.npcLayer.get(it.npc.id) ?? 1) : 1;
-    const cam = this.cameras.main;
-    return { x: it.x + cam.scrollX * (1 - f), y: it.y + cam.scrollY * (1 - f) };
-  }
-
-  private nearest(): Interactable | null {
-    let best: Interactable | null = null;
-    let bd = reef.interactRadius;
-    for (const it of this.interactables) {
-      const p = this.apparent(it);
-      const d = Math.hypot(p.x - this.swimmer.x, p.y - this.swimmer.y);
-      if (d < bd) {
-        bd = d;
-        best = it;
-      }
-    }
-    return best;
-  }
-
-  private labelFor(it: Interactable): string {
-    switch (it.kind) {
-      case 'npc':
-        return t('riff.talk');
-      case 'building':
-        return t('riff.open');
-      case 'dive':
-        return t('riff.dive');
-    }
-  }
-
-  private interact(it: Interactable): void {
-    this.joystick.release();
-    this.moved = true;
-    switch (it.kind) {
-      case 'npc':
-        this.openDialog(it.npc, 'start');
-        break;
-      case 'building':
-        if (it.building.id === 'house') this.openHouse();
-        else this.openStation(it.building);
-        break;
-      case 'dive':
-        writeSave(this.save);
-        this.scene.start('Dive', { zoneId: 'kelp', diveNumber: this.save.diveCount + 1 });
-        break;
-    }
-  }
-
-  private tapInteract(screen: Vec2): void {
-    const it = this.nearest();
-    if (!it) return;
-    const cam = this.cameras.main;
-    const p = this.apparent(it);
-    if (Math.hypot(screen.x + cam.scrollX - p.x, screen.y + cam.scrollY - p.y) < 160) this.interact(it);
+    this.cameras.main.setSize(this.scale.width, this.scale.height);
+    // Andere Ausrichtung = andere Anordnung der Grotten.
+    if (next !== this.orientation && !this.sheet.open) this.scene.restart({});
+    else this.scrollBy(0, 0);
   }
 
   // ---------------------------------------------------------------- Karten
@@ -380,7 +488,6 @@ export class RiffScene extends Phaser.Scene {
     return job ? t(job.nameKey) : t('job.none');
   }
 
-  /** Porträt der Figur für den Dialog (erstes Frame ihres Spritesheets). */
   private portrait(npc: NpcDef): string | undefined {
     try {
       return this.textures.getBase64(npc.sprite, 0);
@@ -389,8 +496,15 @@ export class RiffScene extends Phaser.Scene {
     }
   }
 
-  private openDialog(npc: NpcDef, nodeId: string): void {
+  private openDialog(npc: NpcDef, nodeId: string, skipReaction = false): void {
     const node = dialogNode(npc.dialog, nodeId, this.save.quests);
+    const portrait = this.portrait(npc);
+    if (node.reaction && portrait && !skipReaction) {
+      // Erst die Reaktions-Szene, dann derselbe Knoten ohne Szene.
+      this.sheet.close();
+      playReaction(document.getElementById('ui')!, portrait, node.reaction, t(`reaction.${npc.id}.${node.id}`), () => this.openDialog(npc, nodeId, true));
+      return;
+    }
     if (node.action?.type === 'startQuest') this.commit(startQuest(this.save, node.action.quest, Date.now()));
     if (node.action?.type === 'openShop') {
       this.openShop(npc);
@@ -423,7 +537,12 @@ export class RiffScene extends Phaser.Scene {
         let next = upgrade(this.save, b.id, colonyDefs, Date.now());
         if (b.id === 'house') next = letIn(next, colonyDefs, Date.now());
         this.commit(next, true);
-        this.bubbles.burst(b.position.x, b.position.y - 120, 14);
+        const grotto = reef.grottos.find((g) => g.building === b.id);
+        if (grotto) {
+          const c = this.grottoCenter(grotto.id);
+          this.bubbles.burst(c.x, c.y, 16);
+          this.cameras.main.shake(120, 0.004);
+        }
         this.hud.say(t('riff.upgraded', { building: t(b.nameKey), level: buildingLevel(this.save, b.id) }));
         reopen();
       },
@@ -461,7 +580,8 @@ export class RiffScene extends Phaser.Scene {
     }
     this.sheet.show(t('riff.house.fish'), t('riff.fishList'), [
       ...this.save.fish.map((f) => ({
-        label: t('riff.fishEntry', { name: this.fishName(f), stats: this.statsText(f), job: this.jobName(f.job) }),
+        label: `${this.fishName(f)} · ${this.jobName(f.job)}`,
+        meta: this.statsText(f),
         color: fishById.get(f.fishId)!.placeholderColor,
         onSelect: () => this.openJobPicker(f.uid),
       })),
@@ -475,7 +595,8 @@ export class RiffScene extends Phaser.Scene {
     const options: SheetOption[] = jobs.map((job) => {
       const full = canAssign(this.save, uid, job.id, colonyDefs) === 'full';
       return {
-        label: full ? t('riff.jobFull', { job: t(job.nameKey) }) : t('riff.jobOption', { job: t(job.nameKey), stat: t(`stat.${job.stat}`), value: f.stats[job.stat] }),
+        label: full ? t('riff.jobFull', { job: t(job.nameKey) }) : t(job.nameKey),
+        meta: `${t(`stat.${job.stat}`)} ${f.stats[job.stat]}`,
         onSelect: () => {
           if (full) return;
           this.commit(assignJob(this.save, uid, job.id, colonyDefs, Date.now()));
@@ -511,52 +632,63 @@ export class RiffScene extends Phaser.Scene {
   private openShop(npc: NpcDef): void {
     const all = [...this.save.fish, ...this.save.waiting];
     if (all.length === 0) {
-      this.sheet.show(t(npc.nameKey), t('riff.shop.empty'), [this.close()]);
+      this.sheet.show(t(npc.nameKey), t('riff.shop.empty'), [this.close()], undefined, this.portrait(npc));
       return;
     }
-    this.sheet.show(t(npc.nameKey), t('npc.bruno.shop'), [
-      ...all.map((f) => ({
-        label: t('riff.shop.entry', { name: this.fishName(f), stats: this.statsText(f), price: sellPrice(f, colonyDefs) }),
-        color: fishById.get(f.fishId)!.placeholderColor,
-        onSelect: () => {
-          const r = sellFish(this.save, f.uid, colonyDefs, Date.now());
-          this.commit(r.save, true);
-          this.hud.say(t('riff.sold', { name: this.fishName(f), price: r.price }));
-          this.openShop(npc);
-        },
-      })),
-      this.close(),
-    ]);
+    this.sheet.show(
+      t(npc.nameKey),
+      t('npc.bruno.shop'),
+      [
+        ...all.map((f) => ({
+          label: this.fishName(f),
+          meta: `${sellPrice(f, colonyDefs)} 🐚`,
+          color: fishById.get(f.fishId)!.placeholderColor,
+          onSelect: () => {
+            const r = sellFish(this.save, f.uid, colonyDefs, Date.now());
+            this.commit(r.save, true);
+            this.hud.say(t('riff.sold', { name: this.fishName(f), price: r.price }));
+            this.openShop(npc);
+          },
+        })),
+        this.close(),
+      ],
+      undefined,
+      this.portrait(npc),
+    );
   }
 
-  // ---------------------------------------------------------------- Fische im Riff
+  // ---------------------------------------------------------------- Leben im Riff
 
-  /** Arbeiter schwimmen bei ihrem Arbeitsplatz, alle anderen ums Haus, Wartende vor der Tür. */
+  /** Arbeiter wuseln in ihrer Grotte, alle anderen im Haus, Wartende vor der Tür (halb durchsichtig). */
   private renderFish(): void {
     const seen = new Set<number>();
     const counters = new Map<string, number>();
-    const place = (f: OwnedFish, anchor: string, waiting: boolean) => {
+    const place = (f: OwnedFish, grottoId: string, waiting: boolean) => {
       seen.add(f.uid);
       const def = fishById.get(f.fishId);
-      const b = buildings.find((x) => x.id === anchor);
-      if (!def || !b) return;
-      const i = counters.get(anchor + waiting) ?? 0;
-      counters.set(anchor + waiting, i + 1);
+      const r = this.layout.grottos.get(grottoId);
+      if (!def || !r) return;
+      const key = grottoId + waiting;
+      const i = counters.get(key) ?? 0;
+      counters.set(key, i + 1);
       let s = this.fishSprites.get(f.uid);
       if (!s) {
-        s = this.add.sprite(b.position.x, b.position.y, def.sprite, 0).setScale(game.spriteScale).setDepth(5);
+        s = this.add.sprite(r.x + r.width / 2, r.y + r.height / 2, def.sprite, 0).setScale(this.scale_).setDepth(waiting ? 2.5 : 3.5);
         s.play(animKey(def.sprite, 'swim'));
         if (f.variant === 'zombie') s.setTint(0x9fe0a0);
         this.fishSprites.set(f.uid, s);
       }
-      const phase = this.clock * (0.5 + (i % 5) * 0.11) + i * 2.1;
-      const spread = waiting ? 40 : 90 + (i % 4) * 22;
-      const baseX = waiting ? b.position.x - 220 - i * 26 : b.position.x;
-      const x = baseX + Math.sin(phase) * spread;
-      const y = b.position.y - (waiting ? 40 : 160 + (i % 4) * 34) + Math.sin(phase * 2) * 10;
-      s.setPosition(x, y).setFlipX(Math.cos(phase) < 0).setAlpha(waiting ? 0.75 : 1);
+      const phase = this.clock * (0.45 + (i % 5) * 0.09) + i * 2.3;
+      const half = r.width / 2 - 40;
+      const x = r.x + r.width / 2 + Math.sin(phase) * half * (waiting ? 0.3 : 0.9);
+      const lanes = r.height - FLOOR - 70;
+      const y = r.y + 40 + ((i * 37) % Math.max(1, lanes)) + Math.sin(phase * 2) * 6;
+      s.setPosition(x, y).setFlipX(Math.cos(phase) < 0).setAlpha(waiting ? 0.55 : 1);
     };
-    for (const f of this.save.fish) place(f, jobs.find((j) => j.id === f.job)?.building ?? 'house', false);
+    for (const f of this.save.fish) {
+      const building = jobs.find((j) => j.id === f.job)?.building ?? 'house';
+      place(f, reef.grottos.find((g) => g.building === building)?.id ?? 'house', false);
+    }
     for (const f of this.save.waiting) place(f, 'house', true);
     for (const [uid, s] of this.fishSprites) {
       if (seen.has(uid)) continue;
@@ -565,65 +697,48 @@ export class RiffScene extends Phaser.Scene {
     }
   }
 
+  /** Erträge als aufsteigende Zahl über der Grotte. */
+  private showGain(grottoId: string, text: string, colorHex: string): void {
+    const r = this.layout.grottos.get(grottoId);
+    if (!r) return;
+    const cam = this.cameras.main;
+    this.hud.floater(text, r.x + r.width / 2 - cam.scrollX, r.y + 40 - cam.scrollY, colorHex);
+  }
+
   update(_time: number, deltaMs: number): void {
     const dt = Math.min(deltaMs / 1000, 0.1);
     this.clock += dt;
-    const busy = this.paused || this.sheet.open;
 
-    const keys = this.keyboard.read();
-    const move = busy ? { x: 0, y: 0 } : keys.x !== 0 || keys.y !== 0 ? keys : this.joystick.value;
-    if (busy) this.joystick.release();
-    if (move.x !== 0 || move.y !== 0) this.moved = true;
-    if (this.moved) this.hud.hideHint();
-
-    if (!this.paused) {
-      const steps = this.stepper.advance(dt);
-      for (let i = 0; i < steps; i++) {
-        this.prevSwimmer = this.swimmer;
-        this.swimmer = stepSwimmer(this.swimmer, move, player.movement, this.bounds, this.stepper.step);
-      }
+    // Schwung nach dem Wischen
+    if (!this.drag && (this.velocity.x !== 0 || this.velocity.y !== 0)) {
+      this.scrollBy(this.velocity.x * dt, this.velocity.y * dt);
+      const k = Math.exp(-reef.drag.friction * dt);
+      this.velocity = { x: this.velocity.x * k, y: this.velocity.y * k };
+      if (Math.hypot(this.velocity.x, this.velocity.y) < 8) this.velocity = { x: 0, y: 0 };
     }
-
-    const it = busy ? null : this.nearest();
-    this.hud.setAction(it ? this.labelFor(it) : null, it ? () => this.interact(it) : null);
-    if (it && !busy && this.keyboard.actionPressed()) this.interact(it);
+    this.hud.setAction(this.sheet.open ? null : t('riff.dive'), () => this.startDive());
 
     this.tickTimer += dt;
     if (this.tickTimer >= TICK_SECONDS) {
       this.tickTimer = 0;
-      const before = Math.floor(this.save.shells);
       const r = tick(this.save, Date.now(), colonyDefs);
       if (r.ranOut && !this.hungryWarned) {
         this.hungryWarned = true;
         this.hud.say(t('riff.hungry'), 3);
       }
       if (r.save.food > 0) this.hungryWarned = false;
+      this.shellCarry += r.shells;
+      const before = Math.floor(this.save.shells);
       this.save = r.save;
       writeSave(this.save);
-      this.refreshHud(Math.floor(this.save.shells) > before);
+      const gained = Math.floor(this.save.shells) - before;
+      if (gained > 0) this.showGain('shells', `+${gained}`, '#ffd1dc');
+      this.refreshHud(gained > 0);
     }
 
-    const pos = this.octopus.render(this.prevSwimmer, this.swimmer, this.stepper.alpha, this.paused ? 0 : dt);
     this.renderFish();
-    this.updateCamera(pos, dt);
-    this.entrance.update(this.cameras.main, dt, false);
-    const speedRatio = Math.hypot(this.swimmer.vx, this.swimmer.vy) / player.movement.maxSpeed;
-    this.bubbles.update(dt, pos.x, pos.y, this.swimmer.vx, this.swimmer.vy, speedRatio);
+    this.parallax.update(this.cameras.main);
     this.snow.update(this.cameras.main, dt);
-  }
-
-  private updateCamera(pos: Vec2, dt: number): void {
-    const cam = this.cameras.main;
-    const target = targetLookAhead({ x: this.swimmer.vx, y: this.swimmer.vy }, this.orientation, cam.width, cam.height, game.camera);
-    const la = approachFactor(game.camera.lookAheadRate, dt);
-    this.lookAhead.x += (target.x * 0.5 - this.lookAhead.x) * la;
-    this.lookAhead.y += (target.y * 0.5 - this.lookAhead.y) * la;
-    const f = approachFactor(game.camera.followRate, dt);
-    this.camCenter.x += (pos.x + this.lookAhead.x - this.camCenter.x) * f;
-    this.camCenter.y += (pos.y + this.lookAhead.y - this.camCenter.y) * f;
-    cam.centerOn(this.camCenter.x, this.camCenter.y);
-    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, 0, Math.max(0, reef.world.width - cam.width));
-    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, 0, Math.max(0, reef.world.height - cam.height));
-    this.parallax.update(cam);
+    this.bubbles.update(dt, 0, 0, 0, 0, 0);
   }
 }

@@ -105,7 +105,11 @@ const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const white = [1, 1, 1];
 const ink = hex('#0e1a2b');
+// Fertige Grafik (per scripts/import-art.mjs eingespielt) wird nie überschrieben.
+const finalArt = new Set(JSON.parse(readFileSync(join(root, 'scripts', 'final-art.json'), 'utf8')));
 const save = (dir, name, img) => {
+  const rel = join(dir, name).slice(join(root, 'assets').length + 1).replaceAll('\\', '/');
+  if (finalArt.has(rel)) return console.log(`  ${rel}  (fertige Grafik, bleibt)`);
   writeFileSync(join(dir, name), img.toPng());
   console.log(`  ${join(dir, name).slice(root.length + 1)}  ${img.width}×${img.height}`);
 };

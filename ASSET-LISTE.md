@@ -14,6 +14,17 @@ Alles unter **A** ersetzt vorhandene Platzhalter 1:1: Datei mit gleichem Namen u
   2. **Wenige Schlüsselposen** (2–4) einzeln erzeugen statt ganzer Streifen auf einmal.
   3. Die Rohbilder schickst du mir, ich baue daraus die Streifen.
 
+### Einspielen (macht Claude bzw. jeder mit dem Projekt)
+
+```
+npm run art:import -- sprites/anim_bert_talk.png rohbilder/talk/        # Ordner mit Einzelbildern = Frames
+npm run art:import -- sprites/anim_bert_shock.png shock.png --frames 10 --once
+npm run art:import -- sprites/npc_hilde.png hilde_sheet.png --grid 4x3
+npm run art:import -- sprites/fish_cod.png kabeljau.jpg                  # ein Bild, Bewegung wird abgeleitet
+```
+
+Das Skript (`scripts/import-art.mjs`) stellt frei (auch karierte Fake-Transparenz), schneidet zu, verkleinert pixelgenau, richtet die Frames aus und setzt das Sheet nach dem Raster aus den Spieldaten zusammen. Bei Acting-Streifen trägt es die Frame-Anzahl in `data/anims.json` ein. Jede eingespielte Datei steht danach in `scripts/final-art.json`, und `npm run assets:placeholders` überschreibt sie nie mehr.
+
 ### Stil-Block (vor jeden Prompt setzen)
 
 > Pixel art game sprite, crisp hard pixels, no anti-aliasing, limited palette with 4-tone color ramps, colored dark outline (#0E1A2B), big expressive eyes with a white highlight, saturated warm colors, cute but slightly goofy, side view, transparent background, in the style of modern indie pixel games like Dave the Diver and Eastward. Same character design in every image.

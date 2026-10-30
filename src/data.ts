@@ -30,6 +30,7 @@ import chatterJson from '../data/chatter.json';
 import cutscenesJson from '../data/cutscenes.json';
 import type { ActingAnim, Shot } from './ui/Cutscene';
 import animsJson from '../data/anims.json';
+import sheetsJson from '../data/sheets.json';
 import creditsJson from '../data/credits.json';
 import type { ChatterGag, LifeDef } from './systems/harborLife';
 import type { BaitDef } from './systems/bait';
@@ -108,6 +109,14 @@ export const harborLife = harborLifeJson as unknown as LifeDef[];
 export const chatter = chatterJson as ChatterGag[];
 export const cutscenes = cutscenesJson as unknown as Record<string, Shot[]>;
 export const anims = animsJson as Record<string, ActingAnim>;
+
+/** Zusätzliches Spritesheet mit Animationen; ohne `from`/`to` läuft eine Animation über alle Frames. */
+export interface SheetDef {
+  file: string;
+  frame: [number, number];
+  anims: Record<string, { from?: number; to?: number; fps: number; once?: boolean }>;
+}
+export const sheets = sheetsJson as unknown as Record<string, SheetDef>;
 export const creditLines = creditsJson as string[];
 export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;
 export const texts = textsJson as TextTable;

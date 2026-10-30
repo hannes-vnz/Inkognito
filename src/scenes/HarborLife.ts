@@ -49,20 +49,6 @@ export class HarborLife {
 
   build(spots: LifeSpots): void {
     this.rng = createRng(`harbor-life-${this.host.save.stats.casts}`);
-    const anims = this.scene.anims;
-    const make = (key: string, sheet: string, start: number, end: number, fps: number, repeat = -1) => {
-      if (!anims.exists(key)) anims.create({ key, frames: anims.generateFrameNumbers(sheet, { start, end }), frameRate: fps, repeat });
-    };
-    make('life-angler-fish', 'life_angler_fish', 0, 3, 4);
-    make('life-angler-hook', 'life_angler_hook', 0, 5, 8, 0);
-    make('life-angler2-fish', 'life_angler2_fish', 0, 3, 4);
-    make('life-rower', 'life_rower', 0, 3, 6);
-    make('life-cat-walk', 'life_cat', 0, 3, 8);
-    make('life-cat-sit', 'life_cat', 18, 23, 3);
-    make('life-cat-sleep', 'life_cat', 14, 14, 1);
-    make('life-hermit-raise', 'life_hermit', 0, 9, 10, 0);
-    make('life-hermit-scoot', 'life_hermit', 10, 13, 8);
-
     this.spots = spots;
     for (const l of lifeUnlocked(this.host.save, harborLife)) {
       this.spawn(l.id);

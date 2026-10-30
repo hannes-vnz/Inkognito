@@ -1,0 +1,26 @@
+{
+  "life_angler_fish": { "file": "life/life_angler_fish.png", "frame": [48, 48], "anims": { "life-angler-fish": { "fps": 4 } } },
+  "life_angler_hook": { "file": "life/life_angler_hook.png", "frame": [48, 48], "anims": { "life-angler-hook": { "fps": 8, "once": true } } },
+  "life_angler_walk": { "file": "life/life_angler_walk.png", "frame": [48, 48], "anims": { "life-angler-walk": { "fps": 8 } } },
+  "life_angler_idle": { "file": "life/life_angler_idle.png", "frame": [48, 48], "anims": { "life-angler-idle": { "fps": 4 } } },
+  "life_angler_death": { "file": "life/life_angler_death.png", "frame": [48, 48], "anims": { "life-angler-fall": { "fps": 8, "once": true } } },
+  "life_angler2_fish": { "file": "life/life_angler2_fish.png", "frame": [48, 48], "anims": { "life-angler2-fish": { "fps": 4 } } },
+  "life_rower": { "file": "life/life_rower.png", "frame": [48, 48], "anims": { "life-rower": { "fps": 6 } } },
+  "life_cat": {
+    "file": "life/life_cat.png",
+    "frame": [16, 16],
+    "anims": {
+      "life-cat-walk": { "from": 0, "to": 3, "fps": 8 },
+      "life-cat-sit": { "from": 18, "to": 23, "fps": 3 },
+      "life-cat-sleep": { "from": 14, "to": 14, "fps": 1 }
+    }
+  },
+  "life_hermit": {
+    "file": "life/life_hermit.png",
+    "frame": [32, 32],
+    "anims": {
+      "life-hermit-raise": { "from": 0, "to": 9, "fps": 10, "once": true },
+      "life-hermit-scoot": { "from": 10, "to": 13, "fps": 8 }
+    }
+  }
+}

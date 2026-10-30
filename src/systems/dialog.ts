@@ -4,7 +4,7 @@ export interface DialogOption {
 }
 
 /** Was nach dem Text passiert: Wunschfisch, Quiz, Seemannsgarn oder ein Möwen-Spruch. */
-export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' } | { type: 'legendHint' } | { type: 'gag' } | { type: 'showBaits' };
+export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' } | { type: 'legendHint' } | { type: 'gag' } | { type: 'showBaits' } | { type: 'giselaTip' } | { type: 'charter' };
 
 /** Weiterleitung abhängig von gesehenen Story-Momenten; die erste passende gewinnt. */
 export interface DialogRedirect {

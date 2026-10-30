@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -82,11 +82,20 @@ export interface SaveV11 extends Omit<SaveV10, 'version'> {
   harbor: { life: string[]; chatter: Record<string, number> };
 }
 
-export type Save = SaveV11;
+export interface SaveV12 extends Omit<SaveV11, 'version'> {
+  version: 12;
+  /** Dienste der Hafenfiguren: Giselas Schwarm-Tipp und Schulzes Bootscharter mit Urlaubsalbum. */
+  perks: {
+    tip: { spot: string; casts: number } | null;
+    charter: { day: string; aboard: boolean; album: string[] };
+  };
+}
+
+export type Save = SaveV12;
 
 export function newSave(now: number): Save {
   return {
-    version: 11,
+    version: 12,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -104,6 +113,7 @@ export function newSave(now: number): Save {
     legend: { hints: {}, hintAtCast: 0, snapped: [] },
     bait: null,
     harbor: { life: [], chatter: {} },
+    perks: { tip: null, charter: { day: '', aboard: false, album: [] } },
   };
 }
 
@@ -155,6 +165,8 @@ const migrations: Record<number, Migration> = {
   9: (old) => ({ ...old, bait: null }),
   // v10 → v11: Hafenleben und Running Gags.
   10: (old) => ({ ...old, harbor: { life: [], chatter: {} } }),
+  // v11 → v12: Gisela und Schulze bieten Dienste an.
+  11: (old) => ({ ...old, perks: { tip: null, charter: { day: '', aboard: false, album: [] } } }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

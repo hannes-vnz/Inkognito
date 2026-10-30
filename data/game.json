@@ -152,5 +152,17 @@
       1.1
     ],
     "steerSpeed": 900
+  },
+  "perks": {
+    "tip": {
+      "priceBase": 25,
+      "pricePerLevel": 12,
+      "casts": 3,
+      "bonus": 1
+    },
+    "charter": {
+      "bonus": 1,
+      "hookPenalty": 1
+    }
   }
 }

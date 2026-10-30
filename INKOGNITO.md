@@ -89,6 +89,9 @@ Der Hafen ist das Menü der Basis. Hier wohnen die Figuren, die das Spiel tragen
 | Hafenmeisterin Hilde | Upgrades, Leine und Boot | Ist sich sicher, dass mit Bert was nicht stimmt |
 | Bruno | Fischhändler | Ein Hai im Trenchcoat, ebenfalls inkognito; die beiden decken sich gegenseitig |
 | Professorin Qualle | Fischbuch, Quiz | Liebt Fakten, hat kein Gehirn und sagt das auch |
+| Opa Knut | Hinweise zur Legende | Echter Bart, zweifelt an Berts |
+| Möwe Gisela | Schwarm-Tipp gegen Fischbrötchen: ein erreichbarer Platz bringt 3 Würfe lang doppelte Münzen (Preis steigt mit den Upgrades) | Riecht die Tinte, klaut ab und zu einen Fisch |
+| Herr Schulze | Bootscharter einmal am Tag: doppelte Münzen, aber sein Blitz kostet einen Haken; neue Arten klebt er ins Urlaubsalbum | Tourist, hält Bruno für einen Hai (stimmt) |
 
 Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 

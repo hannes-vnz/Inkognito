@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
-import { baitById, baits, gags, harbor, homeOf, npcById, npcs, quiz, species, speciesById, speciesIn, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gags, harbor, homeOf, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
 import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
-import { reachableMeters } from '../systems/seaMap';
+import { reachableMeters, unlockedSpots } from '../systems/seaMap';
+import { boardCharter, buyTip, charterReady, tipPrice } from '../systems/perks';
+import { dayKey } from '../systems/daily';
 import { play } from '../audio/sfx';
 import { animKey } from '../entities/Octopus';
 import { dialogNode, faceOf, type Face, type NpcDef } from '../systems/dialog';
@@ -25,6 +27,12 @@ export interface HarborHost {
 }
 
 const SCALE = 2;
+
+/** Heutiger Tag (Ortszeit) für tägliche Angebote. */
+const today = (): string => {
+  const now = new Date();
+  return dayKey(now.getTime(), now.getTimezoneOffset());
+};
 
 /**
  * Der Hafen als kleine Stadt: Häuser und Leuchtturm im Hintergrund, Hilde und Opa Knut auf dem Steg,
@@ -137,6 +145,7 @@ export class Harbor {
       if (met && n.id === 'qualle' && quizReady(save, quiz, harbor)) mark = '?';
       const legend = legendOf(species, save.sea.current);
       if (met && n.id === 'knut' && legend && !save.fishbook[legend.id] && hintReady(save, save.sea.current, legend.legend.hintKeys.length, harbor)) mark = '!';
+      if (met && n.id === 'schulze' && charterReady(save, today())) mark = '!';
       this.markers.get(n.id)?.setText(mark).setVisible(mark !== '');
     }
   }
@@ -202,6 +211,8 @@ export class Harbor {
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       if (node.action?.type === 'legendHint') return this.legendHint(npc, portrait, done);
       if (node.action?.type === 'showBaits') return this.showBaits(npc, portrait, done);
+      if (node.action?.type === 'giselaTip') return this.giselaTip(npc, portrait, done);
+      if (node.action?.type === 'charter') return this.charter(npc, portrait, done);
       if (node.action?.type === 'gag') return this.gag(npc, this.portrait(npc, 'annoyed'), done);
       this.anim(npc, 'talk');
       this.sheet.show(
@@ -260,6 +271,82 @@ export class Harbor {
   }
 
   /** Brunos Köder: für den nächsten Wurf, Preis wächst mit den Upgrades. */
+  /** Möwe Gisela: Fischbrötchen gegen einen Schwarm-Platz mit doppelten Münzen. */
+  private giselaTip(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const save = this.host.save;
+    const ok = () => [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }];
+    if (save.perks.tip) {
+      const spot = spotById(save.perks.tip.spot);
+      this.sheet.show(t('tip.title'), t('tip.active', { spot: t(spot.nameKey), casts: save.perks.tip.casts }), ok(), undefined, portrait);
+      return;
+    }
+    const sea = save.sea.current;
+    const range = upgradeValue(upgradeById('engine'), save.upgrades.engine);
+    const ids = unlockedSpots(spotsIn(sea), homeOf(sea), range)
+      .filter((s) => !s.harbor)
+      .map((s) => s.id);
+    if (ids.length === 0) {
+      this.sheet.show(t('tip.title'), t('tip.none'), ok(), undefined, portrait);
+      return;
+    }
+    this.anim(npc, 'talk');
+    this.sheet.show(
+      t('tip.title'),
+      t('tip.offer', { casts: perkParams.tip.casts }),
+      [
+        {
+          label: t('tip.buy'),
+          meta: tipPrice(save, perkParams).toLocaleString('de-DE'),
+          onSelect: () => {
+            const bought = buyTip(this.host.save, ids, `${save.createdAt}-tip-${save.stats.casts}`, perkParams);
+            if (!bought) {
+              play('error');
+              this.host.say(t('tip.poor'));
+              return;
+            }
+            this.host.setSave(bought);
+            play('coin');
+            this.anim(npc, 'react');
+            const spot = spotById(bought.perks.tip!.spot);
+            this.sheet.show(t('tip.title'), t('tip.given', { spot: t(spot.nameKey) }), ok(), undefined, this.portrait(npc, 'happy'));
+          },
+        },
+        { label: t('npc.bye'), onSelect: () => this.finish(npc, done) },
+      ],
+      undefined,
+      portrait,
+    );
+  }
+
+  /** Herr Schulze fährt einmal am Tag mit: doppelte Münzen, ein Haken weniger, neue Arten ins Album. */
+  private charter(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const save = this.host.save;
+    if (save.perks.charter.aboard || !charterReady(save, today())) {
+      this.sheet.show(t('charter.title'), t('charter.done', { album: save.perks.charter.album.length }), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+      return;
+    }
+    this.anim(npc, 'talk');
+    this.sheet.show(
+      t('charter.title'),
+      t('charter.offer'),
+      [
+        {
+          label: t('charter.go'),
+          onSelect: () => {
+            this.host.setSave(boardCharter(this.host.save, today()));
+            play('fanfare', 1.4);
+            this.anim(npc, 'react');
+            this.finish(npc, done);
+            this.host.say(t('charter.aboard'));
+          },
+        },
+        { label: t('charter.later'), onSelect: () => this.finish(npc, done) },
+      ],
+      undefined,
+      portrait,
+    );
+  }
+
   private showBaits(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
     const save = this.host.save;
     const active = baitById(save.bait);

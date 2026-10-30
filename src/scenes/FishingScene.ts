@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { baitById, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { baitById, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
+import { charterBonus, charterHooks, landCharter, tipBonus, useTip } from '../systems/perks';
 import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isLegend, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
@@ -367,7 +368,8 @@ export class FishingScene extends Phaser.Scene {
       this.limitSaid = true;
       this.ui.say(t('spot.limit', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 4);
     }
-    const hooks = upgradeValue(upgradeById('hook'), this.save.upgrades.hook);
+    const hooks = charterHooks(this.save, upgradeValue(upgradeById('hook'), this.save.upgrades.hook), perkParams);
+    if (tipBonus(this.save, this.spot.id, perkParams) > 0) this.ui.say(t('tip.cast'), 2.5);
     const night = isNight(this.save.stats.casts, timeParams);
     const bait = baitById(this.save.bait);
     const pool = baitSpecies(nightSpecies(spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight), night, timeParams), bait);
@@ -507,7 +509,7 @@ export class FishingScene extends Phaser.Scene {
         onComplete: () => {
           // Aufprall an Deck: Münzen spritzen, Wert ploppt auf, Ton steigt mit jedem Fisch
           const def = speciesById.get(f.speciesId)!;
-          const value = fishValue(def, this.save.fishbook[def.id] !== undefined, combos.has(i), params, setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams));
+          const value = fishValue(def, this.save.fishbook[def.id] !== undefined, combos.has(i), params, this.coinBonus());
           this.burst(s.x, s.y, 6, juice.coinSpark);
           this.ui.floater(`+${value}`, s.x - this.cameras.main.scrollX, s.y - this.cameras.main.scrollY - 24, '#ffd23f');
           play('coin', 1 + i * 0.07);
@@ -531,8 +533,17 @@ export class FishingScene extends Phaser.Scene {
         speciesById,
         params,
         Date.now(),
-        setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams),
+        this.coinBonus(),
       );
+      // Giselas Schwarm zählt einen Wurf herunter, Schulze geht von Bord und klebt Fotos ins Album
+      const charter = landCharter(useTip(landed.save, this.spot.id), caught);
+      if (this.save.perks.charter.aboard) {
+        this.cameras.main.flash(180, 255, 255, 255);
+        play('tap', 2);
+        const album = charter.save.perks.charter.album.length;
+        this.time.delayedCall(900, () => this.ui.say(charter.photos.length > 0 ? t('charter.photos', { count: charter.photos.length, album }) : t('charter.thanks'), 3));
+      }
+      landed.save = charter.save;
       const completed = newlyCompleted(this.save, landed.save, sets);
       const switched = isNight(this.save.stats.casts, timeParams) !== isNight(landed.save.stats.casts, timeParams);
       const record = landed.save.stats.deepestMeters > this.save.stats.deepestMeters && this.save.stats.casts > 0;
@@ -562,6 +573,11 @@ export class FishingScene extends Phaser.Scene {
         this.endRound(landed.firstCatches, completed, () => this.scene.restart({ toast }));
       } else this.endRound(landed.firstCatches, completed);
     });
+  }
+
+  /** Münz-Bonus dieses Wurfs: Sammel-Sets, Prestige, Giselas Schwarm, Schulzes Charter. */
+  private coinBonus(): number {
+    return setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams) + tipBonus(this.save, this.spot.id, perkParams) + charterBonus(this.save, perkParams);
   }
 
   private endRound(firstCatches: string[], completedSets: SetDef[] = [], after?: () => void): void {

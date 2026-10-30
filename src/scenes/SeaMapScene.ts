@@ -81,6 +81,18 @@ export class SeaMapScene extends Phaser.Scene {
         .setOrigin(0.5, 1)
         .setDepth(6);
       this.buoys.set(s.id, { icon, label });
+      // Giselas Schwarm-Tipp: Platz leuchtet mit Hinweis
+      const tip = this.save.perks.tip;
+      if (tip?.spot === s.id) {
+        const sign = this.add
+          .text(s.x, s.y - 86, t('tip.map', { casts: tip.casts }), { fontFamily: '"Baloo 2", sans-serif', fontSize: '16px', fontStyle: '800', color: '#ffd23f', stroke: '#0e1a2b', strokeThickness: 5 })
+          .setOrigin(0.5, 1)
+          .setDepth(6);
+        this.tweens.add({ targets: sign, scale: 1.12, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+        const ring = this.add.circle(s.x, s.y, 26).setStrokeStyle(4, 0xffd23f).setDepth(2);
+        this.tweens.add({ targets: ring, scale: 1.8, alpha: 0, duration: 1200, repeat: -1 });
+        this.time.delayedCall(400, () => this.ui.say(t('tip.mapSay', { spot: t(s.nameKey), casts: tip.casts }), 3));
+      }
     }
     this.spawnFlotsam();
 

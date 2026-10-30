@@ -547,6 +547,30 @@
         "face": "annoyed"
       },
       "start": {
+        "textKey": "npc.gisela.hub2",
+        "face": "annoyed",
+        "options": [
+          {
+            "textKey": "npc.gisela.hub.tip",
+            "next": "tip"
+          },
+          {
+            "textKey": "npc.gisela.hub.gag",
+            "next": "gag"
+          },
+          {
+            "textKey": "npc.bye",
+            "next": null
+          }
+        ]
+      },
+      "tip": {
+        "textKey": "npc.gisela.hub2",
+        "action": {
+          "type": "giselaTip"
+        }
+      },
+      "gag": {
         "textKey": "npc.gisela.hub",
         "action": {
           "type": "gag"
@@ -617,6 +641,10 @@
         "face": "happy",
         "options": [
           {
+            "textKey": "npc.schulze.hub.charter",
+            "next": "charter"
+          },
+          {
             "textKey": "npc.schulze.hub.opt",
             "next": "bruno"
           },
@@ -635,6 +663,12 @@
             "next": null
           }
         ]
+      },
+      "charter": {
+        "textKey": "npc.schulze.hub",
+        "action": {
+          "type": "charter"
+        }
       }
     }
   }

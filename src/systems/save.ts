@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -97,11 +97,17 @@ export interface SaveV13 extends Omit<SaveV12, 'version'> {
   crate: Record<string, { n: number; premium: number }>;
 }
 
-export type Save = SaveV13;
+export interface SaveV14 extends Omit<SaveV13, 'version'> {
+  version: 14;
+  /** Professor Blinkers Gadgets: gekaufte und das, was gerade am Haken hängt. */
+  gadgets: { owned: string[]; equipped: string | null };
+}
+
+export type Save = SaveV14;
 
 export function newSave(now: number): Save {
   return {
-    version: 13,
+    version: 14,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -121,6 +127,7 @@ export function newSave(now: number): Save {
     harbor: { life: [], chatter: {} },
     perks: { tip: null, charter: { day: '', aboard: false, album: [] } },
     crate: {},
+    gadgets: { owned: [], equipped: null },
   };
 }
 
@@ -176,6 +183,8 @@ const migrations: Record<number, Migration> = {
   11: (old) => ({ ...old, perks: { tip: null, charter: { day: '', aboard: false, album: [] } } }),
   // v12 → v13: Fang kommt erst in die Kiste und wird bei Bruno verkauft.
   12: (old) => ({ ...old, crate: {} }),
+  // v13 → v14: Gadgets von Professor Blinker.
+  13: (old) => ({ ...old, gadgets: { owned: [], equipped: null } }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

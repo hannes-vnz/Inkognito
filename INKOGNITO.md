@@ -94,6 +94,7 @@ Der Hafen ist das Menü der Basis. Hier wohnen die Figuren, die das Spiel tragen
 | Bruno | Kauft den Fang zum Tageskurs, Wunschfisch, Köder | Ein Hai im Trenchcoat, ebenfalls inkognito; die beiden decken sich gegenseitig |
 | Professorin Qualle | Fischbuch, Quiz | Liebt Fakten, hat kein Gehirn und sagt das auch |
 | Opa Knut | Hinweise zur Legende | Echter Bart, zweifelt an Berts |
+| Professor Blinker | Gadgets für den Haken: Bremsfallschirm (sinkt langsamer), Magnet-Spule (größerer Fangradius), Panzerhaken (erster Biss prallt ab); einmal kaufen, eins hängt am Haken | Erfinder mit Qualle im Helm („mein Assistent“) |
 | Möwe Gisela | Schwarm-Tipp gegen Fischbrötchen: an einem erreichbaren Platz hängen 3 Würfe lang zwei Fische mehr am Haken (Preis steigt mit den Upgrades) | Riecht die Tinte, klaut ab und zu einen Fisch |
 | Herr Schulze | Bootscharter einmal am Tag: zahlt den Wert des Fangs bar, aber sein Blitz kostet einen Haken; neue Arten klebt er ins Urlaubsalbum | Tourist, hält Bruno für einen Hai (stimmt) |
 

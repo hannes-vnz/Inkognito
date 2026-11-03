@@ -503,6 +503,66 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     if (row === 2 && f % 2 === 0) for (const [dx, dy] of [[0, -3], [3, 0], [-3, 0], [0, 3], [0, 0]]) img.set(ox + 24 + dx, oy + 17 + b + dy, white);
   };
 
+  /** Professor Blinker: Tüftler im fleckigen Laborkittel, wirres Haar, Schutzbrille, Glaskuppel mit Qualle, Glaskolben. */
+  const coat = rampOf(hex('#e8e4d6'));
+  const hair = rampOf(hex('#d8e2f0'));
+  const dome = rampOf(hex('#bff4ff'));
+  portraits.prof = (img) => {
+    blob(img, 0, 0, 32, 68, 31, 20, coat);
+    for (const [x, y] of [[14, 58], [44, 62], [22, 64]]) blob(img, 0, 0, x, y, 2.5, 1.5, rampOf(hex('#7bd88f')));
+    poly(img, 0, 0, [[26, 48], [32, 58], [38, 48]], rampOf(hex('#5a4a3a')).base);
+    // Glaskolben mit blubbernder Flüssigkeit
+    rect(img, 0, 0, 48, 44, 3, 6, dome.light);
+    blob(img, 0, 0, 49.5, 54, 6, 5, rampOf(hex('#c78cff')));
+    for (const [x, y] of [[48, 47], [51, 43], [49, 39]]) img.set(x, y, white);
+    blob(img, 0, 0, 32, 33, 12, 13, P.skin);
+    blob(img, 0, 0, 19, 34, 3, 4, P.skin);
+    blob(img, 0, 0, 45, 34, 3, 4, P.skin);
+    // Wirres Haar an den Seiten
+    for (const [x, y] of [[17, 26], [15, 31], [47, 26], [49, 31], [19, 21], [45, 21]]) blob(img, 0, 0, x, y, 4, 3, hair);
+    blob(img, 0, 0, 32, 36, 2.4, 2, P.skinRed);
+    line(img, 0, 0, 28, 42, 36, 41, ink);
+    // Schutzbrille mit großen Gläsern
+    for (const cx of [26, 38]) {
+      blob(img, 0, 0, cx, 30, 5, 4.5, rampOf(hex('#3a4a5a')));
+      blob(img, 0, 0, cx, 30, 3.6, 3.2, dome);
+    }
+    line(img, 0, 0, 31, 30, 33, 30, ink);
+    eye(img, 0, 0, 26, 30, 2, hex('#3a6aa8'), 1, -1);
+    eye(img, 0, 0, 38, 30, 2, hex('#3a6aa8'), 1, -1);
+    // Glaskuppel auf dem Kopf, darin eine kleine Qualle
+    blob(img, 0, 0, 32, 14, 15, 10, dome, 0.55);
+    blob(img, 0, 0, 32, 13, 6, 4, P.jelly, 0.95);
+    for (let k = 0; k < 4; k++) line(img, 0, 0, 28 + k * 3, 16, 28 + k * 3 + (k % 2), 21, P.jellyLight.base);
+    rect(img, 0, 0, 17, 22, 30, 2, rampOf(hex('#8a8a9a')).base);
+    img.set(24, 9, white);
+    img.set(25, 8, white);
+  };
+  faces.prof = { skin: P.skin.base, eyes: [[26, 30, 2], [38, 30, 2]], mouth: [29, 35, 42] };
+  sprites.prof = (img, ox, oy, f, row) => {
+    const b = f === 1 || f === 2 ? 1 : 0;
+    rect(img, ox, oy, 12, 28, 3, 3, rampOf(hex('#3a3a4a')).base);
+    rect(img, ox, oy, 17, 28, 3, 3, rampOf(hex('#3a3a4a')).base);
+    blob(img, ox, oy, 16, 22 + b, 7, 7, coat);
+    line(img, ox, oy, 16, 17 + b, 16, 28, coat.shadow);
+    img.set(ox + 13, oy + 24 + b, hex('#7bd88f'));
+    blob(img, ox, oy, 16, 12 + b, 5.5, 5.5, P.skin);
+    for (const [x, y] of [[10, 11], [22, 11], [11, 8], [21, 8]]) blob(img, ox, oy, x, y + b, 2, 1.6, hair);
+    rect(img, ox, oy, 12, 11 + b, 3, 2, dome.base);
+    rect(img, ox, oy, 17, 11 + b, 3, 2, dome.base);
+    img.set(ox + 13, oy + 11 + b, ink);
+    img.set(ox + 18, oy + 11 + b, ink);
+    line(img, ox, oy, 14, 15 + b, 18, 15 + b, ink);
+    if (row === 1 && f % 2) rect(img, ox, oy, 15, 16 + b, 3, 1, hex('#5a2030'));
+    blob(img, ox, oy, 16, 5 + b, 7, 4.5, dome, 0.6);
+    blob(img, ox, oy, 16, 5 + b, 3, 2, P.jelly);
+    // Glaskolben; bei react blubbert er über
+    const lift = row === 2 ? [0, -2, -3, -1][f] : 0;
+    rect(img, ox, oy, 23, 17 + b + lift, 2, 3, dome.light);
+    blob(img, ox, oy, 24, 22 + b + lift, 3, 2.5, rampOf(hex('#c78cff')));
+    if (row === 2) for (let i = 0; i < 3; i++) img.set(ox + 23 + (i % 2), oy + 14 + lift - i * 2 - (f % 2), white);
+  };
+
   function sheet(id) {
     const F = 32;
     const img = new Image(F * 4, F * 3);

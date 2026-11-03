@@ -681,5 +681,84 @@
         }
       }
     }
+  },
+  {
+    "id": "prof",
+    "nameKey": "npc.prof.name",
+    "sprite": "npc_prof",
+    "frame": {
+      "width": 32,
+      "height": 32
+    },
+    "animations": [
+      {
+        "key": "idle",
+        "row": 0,
+        "frames": 4,
+        "fps": 4,
+        "repeat": -1
+      },
+      {
+        "key": "talk",
+        "row": 1,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      },
+      {
+        "key": "react",
+        "row": 2,
+        "frames": 4,
+        "fps": 8,
+        "repeat": -1
+      }
+    ],
+    "placeholderColor": "#bff4ff",
+    "place": "hut",
+    "dialog": {
+      "intro": {
+        "textKey": "npc.prof.intro",
+        "reaction": {
+          "background": "sparkle",
+          "mood": "joy"
+        },
+        "options": [
+          {
+            "textKey": "npc.prof.intro.opt",
+            "next": "intro2"
+          }
+        ]
+      },
+      "intro2": {
+        "textKey": "npc.prof.intro2",
+        "face": "happy",
+        "options": [
+          {
+            "textKey": "npc.prof.intro2.opt",
+            "next": "gadgets"
+          }
+        ]
+      },
+      "start": {
+        "textKey": "npc.prof.hub",
+        "face": "happy",
+        "options": [
+          {
+            "textKey": "npc.prof.hub.opt",
+            "next": "gadgets"
+          },
+          {
+            "textKey": "npc.bye",
+            "next": null
+          }
+        ]
+      },
+      "gadgets": {
+        "textKey": "npc.prof.hub",
+        "action": {
+          "type": "showGadgets"
+        }
+      }
+    }
   }
 ]

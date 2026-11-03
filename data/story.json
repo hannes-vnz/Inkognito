@@ -71,6 +71,15 @@
     }
   },
   {
+    "id": "prof_intro",
+    "npc": "prof",
+    "node": "intro",
+    "trigger": {
+      "type": "casts",
+      "value": 8
+    }
+  },
+  {
     "id": "schulze_intro",
     "npc": "schulze",
     "node": "intro",

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "brake",
+    "nameKey": "gadget.brake.name",
+    "descKey": "gadget.brake.desc",
+    "price": 150,
+    "effect": {
+      "fallSpeed": 0.7
+    }
+  },
+  {
+    "id": "magnet",
+    "nameKey": "gadget.magnet.name",
+    "descKey": "gadget.magnet.desc",
+    "price": 350,
+    "effect": {
+      "catchRadius": 1.6
+    }
+  },
+  {
+    "id": "shield",
+    "nameKey": "gadget.shield.name",
+    "descKey": "gadget.shield.desc",
+    "price": 700,
+    "effect": {
+      "shield": 1
+    }
+  }
+]

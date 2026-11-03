@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { baitById, baits, gags, harbor, homeOf, marketParams, params, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gadgets, gags, harbor, homeOf, marketParams, params, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
 import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters, unlockedSpots } from '../systems/seaMap';
@@ -10,6 +10,7 @@ import { animKey } from '../entities/Octopus';
 import { dialogNode, faceOf, type Face, type NpcDef } from '../systems/dialog';
 import { markSeen, nextBeat, npcMet } from '../systems/story';
 import { newRequest } from '../systems/requests';
+import { buyGadget, equipGadget } from '../systems/gadgets';
 import { castsUntilTick, crateCount, marketTick, priceTrend, sellFish } from '../systems/market';
 import { answerQuiz, pickQuiz, quizReady } from '../systems/quiz';
 import { upgradeValue } from '../systems/economy';
@@ -96,6 +97,8 @@ export class Harbor {
       stall: { x: sx, y: surface - 18 },
       roof: { x: sx - 16, y: surface - 90 },
       water: wide ? { x: width * 0.3, y: surface + 80 } : { x: width / 2 + 80, y: surface + 96 },
+      // Auf dem Steg der Fischerhütte: Professor Blinkers Werkstatt
+      hut: { x: wide ? 190 : 46, y: surface - 6 },
       // Zwischen Boot und Fischstand
       promenade: { x: (width / 2 + 96 + sx - 34) / 2, y: surface - 4 },
     };
@@ -171,6 +174,48 @@ export class Harbor {
       this.scene.tweens.add({ targets: s, scale: SCALE, duration: 260, ease: 'Back.Out' });
     }
     this.scene.time.delayedCall(300, () => this.talk(npc, beat.node, done));
+  }
+
+  /** Professor Blinkers Werkstatt: Gadgets kaufen oder das angehängte wechseln. */
+  private showGadgets(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const save = this.host.save;
+    this.anim(npc, 'talk');
+    this.sheet.show(
+      t('gadget.title'),
+      t('gadget.text'),
+      [
+        ...gadgets.map((g) => {
+          const owned = save.gadgets.owned.includes(g.id);
+          const on = save.gadgets.equipped === g.id;
+          return {
+            label: `${t(g.nameKey)} · ${t(g.descKey)}`,
+            meta: on ? t('gadget.equipped') : owned ? t('gadget.equip') : g.price.toLocaleString('de-DE'),
+            onSelect: () => {
+              if (on) return;
+              if (owned) {
+                this.host.setSave(equipGadget(this.host.save, g.id));
+                play('tap');
+                return this.showGadgets(npc, portrait, done);
+              }
+              const bought = buyGadget(this.host.save, g);
+              if (!bought) {
+                play('error');
+                this.host.say(t('gadget.poor'));
+                return;
+              }
+              this.host.setSave(bought);
+              play('upgrade');
+              this.anim(npc, 'react');
+              this.host.say(t('gadget.bought', { name: t(g.nameKey) }));
+              this.finish(npc, done);
+            },
+          };
+        }),
+        { label: t('npc.bye'), onSelect: () => this.finish(npc, done) },
+      ],
+      undefined,
+      portrait,
+    );
   }
 
   /** Bruno steht am Stand und darf angesprochen werden. */
@@ -281,6 +326,7 @@ export class Harbor {
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       if (node.action?.type === 'legendHint') return this.legendHint(npc, portrait, done);
       if (node.action?.type === 'showBaits') return this.showBaits(npc, portrait, done);
+      if (node.action?.type === 'showGadgets') return this.showGadgets(npc, portrait, done);
       if (node.action?.type === 'sellFish') return this.sellFish(npc, portrait, done);
       if (node.action?.type === 'giselaTip') return this.giselaTip(npc, portrait, done);
       if (node.action?.type === 'charter') return this.charter(npc, portrait, done);

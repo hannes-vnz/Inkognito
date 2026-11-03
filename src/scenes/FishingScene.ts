@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import { baitById, marketParams, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { baitById, gadgets, marketParams, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
 import { charterHooks, charterPay, landCharter, tipHooks, useTip } from '../systems/perks';
 import { crateCount, marketTick, priceFactor } from '../systems/market';
+import { gadgetEffect } from '../systems/gadgets';
 import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isLegend, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
@@ -354,6 +355,7 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private keys: Phaser.Input.Keyboard.Key[] = [];
+  private roundParams = params;
 
   private keySteer(dt: number): void {
     const kb = this.input.keyboard;
@@ -385,7 +387,13 @@ export class FishingScene extends Phaser.Scene {
     this.legend = legendOf(species, this.save.sea.current);
     const legendMeters = this.legend ? legendSpawn(seed, this.legend, this.spot.id, night, line, baitCallsLegend(bait)) : null;
     const extra = this.legend && legendMeters !== null ? [{ species: this.legend, meters: legendMeters }] : [];
-    this.round = createRound(seed, this.scale.width, line, hooks, pool, this.depth, params, this.spot.current, extra);
+    // Professor Blinkers Gadget wirkt auf Sinken, Fangradius und Bisse im Abstieg
+    const gadget = gadgetEffect(this.save, gadgets);
+    this.roundParams = { ...params, fallSpeed: params.fallSpeed * gadget.fallSpeed, catchRadius: params.catchRadius * gadget.catchRadius };
+    this.round = createRound(seed, this.scale.width, line, hooks, pool, this.depth, this.roundParams, this.spot.current, extra);
+    this.round.shield = gadget.shield;
+    const equipped = gadgets.find((g) => g.id === this.save.gadgets.equipped);
+    if (equipped && this.save.stats.casts % 4 === 0) this.ui.say(t('gadget.cast', { name: t(equipped.nameKey) }), 2);
     this.legendUid = extra.length ? this.round.fish[this.round.fish.length - 1]!.uid : -1;
     this.legendSeen = false;
     this.fight = null;
@@ -440,6 +448,13 @@ export class FishingScene extends Phaser.Scene {
           this.ui.floater(t('round.bite'), r.hookX, screen(r.hookY) - 30, '#ffd23f');
           navigator.vibrate?.(25);
           this.ui.hideHint();
+          break;
+        case 'shield':
+          // Panzerhaken: Biss prallt ab, Funken, der Haken sinkt weiter
+          this.cameras.main.shake(80, 0.004);
+          play('tap', 0.7);
+          this.burst(r.hookX + this.offsetX, r.hookY, 10, juice.spark);
+          this.ui.floater(t('gadget.shieldHit'), r.hookX, screen(r.hookY) - 30, '#5ce1e6');
           break;
         case 'lineEnd':
           this.ui.floater(t('round.lineEnd'), r.hookX, screen(r.hookY) - 30, '#ff6b6b');
@@ -953,7 +968,7 @@ export class FishingScene extends Phaser.Scene {
       if (this.fight && !frozen && !this.fightHold) this.updateFight(dt);
       const steps = frozen || this.fight ? 0 : this.stepper.advance(dt);
       for (let i = 0; i < steps && this.round && this.mode === 'round'; i++) {
-        this.handle(stepRound(this.round, this.steerX, speciesById, this.depth, params, this.stepper.step));
+        this.handle(stepRound(this.round, this.steerX, speciesById, this.depth, this.roundParams, this.stepper.step));
         if (this.mode === 'round') this.checkZone();
       }
     }

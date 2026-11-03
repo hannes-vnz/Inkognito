@@ -77,10 +77,13 @@ export interface RoundState {
   time: number;
   /** Strömung des Angelplatzes: Haken treibt hin und her (Einheiten pro Sekunde). */
   current: number;
+  /** Panzerhaken: so viele Bisse im Abstieg prallen noch ab. */
+  shield: number;
 }
 
 export type RoundEvent =
   | { type: 'bite'; uid: number }
+  | { type: 'shield'; uid: number }
   | { type: 'lineEnd' }
   | { type: 'catch'; uid: number }
   | { type: 'full' }
@@ -172,6 +175,7 @@ export function createRound(
     capacity,
     fish,
     current,
+    shield: 0,
     caught: [],
     deepestY: map.surfaceY,
     time: 0,
@@ -243,7 +247,12 @@ export function stepRound(
     s.deepestY = Math.max(s.deepestY, s.hookY);
     // Im Abstieg zählt nur der Kern des Fisches, knappes Vorbeischrammen geht gut.
     const bitten = s.fish.find((f) => touches(s, f, f.radius * 0.6 + p.biteRadius));
-    if (bitten) {
+    if (bitten && s.shield > 0) {
+      // Panzerhaken: Der Fisch prallt ab und flieht, der Haken sinkt weiter
+      s.shield--;
+      releaseFish(s, bitten.uid);
+      events.push({ type: 'shield', uid: bitten.uid });
+    } else if (bitten) {
       bitten.caught = true;
       s.caught.push(bitten);
       s.phase = 'ascent';

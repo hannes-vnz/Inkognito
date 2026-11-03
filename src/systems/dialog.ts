@@ -4,7 +4,7 @@ export interface DialogOption {
 }
 
 /** Was nach dem Text passiert: Wunschfisch, Quiz, Seemannsgarn oder ein Möwen-Spruch. */
-export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' } | { type: 'legendHint' } | { type: 'gag' } | { type: 'showBaits' } | { type: 'giselaTip' } | { type: 'charter' } | { type: 'sellFish' };
+export type DialogAction = { type: 'showRequest' } | { type: 'startQuiz' } | { type: 'legendHint' } | { type: 'gag' } | { type: 'showBaits' } | { type: 'giselaTip' } | { type: 'charter' } | { type: 'sellFish' } | { type: 'showGadgets' };
 
 /** Weiterleitung abhängig von gesehenen Story-Momenten; die erste passende gewinnt. */
 export interface DialogRedirect {
@@ -34,7 +34,7 @@ export type Face = 'normal' | 'happy' | 'annoyed' | 'shock';
 export const faceOf = (node: DialogNode): Face =>
   node.face ?? (node.reaction ? ({ shock: 'shock', joy: 'happy', smug: 'annoyed' } as const)[node.reaction.mood] : 'normal');
 
-export type NpcPlace = 'pier' | 'bench' | 'stall' | 'roof' | 'water' | 'promenade';
+export type NpcPlace = 'pier' | 'bench' | 'stall' | 'roof' | 'water' | 'promenade' | 'hut';
 
 export interface NpcDef {
   id: string;

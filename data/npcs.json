@@ -208,6 +208,10 @@
         "textKey": "npc.bruno.hub",
         "options": [
           {
+            "textKey": "npc.bruno.hub.sell",
+            "next": "sell"
+          },
+          {
             "textKey": "npc.bruno.hub.opt",
             "next": "request"
           },
@@ -258,6 +262,12 @@
         "textKey": "npc.bruno.request",
         "action": {
           "type": "showBaits"
+        }
+      },
+      "sell": {
+        "textKey": "npc.bruno.hub",
+        "action": {
+          "type": "sellFish"
         }
       }
     }

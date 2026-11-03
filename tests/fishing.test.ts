@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { metersToY, yToMeters, zoneIndexAt, type DepthMap } from '../src/systems/depthMap';
 import { createRound, pickSpecies, stepRound, type FishingParams, type RoundEvent, type SpeciesDef } from '../src/systems/fishing';
+import { marketTick, priceFactor, sellFish, type MarketParams } from '../src/systems/market';
 import { buyUpgrade, collectIdle, fishValue, isMaxed, landCatch, upgradeCost, upgradeValue, type EconomyParams, type UpgradeDef } from '../src/systems/economy';
 import { deserialize, migrate, newSave, SAVE_VERSION, serialize, type Save } from '../src/systems/save';
 import { createRng } from '../src/systems/rng';
@@ -15,6 +16,7 @@ import { reachableMeters, spotSpecies, unlockedSpots, type MapParams, type SpotD
 const species = fishJson as unknown as SpeciesDef[];
 const byId = new Map(species.map((s) => [s.id, s]));
 const p = gameJson.fishing as FishingParams & EconomyParams & { unitsPerZone: number; surfaceY: number };
+const market = gameJson.market as MarketParams;
 const map: DepthMap = { zones: zonesJson as unknown as DepthMap['zones'], unitsPerZone: p.unitsPerZone, surfaceY: p.surfaceY };
 const upgrades = upgradesJson as UpgradeDef[];
 const up = (id: string) => upgrades.find((u) => u.id === id)!;
@@ -131,12 +133,13 @@ describe('Wirtschaft', () => {
     expect(fishValue(h, false, true, p)).toBe(h.value * p.comboMultiplier);
   });
 
-  it('Fang verbuchen: Erstfänge für die Fakt-Karten, Rekord, Fischbuch', () => {
-    const r = landCatch(newSave(T), [{ speciesId: 'herring', combo: false }, { speciesId: 'herring', combo: true }], 80, byId, p, T);
+  it('Fang verbuchen: in die Kiste, Erstfänge für die Fakt-Karten, Rekord, Fischbuch', () => {
+    const r = landCatch(newSave(T), [{ speciesId: 'herring', combo: false }, { speciesId: 'herring', combo: true }, { speciesId: 'gibt-es-nicht', combo: false }], 80, byId, T);
     expect(r.firstCatches).toEqual(['herring']);
     expect(r.save.fishbook.herring!.count).toBe(2);
     expect(r.save.stats).toEqual({ casts: 1, deepestMeters: 80 });
-    expect(r.coins).toBe(fishValue(byId.get('herring')!, false, false, p) + fishValue(byId.get('herring')!, true, true, p));
+    expect(r.save.coins).toBe(0);
+    expect(r.save.crate).toEqual({ herring: { n: 2, premium: 1 } });
   });
 
   it('Crew verdient offline, gedeckelt, ohne Münzen zu verlieren', () => {
@@ -174,7 +177,11 @@ describe('Balance: die ersten Minuten', () => {
         const steer = !near ? null : s.phase === 'descent' ? (near.x > 195 ? near.x - 160 : near.x + 160) : near.x;
         stepRound(s, steer, byId, map, p, dt);
       }
-      save = landCatch(save, s.caught.map((f) => ({ speciesId: f.speciesId, combo: false })), Math.round(yToMeters(s.deepestY, map)), byId, p, T).save;
+      save = landCatch(save, s.caught.map((f) => ({ speciesId: f.speciesId, combo: false })), Math.round(yToMeters(s.deepestY, map)), byId, T).save;
+      // Verkauft nach jedem Wurf alles bei Bruno zum Tageskurs
+      const tick = marketTick(save.stats.casts, market);
+      const priced = save;
+      save = sellFish(save, Object.keys(save.crate), (id) => fishValue(byId.get(id)!, (priced.fishbook[id]?.count ?? 0) >= 2, false, p, 0, priceFactor(String(priced.createdAt), id, tick, market)), p.comboMultiplier).save;
       const bought: string[] = [];
       for (;;) {
         const affordable = upgrades
@@ -209,7 +216,7 @@ describe('Spielstand v3', () => {
   it('migriert v0, v1 und v2 (Muscheln werden Münzen)', () => {
     expect(migrate({ shells: 42 }, T).coins).toBe(42);
     expect(migrate({ version: 1, shells: 7, createdAt: 5 }, T)).toMatchObject({ coins: 7, createdAt: 5 });
-    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 12, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "harbor", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "atlantic", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
+    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 13, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "harbor", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "atlantic", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
   });
   it('kaputte Daten ergeben einen neuen Stand, zu neue Versionen werfen', () => {
     expect(deserialize('{nicht json', T)).toEqual(newSave(T));

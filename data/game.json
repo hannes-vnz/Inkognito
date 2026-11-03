@@ -158,11 +158,16 @@
       "priceBase": 25,
       "pricePerLevel": 12,
       "casts": 3,
-      "bonus": 1
+      "extraHooks": 2
     },
     "charter": {
       "bonus": 1,
       "hookPenalty": 1
     }
+  },
+  "market": {
+    "castsPerTick": 3,
+    "swing": 0.45,
+    "noise": 0.12
   }
 }

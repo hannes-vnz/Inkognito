@@ -28,6 +28,10 @@ Inkognito ist ein lustiges Angel-Incremental für Mobile: Ein Oktopus mit Fake-B
 
 **Idle:** Die Crew angelt weiter, auch wenn das Spiel zu ist. Beim Zurückkommen zeigt ein Pop-up die Ausbeute.
 
+## Fischkiste und Markt
+
+Gefangenes landet erst in der **Fischkiste** (Knopf oben rechts) und wird bei **Bruno** im Hafen verkauft. Jede Art hat einen eigenen **Tageskurs**, der in Wellen steigt und fällt (neue Kurse alle 3 Würfe, Pfeile zeigen den Trend). Verkaufen geht einzeln oder alles auf einmal; angetippte Fische bringen das Doppelte, Brunos Wunschfisch die Prämie obendrauf. Wer wartet, bis der Hering teuer ist, verdient mehr. Werte in data/game.json (`market`), Regeln in src/systems/market.ts.
+
 ## Upgrades
 
 | Upgrade | Wirkung | Vorbild |
@@ -87,11 +91,11 @@ Der Hafen ist das Menü der Basis. Hier wohnen die Figuren, die das Spiel tragen
 | --- | --- | --- |
 | Der Oktopus („Kapitän Bert“) | Spielfigur | Sieht fast aus wie ein gemütlicher Fischer: orange Haut, Ölmantel, Südwester, Nasen-Brille mit Schnurrbart und Fake-Bart. Nur die Tentakel-Hände mit Saugnäpfen und die Tentakel in den Gummistiefeln verraten ihn. Schlechte Ausreden, „acht Arme? Das ist Rheuma“ |
 | Hafenmeisterin Hilde | Upgrades, Leine und Boot | Ist sich sicher, dass mit Bert was nicht stimmt |
-| Bruno | Fischhändler | Ein Hai im Trenchcoat, ebenfalls inkognito; die beiden decken sich gegenseitig |
+| Bruno | Kauft den Fang zum Tageskurs, Wunschfisch, Köder | Ein Hai im Trenchcoat, ebenfalls inkognito; die beiden decken sich gegenseitig |
 | Professorin Qualle | Fischbuch, Quiz | Liebt Fakten, hat kein Gehirn und sagt das auch |
 | Opa Knut | Hinweise zur Legende | Echter Bart, zweifelt an Berts |
-| Möwe Gisela | Schwarm-Tipp gegen Fischbrötchen: ein erreichbarer Platz bringt 3 Würfe lang doppelte Münzen (Preis steigt mit den Upgrades) | Riecht die Tinte, klaut ab und zu einen Fisch |
-| Herr Schulze | Bootscharter einmal am Tag: doppelte Münzen, aber sein Blitz kostet einen Haken; neue Arten klebt er ins Urlaubsalbum | Tourist, hält Bruno für einen Hai (stimmt) |
+| Möwe Gisela | Schwarm-Tipp gegen Fischbrötchen: an einem erreichbaren Platz hängen 3 Würfe lang zwei Fische mehr am Haken (Preis steigt mit den Upgrades) | Riecht die Tinte, klaut ab und zu einen Fisch |
+| Herr Schulze | Bootscharter einmal am Tag: zahlt den Wert des Fangs bar, aber sein Blitz kostet einen Haken; neue Arten klebt er ins Urlaubsalbum | Tourist, hält Bruno für einen Hai (stimmt) |
 
 Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 

@@ -34,11 +34,13 @@ export class DeckUi {
   private shownCoins = 0;
   private roll = 0;
   private readonly coinCard: HTMLDivElement;
+  private readonly crateButton: HTMLButtonElement;
+  private readonly crateCount: HTMLSpanElement;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly upgrades: readonly UpgradeDef[],
-    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void; map: () => void; menu: () => void },
+    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void; map: () => void; menu: () => void; crate: () => void },
   ) {
     const coinCard = el('div', 'card hud-coins');
     this.coinCard = coinCard;
@@ -89,6 +91,17 @@ export class DeckUi {
       handlers.book();
     });
 
+    // Fischkiste: Fang wartet hier auf den Verkauf bei Bruno
+    this.crateButton = el('button', 'account-button hud-crate');
+    this.crateButton.type = 'button';
+    this.crateCount = el('span', '');
+    this.crateButton.append(iconImg('fx_crate'), this.crateCount);
+    this.crateButton.setAttribute('aria-label', t('crate.title'));
+    this.crateButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handlers.crate();
+    });
+
     this.mapButton = el('button', 'button book map-button');
     this.mapButton.type = 'button';
     const mapLabel = el('span', '');
@@ -132,7 +145,7 @@ export class DeckUi {
     root.append(this.panLeft, this.panRight);
 
     this.hint = el('div', 'card hint hidden');
-    root.append(coinCard, this.depthCard, sound, this.deck, this.hint);
+    root.append(coinCard, this.crateButton, this.depthCard, sound, this.deck, this.hint);
     this.toast = new Toast(root);
   }
 
@@ -163,6 +176,14 @@ export class DeckUi {
     this.bookButton.hidden = knownSpecies === 0;
     this.mapButton.hidden = !started;
     this.bookCount.textContent = `${knownSpecies}/${totalSpecies}`;
+    const inCrate = Object.values(save.crate).reduce((a, c) => a + c.n, 0);
+    if (this.crateCount.textContent !== String(inCrate) && bump) {
+      this.crateButton.classList.remove('bump');
+      void this.crateButton.offsetWidth;
+      this.crateButton.classList.add('bump');
+    }
+    this.crateCount.textContent = String(inCrate);
+    this.crateButton.hidden = !started;
     for (const u of this.upgrades) {
       const c = this.cards.get(u.id)!;
       const level = save.upgrades[u.id];

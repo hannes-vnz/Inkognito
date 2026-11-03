@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import { baitById, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { baitById, marketParams, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
-import { charterBonus, charterHooks, landCharter, tipBonus, useTip } from '../systems/perks';
+import { charterHooks, charterPay, landCharter, tipHooks, useTip } from '../systems/perks';
+import { crateCount, marketTick, priceFactor } from '../systems/market';
 import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
 import { castsUntilSwitch, hookHolds, isLegend, isNight, legendOf, legendSpawn, markSnapped, nightSpecies, type LegendDef } from '../systems/legend';
@@ -126,6 +127,7 @@ export class FishingScene extends Phaser.Scene {
       book: () => this.openFishbook(),
       map: () => this.openMap(),
       menu: () => this.openMenu(),
+      crate: () => (this.spot.harbor && this.harbor.canOpenSale() ? this.harbor.openSale() : this.ui.say(t('crate.away', { n: crateCount(this.save.crate), value: this.crateValue() }), 3.5)),
     });
     this.sheet = new Sheet(this.uiRoot);
     this.account = new AccountMenu(this.uiRoot, this.sheet, (r) => this.applySync(r), (text) => this.ui.say(text, 3));
@@ -143,6 +145,12 @@ export class FishingScene extends Phaser.Scene {
       },
       canTalk: () => this.mode === 'deck' && !this.overlayOpen() && !this.dragged,
       say: (text) => this.ui.say(text, 3.5),
+      priceOf: (id, combo) => this.priceOf(id, combo),
+      celebrate: (coins, x, y) => {
+        const cam = this.cameras.main;
+        this.ui.coinBurst(x - cam.scrollX, y - cam.scrollY, Math.min(30, Math.ceil(coins / 10)));
+        this.ui.floater(`+${coins.toLocaleString('de-DE')}`, x - cam.scrollX, y - cam.scrollY - 30, '#ffd23f');
+      },
     });
     this.buildWorld();
     this.setupInput();
@@ -368,8 +376,8 @@ export class FishingScene extends Phaser.Scene {
       this.limitSaid = true;
       this.ui.say(t('spot.limit', { name: t(this.spot.nameKey), max: this.spot.maxMeters.toLocaleString('de-DE') }), 4);
     }
-    const hooks = charterHooks(this.save, upgradeValue(upgradeById('hook'), this.save.upgrades.hook), perkParams);
-    if (tipBonus(this.save, this.spot.id, perkParams) > 0) this.ui.say(t('tip.cast'), 2.5);
+    const hooks = charterHooks(this.save, upgradeValue(upgradeById('hook'), this.save.upgrades.hook), perkParams) + tipHooks(this.save, this.spot.id, perkParams);
+    if (tipHooks(this.save, this.spot.id, perkParams) > 0) this.ui.say(t('tip.cast'), 2.5);
     const night = isNight(this.save.stats.casts, timeParams);
     const bait = baitById(this.save.bait);
     const pool = baitSpecies(nightSpecies(spotSpecies(speciesIn(this.save.sea.current), this.spot, mapParams.boostWeight), night, timeParams), bait);
@@ -507,11 +515,10 @@ export class FishingScene extends Phaser.Scene {
           s.y = this.depth.surfaceY - 40 - Math.sin(p * Math.PI) * (this.scale.height * 0.35);
         },
         onComplete: () => {
-          // Aufprall an Deck: Münzen spritzen, Wert ploppt auf, Ton steigt mit jedem Fisch
-          const def = speciesById.get(f.speciesId)!;
-          const value = fishValue(def, this.save.fishbook[def.id] !== undefined, combos.has(i), params, this.coinBonus());
+          // Aufprall an Deck: ab in die Kiste, heutiger Wert ploppt auf, Ton steigt mit jedem Fisch
+          const value = this.priceOf(f.speciesId, combos.has(i));
           this.burst(s.x, s.y, 6, juice.coinSpark);
-          this.ui.floater(`+${value}`, s.x - this.cameras.main.scrollX, s.y - this.cameras.main.scrollY - 24, '#ffd23f');
+          this.ui.floater(t('round.crateFish', { value }), s.x - this.cameras.main.scrollX, s.y - this.cameras.main.scrollY - 24, '#fff6e0');
           play('coin', 1 + i * 0.07);
           s.setVisible(false);
         },
@@ -526,17 +533,12 @@ export class FishingScene extends Phaser.Scene {
     const total = (params.flightSeconds + caught.length * 0.12) * 1000 + 200;
     this.time.delayedCall(total, () => {
       for (const s of flying) s.destroy();
-      const landed = landCatch(
-        this.save,
-        r.caught.map((f, i) => ({ speciesId: f.speciesId, combo: combos.has(i) })),
-        deepest,
-        speciesById,
-        params,
-        Date.now(),
-        this.coinBonus(),
-      );
-      // Giselas Schwarm zählt einen Wurf herunter, Schulze geht von Bord und klebt Fotos ins Album
-      const charter = landCharter(useTip(landed.save, this.spot.id), caught);
+      const catches = r.caught.map((f, i) => ({ speciesId: f.speciesId, combo: combos.has(i) }));
+      const catchValue = catches.reduce((a, c) => a + this.priceOf(c.speciesId, c.combo), 0);
+      const landed = landCatch(this.save, catches, deepest, speciesById, Date.now());
+      // Giselas Schwarm zählt einen Wurf herunter, Schulze zahlt die Tour bar, geht von Bord und klebt Fotos ins Album
+      const pay = charterPay(this.save, catchValue, perkParams);
+      const charter = landCharter(useTip({ ...landed.save, coins: landed.save.coins + pay }, this.spot.id), caught);
       if (this.save.perks.charter.aboard) {
         this.cameras.main.flash(180, 255, 255, 255);
         play('tap', 2);
@@ -549,13 +551,10 @@ export class FishingScene extends Phaser.Scene {
       const record = landed.save.stats.deepestMeters > this.save.stats.deepestMeters && this.save.stats.casts > 0;
       this.save = landed.save;
       writeSave(this.save);
-      this.harbor.landed(caught);
       const boatScreenY = this.depth.surfaceY - this.cameras.main.scrollY;
       const boatScreenX = this.boat.x - this.cameras.main.scrollX;
-      if (landed.coins > 0) {
-        this.ui.floater(t('round.summary', { coins: landed.coins }), boatScreenX, boatScreenY - 90, '#ffd23f');
-        this.ui.coinBurst(boatScreenX, boatScreenY - 40, Math.ceil(landed.coins / 10));
-      }
+      if (catches.length > 0) this.ui.floater(t('round.crate', { n: crateCount(this.save.crate), value: this.crateValue() }), boatScreenX, boatScreenY - 90, '#fff6e0');
+      if (pay > 0) this.ui.coinBurst(boatScreenX, boatScreenY - 40, Math.ceil(pay / 10));
       if (this.legend && caught.includes(this.legend.id)) {
         this.ui.shout(t(this.legend.legend.nameKey), '#c78cff');
         this.ui.confetti(boatScreenX, boatScreenY - 60, 40);
@@ -575,9 +574,18 @@ export class FishingScene extends Phaser.Scene {
     });
   }
 
-  /** Münz-Bonus dieses Wurfs: Sammel-Sets, Prestige, Giselas Schwarm, Schulzes Charter. */
-  private coinBonus(): number {
-    return setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams) + tipBonus(this.save, this.spot.id, perkParams) + charterBonus(this.save, perkParams);
+  /** Heutiger Stückpreis bei Bruno: Grundwert, Wissen, Sammel-Sets, Prestige und Tageskurs. */
+  priceOf(speciesId: string, combo = false): number {
+    const def = speciesById.get(speciesId);
+    if (!def) return 0;
+    const factor = priceFactor(String(this.save.createdAt), speciesId, marketTick(this.save.stats.casts, marketParams), marketParams);
+    const known = (this.save.fishbook[speciesId]?.count ?? 0) >= 2;
+    return fishValue(def, known, combo, params, setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams), factor);
+  }
+
+  /** Was die Kiste heute bei Bruno bringen würde. */
+  crateValue(): number {
+    return Object.entries(this.save.crate).reduce((a, [id, c]) => a + this.priceOf(id) * (c.n - c.premium) + this.priceOf(id, true) * c.premium, 0);
   }
 
   private endRound(firstCatches: string[], completedSets: SetDef[] = [], after?: () => void): void {

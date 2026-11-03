@@ -3,12 +3,12 @@ import type { Save } from './save';
 
 /**
  * Dienste der Hafenfiguren:
- * Möwe Gisela verrät gegen ein Fischbrötchen einen Schwarm-Platz (dort ein paar Würfe lang mehr Münzen).
- * Herr Schulze chartert einmal am Tag das Boot: Er zahlt kräftig, verscheucht aber mit dem Blitz einen Fisch,
+ * Möwe Gisela verrät gegen ein Fischbrötchen einen Schwarm-Platz (dort ein paar Würfe lang mehr Haken voll).
+ * Herr Schulze chartert einmal am Tag das Boot: Er zahlt bar für die Tour, verscheucht aber mit dem Blitz einen Fisch,
  * und jede Art, die dabei an Bord kommt, klebt er in sein Urlaubsalbum.
  */
 export interface PerkParams {
-  tip: { priceBase: number; pricePerLevel: number; casts: number; bonus: number };
+  tip: { priceBase: number; pricePerLevel: number; casts: number; extraHooks: number };
   charter: { bonus: number; hookPenalty: number };
 }
 
@@ -28,9 +28,9 @@ export function buyTip(save: Save, spotIds: readonly string[], seed: string, p: 
   return { ...save, coins: save.coins - price, perks: { ...save.perks, tip: { spot, casts: p.tip.casts } } };
 }
 
-/** Münz-Bonus aus Giselas Tipp für einen Wurf an `spotId` (1 = +100 %). */
-export const tipBonus = (save: Save, spotId: string, p: PerkParams): number =>
-  save.perks.tip && save.perks.tip.spot === spotId && save.perks.tip.casts > 0 ? p.tip.bonus : 0;
+/** Zusätzliche Haken aus Giselas Tipp für einen Wurf an `spotId`: Dort steht der Schwarm. */
+export const tipHooks = (save: Save, spotId: string, p: PerkParams): number =>
+  save.perks.tip && save.perks.tip.spot === spotId && save.perks.tip.casts > 0 ? p.tip.extraHooks : 0;
 
 /** Nach einem Wurf am Tipp-Platz: ein Wurf weniger, danach ist der Schwarm weitergezogen. */
 export function useTip(save: Save, spotId: string): Save {
@@ -50,7 +50,8 @@ export function boardCharter(save: Save, today: string): Save {
 /** Haken beim Charter: der Blitz verscheucht einen Fisch, mindestens ein Haken bleibt. */
 export const charterHooks = (save: Save, hooks: number, p: PerkParams): number => (save.perks.charter.aboard ? Math.max(1, hooks - p.charter.hookPenalty) : hooks);
 
-export const charterBonus = (save: Save, p: PerkParams): number => (save.perks.charter.aboard ? p.charter.bonus : 0);
+/** Schulzes Tourpreis: dieser Anteil vom heutigen Wert des Fangs, bar auf die Hand. */
+export const charterPay = (save: Save, catchValue: number, p: PerkParams): number => (save.perks.charter.aboard ? Math.round(catchValue * p.charter.bonus) : 0);
 
 /** Schulze geht von Bord und klebt neue Arten ins Album. */
 export function landCharter(save: Save, caught: readonly string[]): { save: Save; photos: string[] } {

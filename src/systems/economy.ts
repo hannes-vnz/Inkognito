@@ -1,5 +1,6 @@
 import type { Save, UpgradeId } from './save';
 import type { SpeciesDef } from './fishing';
+import { addToCrate } from './market';
 
 /** Eintrag aus data/upgrades.json: Wert je Stufe und exponentielle Kosten. */
 export interface UpgradeDef {
@@ -33,15 +34,15 @@ export function buyUpgrade(save: Save, def: UpgradeDef, now: number): Save {
 }
 
 /**
- * Wert eines Fangs: bekannte Arten bringen mehr (Wissen zahlt sich aus), angetippte im Flug doppelt,
- * `bonus` aus fertigen Sammel-Sets (0.1 = +10 %).
+ * Stückpreis einer Art: bekannte Arten bringen mehr (Wissen zahlt sich aus, ab dem zweiten Fang),
+ * angetippte im Flug doppelt, `bonus` aus Sammel-Sets und Prestige (0.1 = +10 %), `factor` ist der Tageskurs.
  */
-export function fishValue(def: SpeciesDef, known: boolean, combo: boolean, p: EconomyParams, bonus = 0): number {
-  return Math.round(def.value * (known ? 1 + p.knowledgeBonus : 1) * (combo ? p.comboMultiplier : 1) * (1 + bonus));
+export function fishValue(def: SpeciesDef, known: boolean, combo: boolean, p: EconomyParams, bonus = 0, factor = 1): number {
+  return Math.round(def.value * (known ? 1 + p.knowledgeBonus : 1) * (combo ? p.comboMultiplier : 1) * (1 + bonus) * factor);
 }
 
 /**
- * Fang verbuchen: Münzen gutschreiben, Fischbuch zählen, Rekord merken.
+ * Fang verbuchen: Fische in die Kiste (verkauft wird bei Bruno), Fischbuch zählen, Rekord merken.
  * Gibt zurück, welche Arten zum ersten Mal gefangen wurden (für die Fakt-Karten).
  */
 export function landCatch(
@@ -49,19 +50,13 @@ export function landCatch(
   catches: readonly { speciesId: string; combo: boolean }[],
   deepestMeters: number,
   species: ReadonlyMap<string, SpeciesDef>,
-  p: EconomyParams,
   now: number,
-  bonus = 0,
-): { save: Save; coins: number; firstCatches: string[] } {
+): { save: Save; firstCatches: string[] } {
   const fishbook = { ...save.fishbook };
   const firstCatches: string[] = [];
-  let coins = 0;
-  for (const c of catches) {
-    const def = species.get(c.speciesId);
-    if (!def) continue;
+  const known = catches.filter((c) => species.has(c.speciesId));
+  for (const c of known) {
     const entry = fishbook[c.speciesId];
-    // Wissen gilt erst ab dem zweiten Fang: beim ersten lernt man die Art gerade kennen.
-    coins += fishValue(def, entry !== undefined, c.combo, p, bonus);
     if (entry) fishbook[c.speciesId] = { ...entry, count: entry.count + 1 };
     else {
       fishbook[c.speciesId] = { count: 1, firstAt: now };
@@ -69,12 +64,11 @@ export function landCatch(
     }
   }
   return {
-    coins,
     firstCatches,
     save: {
       ...save,
-      coins: save.coins + coins,
       fishbook,
+      crate: addToCrate(save.crate, known),
       stats: { casts: save.stats.casts + 1, deepestMeters: Math.max(save.stats.deepestMeters, deepestMeters) },
       updatedAt: now,
     },

@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -91,11 +91,17 @@ export interface SaveV12 extends Omit<SaveV11, 'version'> {
   };
 }
 
-export type Save = SaveV12;
+export interface SaveV13 extends Omit<SaveV12, 'version'> {
+  version: 13;
+  /** Fischkiste: Gefangenes wartet hier, bis es bei Bruno verkauft wird (siehe systems/market.ts). */
+  crate: Record<string, { n: number; premium: number }>;
+}
+
+export type Save = SaveV13;
 
 export function newSave(now: number): Save {
   return {
-    version: 12,
+    version: 13,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -114,6 +120,7 @@ export function newSave(now: number): Save {
     bait: null,
     harbor: { life: [], chatter: {} },
     perks: { tip: null, charter: { day: '', aboard: false, album: [] } },
+    crate: {},
   };
 }
 
@@ -167,6 +174,8 @@ const migrations: Record<number, Migration> = {
   10: (old) => ({ ...old, harbor: { life: [], chatter: {} } }),
   // v11 → v12: Gisela und Schulze bieten Dienste an.
   11: (old) => ({ ...old, perks: { tip: null, charter: { day: '', aboard: false, album: [] } } }),
+  // v12 → v13: Fang kommt erst in die Kiste und wird bei Bruno verkauft.
+  12: (old) => ({ ...old, crate: {} }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

@@ -288,6 +288,23 @@ body {
   font-size: 15px;
 }
 
+.hud-crate {
+  /* Links neben „Konto“: Fischkiste mit Anzahl */
+  right: calc(var(--safe-right) + var(--ui-margin) + 96px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+.hud-crate .icon {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+.hud-crate.bump {
+  animation: bump 0.4s ease-out;
+}
+
 .account-button.online::before {
   content: '';
   display: inline-block;

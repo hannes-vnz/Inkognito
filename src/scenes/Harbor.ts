@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { baitById, baits, gags, harbor, homeOf, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gags, harbor, homeOf, marketParams, params, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
 import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters, unlockedSpots } from '../systems/seaMap';
@@ -9,7 +9,8 @@ import { play } from '../audio/sfx';
 import { animKey } from '../entities/Octopus';
 import { dialogNode, faceOf, type Face, type NpcDef } from '../systems/dialog';
 import { markSeen, nextBeat, npcMet } from '../systems/story';
-import { fulfillRequest, newRequest } from '../systems/requests';
+import { newRequest } from '../systems/requests';
+import { castsUntilTick, crateCount, marketTick, priceTrend, sellFish } from '../systems/market';
 import { answerQuiz, pickQuiz, quizReady } from '../systems/quiz';
 import { upgradeValue } from '../systems/economy';
 import type { Save } from '../systems/save';
@@ -24,6 +25,10 @@ export interface HarborHost {
   /** Darf gerade jemand angesprochen werden (an Deck, nichts offen)? */
   canTalk(): boolean;
   say(text: string): void;
+  /** Heutiger Stückpreis einer Art bei Bruno (angetippt: `combo`). */
+  priceOf(speciesId: string, combo?: boolean): number;
+  /** Münzen fliegen von dieser Stelle (Weltkoordinaten) zum Zähler. */
+  celebrate(coins: number, x: number, y: number): void;
 }
 
 const SCALE = 2;
@@ -99,7 +104,8 @@ export class Harbor {
       const s = this.scene.add.sprite(p.x, p.y, n.sprite, 0).setOrigin(0.5, 1).setScale(SCALE).setDepth(n.place === 'stall' ? 1 : 3);
       s.play(animKey(n.sprite, 'idle'));
       s.setInteractive({ useHandCursor: true });
-      s.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => this.host.canTalk() && this.talk(n, 'start'));
+      // Nur echte Tipps aufs Spielfeld: Ein Knopf darüber (z. B. die Kiste) soll nicht durchreichen
+      s.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, (p: Phaser.Input.Pointer) => p.downElement === this.scene.game.canvas && this.host.canTalk() && this.talk(n, 'start'));
       if (n.place === 'water') this.scene.tweens.add({ targets: s, y: '-=10', duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       const m = this.scene.add
         .text(p.x + (n.place === 'stall' ? 30 : 0), p.y - n.frame.height * SCALE - 6 + (n.place === 'stall' ? 24 : 0), '', { fontFamily: '"Baloo 2", sans-serif', fontSize: '26px', color: '#ffd23f', stroke: '#1b1030', strokeThickness: 6 })
@@ -141,7 +147,7 @@ export class Harbor {
       const met = npcMet(save, story, n.id);
       this.sprites.get(n.id)?.setVisible(met);
       let mark = '';
-      if (met && n.id === 'bruno' && save.story.seen.includes(harbor.requestRequires) && save.request === null) mark = '!';
+      if (met && n.id === 'bruno' && ((save.story.seen.includes(harbor.requestRequires) && save.request === null) || crateCount(save.crate) > 0)) mark = '!';
       if (met && n.id === 'qualle' && quizReady(save, quiz, harbor)) mark = '?';
       const legend = legendOf(species, save.sea.current);
       if (met && n.id === 'knut' && legend && !save.fishbook[legend.id] && hintReady(save, save.sea.current, legend.legend.hintKeys.length, harbor)) mark = '!';
@@ -167,15 +173,79 @@ export class Harbor {
     this.scene.time.delayedCall(300, () => this.talk(npc, beat.node, done));
   }
 
-  /** Gelandete Arten gegen Brunos Wunschfisch prüfen. */
-  landed(caught: readonly string[]): void {
-    const r = fulfillRequest(this.host.save, caught);
-    if (!r.speciesId) return;
-    this.lastRequest = r.speciesId;
-    this.host.setSave(r.save);
-    const fish = t(speciesById.get(r.speciesId)!.nameKey);
-    playScene(this.scene, this.uiRoot, 'bruno_deal', { fish }, () => this.host.say(t('request.done', { fish, reward: r.reward })));
-    this.refresh();
+  /** Bruno steht am Stand und darf angesprochen werden. */
+  canOpenSale(): boolean {
+    return Boolean(this.sprites.get('bruno')?.visible) && this.host.canTalk();
+  }
+
+  /** Kiste antippen im Hafen: direkt zu Brunos Ankauf. */
+  openSale(): void {
+    const bruno = npcById.get('bruno');
+    if (bruno) this.talk(bruno, 'sell');
+  }
+
+  /** Bruno kauft den Fang zum Tageskurs; einzeln oder alles. Der Wunschfisch bringt die Prämie obendrauf. */
+  private sellFish(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
+    const save = this.host.save;
+    const ids = Object.keys(save.crate).filter((id) => (save.crate[id]?.n ?? 0) > 0);
+    if (ids.length === 0) {
+      this.sheet.show(t('sell.title'), t('sell.empty'), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
+      return;
+    }
+    const tick = marketTick(save.stats.casts, marketParams);
+    const seed = String(save.createdAt);
+    const arrows = ['↘', '→', '↗'];
+    const total = (id: string) => {
+      const c = save.crate[id]!;
+      const price = this.host.priceOf(id);
+      return price * (c.n - c.premium) + Math.round(price * params.comboMultiplier) * c.premium;
+    };
+    const sorted = [...ids].sort((x, y) => total(y) - total(x));
+    const sell = (which: readonly string[]) => {
+      const r = sellFish(this.host.save, which, (id) => this.host.priceOf(id), params.comboMultiplier);
+      this.host.setSave(r.save);
+      const at = this.sprites.get('bruno');
+      if (at) this.host.celebrate(r.coins, at.x, at.y - 40);
+      play('coin', 1.2);
+      this.anim(npc, 'react');
+      if (r.request) {
+        this.lastRequest = r.request.speciesId;
+        const fish = t(speciesById.get(r.request.speciesId)!.nameKey);
+        this.sheet.close();
+        playScene(this.scene, this.uiRoot, 'bruno_deal', { fish }, () => this.host.say(t('request.done', { fish, reward: r.request!.reward })));
+        this.refresh();
+        return true;
+      }
+      this.host.say(t('sell.done', { coins: r.coins.toLocaleString('de-DE') }));
+      return false;
+    };
+    const wish = save.request ? speciesById.get(save.request.speciesId) : undefined;
+    this.anim(npc, 'talk');
+    this.sheet.show(
+      t('sell.title'),
+      `${castsUntilTick(save.stats.casts, marketParams) === 1 ? t('sell.textSoon') : t('sell.text', { casts: castsUntilTick(save.stats.casts, marketParams) })}${wish ? ` ${t('sell.wish', { fish: t(wish.nameKey), reward: save.request!.reward })}` : ''}`,
+      [
+        ...sorted.map((id) => ({
+          label: t('sell.line', { name: t(speciesById.get(id)!.nameKey), n: save.crate[id]!.n, price: this.host.priceOf(id), trend: arrows[priceTrend(seed, id, tick, marketParams) + 1]! }),
+          meta: total(id).toLocaleString('de-DE'),
+          onSelect: () => {
+            if (sell([id])) return;
+            if (crateCount(this.host.save.crate) > 0) this.sellFish(npc, portrait, done);
+            else this.finish(npc, done);
+          },
+        })),
+        {
+          label: t('sell.all'),
+          meta: sorted.reduce((a, id) => a + total(id), 0).toLocaleString('de-DE'),
+          onSelect: () => {
+            if (!sell(sorted)) this.finish(npc, done);
+          },
+        },
+        { label: t('sell.later'), onSelect: () => this.finish(npc, done) },
+      ],
+      undefined,
+      portrait,
+    );
   }
 
   private portrait(npc: NpcDef, face: Face = 'normal'): string | undefined {
@@ -211,6 +281,7 @@ export class Harbor {
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       if (node.action?.type === 'legendHint') return this.legendHint(npc, portrait, done);
       if (node.action?.type === 'showBaits') return this.showBaits(npc, portrait, done);
+      if (node.action?.type === 'sellFish') return this.sellFish(npc, portrait, done);
       if (node.action?.type === 'giselaTip') return this.giselaTip(npc, portrait, done);
       if (node.action?.type === 'charter') return this.charter(npc, portrait, done);
       if (node.action?.type === 'gag') return this.gag(npc, this.portrait(npc, 'annoyed'), done);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import game from '../data/game.json';
-import { boardCharter, buyTip, charterBonus, charterHooks, charterReady, landCharter, tipBonus, tipPrice, useTip, type PerkParams } from '../src/systems/perks';
+import { boardCharter, buyTip, charterHooks, charterPay, charterReady, landCharter, tipHooks, tipPrice, useTip, type PerkParams } from '../src/systems/perks';
 import { migrate, newSave, type Save } from '../src/systems/save';
 
 const p = game.perks as PerkParams;
@@ -17,8 +17,8 @@ describe('Giselas Schwarm-Tipp', () => {
     expect(['shelf', 'open']).toContain(s.perks.tip!.spot);
     expect(s.coins).toBe(10_000 - tipPrice(rich(), p));
     const spot = s.perks.tip!.spot;
-    expect(tipBonus(s, spot, p)).toBe(p.tip.bonus);
-    expect(tipBonus(s, 'harbor', p)).toBe(0);
+    expect(tipHooks(s, spot, p)).toBe(p.tip.extraHooks);
+    expect(tipHooks(s, 'harbor', p)).toBe(0);
     let t = s;
     for (let i = 0; i < p.tip.casts; i++) t = useTip(t, spot);
     expect(t.perks.tip).toBeNull();
@@ -34,12 +34,13 @@ describe('Giselas Schwarm-Tipp', () => {
 });
 
 describe('Schulzes Bootscharter', () => {
-  it('einmal am Tag: zahlt mehr, kostet einen Haken, klebt neue Arten ins Album', () => {
+  it('einmal am Tag: zahlt die Tour bar, kostet einen Haken, klebt neue Arten ins Album', () => {
     const s = boardCharter(newSave(1), '2026-10-30');
     expect(charterReady(s, '2026-10-30')).toBe(false);
     expect(charterHooks(s, 3, p)).toBe(2);
     expect(charterHooks(s, 1, p)).toBe(1);
-    expect(charterBonus(s, p)).toBe(p.charter.bonus);
+    expect(charterPay(s, 200, p)).toBe(Math.round(200 * p.charter.bonus));
+    expect(charterPay(newSave(1), 200, p)).toBe(0);
     const r = landCharter(s, ['cod', 'cod', 'herring']);
     expect(r.photos).toEqual(['cod', 'herring']);
     expect(r.save.perks.charter.aboard).toBe(false);

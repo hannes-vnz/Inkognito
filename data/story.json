@@ -48,8 +48,8 @@
     "npc": "bruno",
     "node": "intro",
     "trigger": {
-      "type": "species",
-      "value": 3
+      "type": "casts",
+      "value": 1
     }
   },
   {

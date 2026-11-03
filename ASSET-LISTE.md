@@ -4,6 +4,53 @@ Stand: 29.10.2026. Alle Grafiken, die das Spiel braucht, mit Maß, Dateiname und
 Alles unter **A** ersetzt vorhandene Platzhalter 1:1: Datei mit gleichem Namen und gleichem Maß in den Ordner legen, fertig.
 **B** ist neu und braucht eine kleine Code-Anpassung (mache ich, sobald die Bilder da sind).
 
+## Einheitlicher Grafiksatz (Stand 03.11.2026, gilt vor allen Maßen weiter unten)
+
+**Warum:** Im Spiel dürfen nicht mehr drei Quellen (Platzhalter, CraftPix, Gemini) und verschiedene Vergrößerungen nebeneinander stehen. Ab jetzt gilt:
+
+- **Ein Stil:** der Gemini-Stil der gelieferten Figuren (Bert, Hilde, Bruno, Knut, Klementine …): saubere Pixel-Art, dunkle Kontur, warme Farben.
+- **Eine Pixelgröße:** Jede Spielgrafik wird im Spiel gleich vergrößert (×1,5). Deshalb müssen alle Grafiken in **derselben Pixeldichte** gezeichnet sein wie die Figuren. Die Maße unten sind darauf abgestimmt.
+- **Echte Transparenz:** PNG mit transparentem Hintergrund, kein eingebranntes Karo, keine Beschriftung im Bild. (Das Skript kann das notfalls entfernen, aber bei hellen Figuren wie der Möwe gehen dabei Teile verloren.)
+- **Eine Figur, ein Design:** Porträt und Sprite einer Figur müssen dieselbe Person zeigen (gleiche Mütze, Kleidung, Farben).
+- **Ausgetauscht wird erst, wenn ein Bereich komplett ist** (z. B. ganzer Hafen), damit nie gemischt aussieht. Bis dahin liegt alles auf dem Branch `claude/grafik-gemini`.
+
+### Maßstab (Pixeldichte wie die 48er-Figuren)
+
+| Was | Maß | Bemerkung |
+| --- | --- | --- |
+| Figuren (Sprites) | Felder 48 × 48, Figur ca. 44 hoch | Seitenansicht, Blick nach rechts |
+| Porträts (Dialoge) | 96 × 96 | schon geliefert, perfekt |
+| Gebäude | höchstens 96 hoch, bis 128 breit | Die gelieferten 128er-Gebäude sind etwas zu hoch: bitte auf 96 Höhe |
+| Requisiten (Fass, Kiste, Laterne …) | 16–48 | Laterne ca. 24 × 64 |
+| Boot (Seitenansicht) | 128 × 64 | Bert (44 hoch) steht darauf |
+| Fische klein / mittel / groß | 24–32 / 40–56 / 64–96 breit | Legenden 128–160 breit |
+| Deko unter Wasser (Korallen, Seegras, Ruinen) | 32–96 | |
+
+### Was für einen einheitlichen **Hafen** noch fehlt
+
+1. **Hafen-Figuren als Sprites** (48er-Felder, je Zeile 4 Frames: idle, reden, reagieren), passend zu ihren Porträts:
+   - Hilde, Bruno (der **Hai** im Mantel, nicht der Mensch aus `bruno_walk`), Opa Knut (mit **roter Mütze** wie im Porträt, nicht mit Kapitänsmütze), Möwe Gisela (mit echter Transparenz), Professorin Qualle und Herr Schulze.
+   - Zu klären: Ist der Professor mit der Qualle im Helm unsere „Professorin Qualle“? Ist Trixi mit der Kamera der neue Tourist statt Herr Schulze?
+2. **Bert an Deck** (48er-Felder, Seitenansicht): auswerfen, kurbeln, jubeln (je 4 Frames). Stehen, schwitzen und auffliegen sind schon da.
+3. **Boot** in Seitenansicht, 128 × 64, dazu Ausbaustufen 2–4.
+4. **Hafen-Panorama:** 4–6 Häuser, Leuchtturm, Brunos Fischstand, Kaimauer als einzelne Grafiken (höchstens 96 hoch).
+5. **Hafenleben:** die Angler Jens und Ole, Ruderer mit Boot, Kater Krümel, Einsiedlerkrebs (ersetzen die CraftPix-Figuren).
+6. **Fischer Bert fürs Intro** (der echte, älterer Fischer): angeln, gehen, ausrutschen und fallen, im Rettungsring treiben.
+
+### Danach: **unter Wasser** (zweiter Block)
+
+- Alle 37 Fischarten (Liste weiter unten, Maße nach der Tabelle oben). Gemini hatte laut Übergabe schon Fische erzeugt (`processed/fishes_surface`, `sea1_mid`, `sea2_reef`): bitte genau die auch hochladen.
+- Meeresboden, Korallen, Seegras, Felsen, Ruinen.
+- Haken, Luftblase, Kiste, Flaschenpost.
+
+### Schon geliefert und eingeplant (Branch `claude/grafik-gemini`)
+
+- Porträts: Bert (5 Ausdrücke), Hilde (normal, wütend), Bruno (2), Gisela, Knut (2), dazu Klementine, Scholle, Agent Krause, Barry, Fiete, Marina, Dr. Krebs, Lars, Penelope, Stefan, Trixi, Hein, Professor (2).
+- Bert als Spielfigur: stehen, zeigen, schwitzen, Verkleidung fällt ab (Oktopus!).
+- Laufzyklen: Klementine, Scholle, Bruno (Mensch), Fiete, Penelope, Trixi, Bert; Idle: Gisela, Hein, Knut (Kapitänsmütze), Dr. Krebs.
+- Gebäude und Requisiten: Hafenamt/Hütte, Pub „Anker“, Laterne, Fässer, Kisten, Bojen, Hummerkorb, Anker, Karren, Ruderboot, Taucherausrüstung.
+- Nicht verwendbar: die Bodenkacheln (Kopfsteinpflaster, Steg, Beton, Wasser), weil sie von oben gezeichnet sind; das Spiel ist eine Seitenansicht. Ebenso die Laufzyklen nach oben und unten.
+
 ## So liefern
 
 - **PNG mit transparentem Hintergrund**, Pixel-Art ohne Weichzeichnung und ohne Kantenglättung.

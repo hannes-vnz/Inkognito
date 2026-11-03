@@ -301,6 +301,9 @@ body {
   height: 24px;
   image-rendering: pixelated;
 }
+.hud-crate[hidden] {
+  display: none;
+}
 .hud-crate.bump {
   animation: bump 0.4s ease-out;
 }

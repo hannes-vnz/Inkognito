@@ -396,6 +396,10 @@ export function makeFish({ Image, hex, mix, rampOf, outlineRegion, white }) {
     monkfish: { kind: 'angler', height: 0.32, fringe: true, lureGlow: false },
     langoustine: { kind: 'shrimp', claws: true },
     basking_shark: { kind: 'shark', gape: true, gills: 5 },
+    sturgeon: { kind: 'shark', barbel: true, pattern: 'line', height: 0.26, back: '#5a4a3a' },
+    clownfish: { back: '#ff7a1a', belly: '#ffb04a', pattern: 'bars', bar: '#ffffff', height: 0.5, len: 0.3 },
+    parrotfish: { back: '#2fb8a0', belly: '#7be0c8', pattern: 'waves', height: 0.45, fin: '#ff6bb0' },
+    barracuda: { kind: 'eel', fangs: true, pattern: 'bars', bar: '#2a3a4a', back: '#7a8a9a', height: 0.22 },
   };
 
   function drawSpecies(def) {

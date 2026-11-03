@@ -15,9 +15,10 @@ const species = fishJson as unknown as SpeciesDef[];
 const pp = gameJson.prestige as PrestigeParams;
 const T = 1_800_000_000_000;
 
-const knowing = (n: number, sea = 'atlantic'): Save => {
+const knowing = (n: number, sea = 'northsea', legend = true): Save => {
   const s = newSave(T);
-  const ids = species.filter((f) => f.sea === sea).slice(0, n).map((f) => f.id);
+  const ids = species.filter((f) => f.sea === sea && !(f as { legend?: unknown }).legend).slice(0, n).map((f) => f.id);
+  if (legend) ids.push(...species.filter((f) => f.sea === sea && (f as { legend?: unknown }).legend).map((f) => f.id));
   return { ...s, fishbook: Object.fromEntries(ids.map((id) => [id, { count: 1, firstAt: T }])) };
 };
 
@@ -28,35 +29,50 @@ describe('Prestige: neue Meere', () => {
       if (sea.nextKnown !== null) expect(here.length).toBeGreaterThanOrEqual(sea.nextKnown);
       expect(spotsJson.filter((s) => s.sea === sea.id && s.harbor)).toHaveLength(1);
     }
-    expect(nextSea(seas, 'atlantic')?.id).toBe('northsea');
+    expect(seas[0]!.id).toBe('northsea');
+    expect(nextSea(seas, 'northsea')?.id).toBe('pacific');
     expect(nextSea(seas, seas[seas.length - 1]!.id)).toBeNull();
   });
 
-  it('Weiterziehen erst mit genug bekannten Arten des aktuellen Meeres', () => {
+  it('Weiterziehen erst mit genug bekannten Arten und der Legende (Kartenstück) des aktuellen Meeres', () => {
     const need = seas[0]!.nextKnown!;
-    expect(canMoveOn(knowing(need - 1), seas, species)).toBe(false);
+    expect(canMoveOn(knowing(need - 1, 'northsea', false), seas, species)).toBe(false);
+    expect(canMoveOn(knowing(need, 'northsea', false), seas, species)).toBe(false);
     expect(canMoveOn(knowing(need), seas, species)).toBe(true);
-    expect(knownInSea(knowing(need), species, 'northsea')).toBe(0);
+    expect(knownInSea(knowing(need), species, 'pacific')).toBe(0);
   });
 
   it('setzt Münzen und Upgrades zurück, behält Wissen, gibt dauerhaften Bonus', () => {
     const before: Save = { ...knowing(15), coins: 999, upgrades: { line: 5, hook: 4, crew: 3, engine: 2 }, story: { seen: ['hilde_intro'] } };
-    const after = moveOn(before, 'northsea', 'watt', T + 1);
+    const after = moveOn(before, 'pacific', 'harbor', T + 1);
     expect(after.coins).toBe(0);
     expect(after.upgrades).toEqual({ line: 0, hook: 0, crew: 0, engine: 0 });
     expect(after.fishbook).toEqual(before.fishbook);
     expect(after.story).toEqual(before.story);
-    expect(after.map.spot).toBe('watt');
-    expect(after.sea).toEqual({ current: 'northsea', left: ['atlantic'] });
+    expect(after.map.spot).toBe('harbor');
+    expect(after.sea).toEqual({ current: 'pacific', left: ['northsea'] });
     expect(prestigeBonus(before, pp)).toBe(0);
     expect(prestigeBonus(after, pp)).toBe(pp.coinBonusPerSea);
   });
 
-  it('Hilde begrüßt Bert in der Nordsee', () => {
+  it('Hilde begrüßt Bert in der Südsee', () => {
     const beats = storyJson as StoryBeat[];
-    let s = moveOn(knowing(15), 'northsea', 'watt', T);
-    for (const b of beats) if (b.id !== 'hilde_northsea') s = markSeen(s, b.id);
-    expect(nextBeat(s, beats)?.id).toBe('hilde_northsea');
+    let s = moveOn(knowing(15), 'pacific', 'harbor', T);
+    for (const b of beats) if (b.id !== 'hilde_pacific') s = markSeen(s, b.id);
+    expect(nextBeat(s, beats)?.id).toBe('hilde_pacific');
+  });
+
+  it('Spielstand v15: Atlantik wird Südsee, wer noch im ersten Meer war, startet in der Nordsee', async () => {
+    const { migrate } = await import('../src/systems/save');
+    const v14 = (sea: { current: string; left: string[] }) => ({ ...newSave(T), version: 14, sea, map: { ...newSave(T).map, spot: 'open' }, legend: { hints: { atlantic: 2 }, hintAtCast: 0, snapped: ['atlantic'] } });
+    const a = migrate(v14({ current: 'atlantic', left: [] }), T);
+    expect(a.sea).toEqual({ current: 'northsea', left: [] });
+    expect(a.map.spot).toBe('watt');
+    expect(a.legend.hints).toEqual({ pacific: 2 });
+    expect(a.legend.snapped).toEqual(['pacific']);
+    const b = migrate(v14({ current: 'northsea', left: ['atlantic'] }), T);
+    expect(b.sea).toEqual({ current: 'northsea', left: ['pacific'] });
+    expect(b.map.spot).toBe('open');
   });
 });
 

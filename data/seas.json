@@ -1,9 +1,73 @@
 [
   {
-    "id": "atlantic",
-    "nameKey": "sea.atlantic.name",
-    "descKey": "sea.atlantic.desc",
-    "nextKnown": 15,
+    "id": "northsea",
+    "nameKey": "sea.northsea.name",
+    "descKey": "sea.northsea.desc",
+    "nextKnown": 10,
+    "zones": [
+      {
+        "id": "coast",
+        "nameKey": "zone.coast.name",
+        "enterKey": "zone.coast.enter",
+        "depthMeters": [
+          0,
+          20
+        ],
+        "water": [
+          "#7fc9b0",
+          "#4f9f8f"
+        ],
+        "sparkle": false
+      },
+      {
+        "id": "shallow",
+        "nameKey": "zone.shallow.name",
+        "enterKey": "zone.shallow.enter",
+        "depthMeters": [
+          20,
+          50
+        ],
+        "water": [
+          "#4f9f8f",
+          "#3a7f7a"
+        ],
+        "sparkle": false
+      },
+      {
+        "id": "bank",
+        "nameKey": "zone.bank.name",
+        "enterKey": "zone.bank.enter",
+        "depthMeters": [
+          50,
+          100
+        ],
+        "water": [
+          "#3a7f7a",
+          "#2a5f6a"
+        ],
+        "sparkle": false
+      },
+      {
+        "id": "trench_ns",
+        "nameKey": "zone.trench_ns.name",
+        "enterKey": "zone.trench_ns.enter",
+        "depthMeters": [
+          100,
+          700
+        ],
+        "water": [
+          "#2a5f6a",
+          "#0f2a3a"
+        ],
+        "sparkle": false
+      }
+    ]
+  },
+  {
+    "id": "pacific",
+    "nameKey": "sea.pacific.name",
+    "descKey": "sea.pacific.desc",
+    "nextKnown": null,
     "zones": [
       {
         "id": "sunlight",
@@ -74,70 +138,6 @@
         ],
         "enterKey": "zone.hadal.enter",
         "sparkle": true
-      }
-    ]
-  },
-  {
-    "id": "northsea",
-    "nameKey": "sea.northsea.name",
-    "descKey": "sea.northsea.desc",
-    "nextKnown": null,
-    "zones": [
-      {
-        "id": "coast",
-        "nameKey": "zone.coast.name",
-        "enterKey": "zone.coast.enter",
-        "depthMeters": [
-          0,
-          20
-        ],
-        "water": [
-          "#7fc9b0",
-          "#4f9f8f"
-        ],
-        "sparkle": false
-      },
-      {
-        "id": "shallow",
-        "nameKey": "zone.shallow.name",
-        "enterKey": "zone.shallow.enter",
-        "depthMeters": [
-          20,
-          50
-        ],
-        "water": [
-          "#4f9f8f",
-          "#3a7f7a"
-        ],
-        "sparkle": false
-      },
-      {
-        "id": "bank",
-        "nameKey": "zone.bank.name",
-        "enterKey": "zone.bank.enter",
-        "depthMeters": [
-          50,
-          100
-        ],
-        "water": [
-          "#3a7f7a",
-          "#2a5f6a"
-        ],
-        "sparkle": false
-      },
-      {
-        "id": "trench_ns",
-        "nameKey": "zone.trench_ns.name",
-        "enterKey": "zone.trench_ns.enter",
-        "depthMeters": [
-          100,
-          700
-        ],
-        "water": [
-          "#2a5f6a",
-          "#0f2a3a"
-        ],
-        "sparkle": false
       }
     ]
   }

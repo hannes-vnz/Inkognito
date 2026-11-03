@@ -94,10 +94,14 @@ export class MapUi {
   }
 
   /** Fortschritt zum nächsten Meer; leuchtet, sobald man weiterziehen kann. */
-  showPrestige(progress: { known: number; need: number; nextName: string } | null, ready: boolean): void {
+  showPrestige(progress: { known: number; need: number; nextName: string; legend: string | null } | null, ready: boolean): void {
     this.prestige.hidden = !progress;
     if (!progress) return;
-    this.prestige.textContent = ready ? t('prestige.button', { sea: progress.nextName }) : t('prestige.progress', { known: progress.known, need: progress.need });
+    this.prestige.textContent = ready
+      ? t('prestige.button', { sea: progress.nextName })
+      : progress.known >= progress.need && progress.legend
+        ? t('prestige.legend', { legend: progress.legend })
+        : t('prestige.progress', { known: progress.known, need: progress.need });
     this.prestige.disabled = !ready;
     this.prestige.classList.toggle('primary', ready);
     this.prestige.classList.toggle('ready', ready);

@@ -8,12 +8,21 @@
     }
   },
   {
-    "id": "hilde_northsea",
+    "id": "hilde_pacific",
     "npc": "hilde",
-    "node": "northsea",
+    "node": "moved",
     "trigger": {
       "type": "sea",
-      "value": "northsea"
+      "value": "pacific"
+    }
+  },
+  {
+    "id": "bruno_intro",
+    "npc": "bruno",
+    "node": "intro",
+    "trigger": {
+      "type": "casts",
+      "value": 1
     }
   },
   {
@@ -22,7 +31,7 @@
     "node": "upgrades",
     "trigger": {
       "type": "casts",
-      "value": 1
+      "value": 2
     }
   },
   {
@@ -41,15 +50,6 @@
     "trigger": {
       "type": "casts",
       "value": 3
-    }
-  },
-  {
-    "id": "bruno_intro",
-    "npc": "bruno",
-    "node": "intro",
-    "trigger": {
-      "type": "casts",
-      "value": 1
     }
   },
   {
@@ -138,22 +138,22 @@
     "requires": "knut_intro"
   },
   {
-    "id": "knut_northsea",
+    "id": "knut_pacific",
     "npc": "knut",
-    "node": "northsea",
+    "node": "moved",
     "trigger": {
       "type": "sea",
-      "value": "northsea"
+      "value": "pacific"
     },
     "requires": "knut_intro"
   },
   {
-    "id": "knut_caught_atlantic",
+    "id": "knut_caught_pacific",
     "npc": "knut",
     "node": "caught",
     "trigger": {
       "type": "caught",
-      "value": "oarfish"
+      "value": "giant_squid"
     },
     "requires": "knut_intro"
   },
@@ -163,7 +163,7 @@
     "node": "caught",
     "trigger": {
       "type": "caught",
-      "value": "basking_shark"
+      "value": "sturgeon"
     },
     "requires": "knut_intro"
   }

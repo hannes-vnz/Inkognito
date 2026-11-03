@@ -7,7 +7,8 @@ import { deserialize, migrate, newSave, SAVE_VERSION, serialize, type Save } fro
 import { createRng } from '../src/systems/rng';
 import fishJson from '../data/fish.json';
 import seasJson from '../data/seas.json';
-const zonesJson = seasJson[0]!.zones;
+// Tiefenskala und Runden-Tests im tiefen Meer (Südsee); der Balance-Test spielt das erste Meer
+const zonesJson = seasJson.find((x) => x.id === 'pacific')!.zones;
 import upgradesJson from '../data/upgrades.json';
 import gameJson from '../data/game.json';
 import spotsJson from '../data/spots.json';
@@ -21,8 +22,11 @@ const map: DepthMap = { zones: zonesJson as unknown as DepthMap['zones'], unitsP
 const upgrades = upgradesJson as UpgradeDef[];
 const up = (id: string) => upgrades.find((u) => u.id === id)!;
 const dt = 1 / 60;
-const spots = spotsJson as SpotDef[];
+const firstSea = seasJson[0]!;
+const spots = (spotsJson as SpotDef[]).filter((s) => s.sea === firstSea.id);
 const home = spots.find((s) => s.harbor)!;
+const firstMap: DepthMap = { zones: firstSea.zones as unknown as DepthMap['zones'], unitsPerZone: p.unitsPerZone, surfaceY: p.surfaceY };
+const firstSpecies = species.filter((s) => s.sea === firstSea.id);
 const T = 1_800_000_000_000;
 
 describe('Tiefenskala', () => {
@@ -46,14 +50,18 @@ describe('Arten', () => {
       expect(species.some((s) => mid >= s.depthMeters[0] && mid <= s.depthMeters[1]), z.id).toBe(true);
     }
   });
-  it('tiefer ist wertvoller: erwarteter Wert eines Fangs in der Mitte jeder Zone steigt', () => {
-    const expected = map.zones.map((z) => {
-      const m = (z.depthMeters[0] + z.depthMeters[1]) / 2;
-      const here = species.filter((s) => m >= s.depthMeters[0] && m <= s.depthMeters[1]);
-      const w = here.reduce((n, s) => n + s.weight, 0);
-      return here.reduce((n, s) => n + s.value * s.weight, 0) / w;
-    });
-    for (let i = 1; i < expected.length; i++) expect(expected[i], map.zones[i]!.id).toBeGreaterThan(expected[i - 1]!);
+  it('tiefer ist wertvoller: erwarteter Wert eines Fangs in der Mitte jeder Zone steigt (in jedem Meer)', () => {
+    for (const sea of seasJson) {
+      const zones = sea.zones as unknown as DepthMap['zones'];
+      const own = species.filter((s) => s.sea === sea.id);
+      const expected = zones.map((z) => {
+        const m = (z.depthMeters[0] + z.depthMeters[1]) / 2;
+        const here = own.filter((s) => m >= s.depthMeters[0] && m <= s.depthMeters[1]);
+        const w = here.reduce((n, s) => n + s.weight, 0);
+        return here.reduce((n, s) => n + s.value * s.weight, 0) / w;
+      });
+      for (let i = 1; i < expected.length; i++) expect(expected[i], `${sea.id} ${zones[i]!.id}`).toBeGreaterThan(expected[i - 1]!);
+    }
   });
   it('würfelt nur Arten, die in der Tiefe leben', () => {
     const rng = createRng(1);
@@ -168,16 +176,16 @@ describe('Balance: die ersten Minuten', () => {
       const range = upgradeValue(up('engine'), save.upgrades.engine);
       const spot = unlockedSpots(spots, home, range).sort((a, b) => b.maxMeters - a.maxMeters)[0]!;
       const line = reachableMeters(upgradeValue(up('line'), save.upgrades.line), spots, home, range);
-      const pool = spotSpecies(species, spot, (gameJson.map as MapParams).boostWeight);
-      const s = createRound(`sim-${r}`, 390, line, upgradeValue(up('hook'), save.upgrades.hook), pool, map, p);
+      const pool = spotSpecies(firstSpecies, spot, (gameJson.map as MapParams).boostWeight);
+      const s = createRound(`sim-${r}`, 390, line, upgradeValue(up('hook'), save.upgrades.hook), pool, firstMap, p);
       for (let i = 0; i < 60 * 120 && s.phase !== 'surface'; i++) {
         const near = s.fish
           .filter((f) => !f.caught && (s.phase === 'descent' ? f.y > s.hookY && f.y < s.hookY + 220 : f.y < s.hookY && f.y > s.hookY - 260))
           .sort((a, b) => Math.abs(a.y - s.hookY) - Math.abs(b.y - s.hookY))[0];
         const steer = !near ? null : s.phase === 'descent' ? (near.x > 195 ? near.x - 160 : near.x + 160) : near.x;
-        stepRound(s, steer, byId, map, p, dt);
+        stepRound(s, steer, byId, firstMap, p, dt);
       }
-      save = landCatch(save, s.caught.map((f) => ({ speciesId: f.speciesId, combo: false })), Math.round(yToMeters(s.deepestY, map)), byId, T).save;
+      save = landCatch(save, s.caught.map((f) => ({ speciesId: f.speciesId, combo: false })), Math.round(yToMeters(s.deepestY, firstMap)), byId, T).save;
       // Verkauft nach jedem Wurf alles bei Bruno zum Tageskurs
       const tick = marketTick(save.stats.casts, market);
       const priced = save;
@@ -216,7 +224,7 @@ describe('Spielstand v3', () => {
   it('migriert v0, v1 und v2 (Muscheln werden Münzen)', () => {
     expect(migrate({ shells: 42 }, T).coins).toBe(42);
     expect(migrate({ version: 1, shells: 7, createdAt: 5 }, T)).toMatchObject({ coins: 7, createdAt: 5 });
-    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 14, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "harbor", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "atlantic", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
+    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 15, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "watt", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "northsea", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
   });
   it('kaputte Daten ergeben einen neuen Stand, zu neue Versionen werfen', () => {
     expect(deserialize('{nicht json', T)).toEqual(newSave(T));

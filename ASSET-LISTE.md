@@ -183,8 +183,13 @@ Raster: 4 Spalten × 4 Zeilen. **Dateigröße = 4 × Feldbreite mal 4 × Feldhö
 | turbot | Steinbutt | 26 × 16 |
 | monkfish | Seeteufel | 30 × 18 |
 | langoustine | Kaisergranat | 20 × 12 |
-| oarfish | Riemenfisch – **Legende „Die Seeschlange“** | 64 × 16 |
-| basking_shark | Riesenhai – **Legende „Das Ungeheuer von Stronsay“** | 64 × 24 |
+| oarfish | Riemenfisch | 64 × 16 |
+| basking_shark | Riesenhai | 64 × 24 |
+| sturgeon | Europäischer Stör – **Legende Nordsee „Der Uralt-Stör“** (mit rostigen Harpunen) | 64 × 20 |
+| giant_squid | (siehe oben) – **Legende Südsee „Der Titan-Krake“** | 48 × 20 |
+| clownfish | Clownfisch | 16 × 12 |
+| parrotfish | Papageifisch | 24 × 14 |
+| barracuda | Großer Barrakuda | 32 × 10 |
 
 Tipp: Bei den Fischen reicht notfalls ein gutes Einzelbild pro Art, die vier Zeilen (Wackeln, Schwanzschlag, Drehen) kann ich daraus per Skript ableiten.
 

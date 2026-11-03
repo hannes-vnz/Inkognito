@@ -15,7 +15,12 @@ export interface PrestigeParams {
 interface SeaSpecies {
   id: string;
   sea: string;
+  legend?: unknown;
 }
+
+/** Die Legende eines Meeres ist noch nicht gefangen (null, wenn es keine gibt oder sie schon im Fischbuch steht). */
+export const missingLegend = <T extends SeaSpecies>(save: Save, species: readonly T[], sea: string): T | null =>
+  species.find((s) => s.sea === sea && s.legend && !save.fishbook[s.id]) ?? null;
 
 export const knownInSea = (save: Save, species: readonly SeaSpecies[], sea: string): number =>
   species.filter((s) => s.sea === sea && save.fishbook[s.id]).length;
@@ -29,7 +34,8 @@ export function nextSea<T extends SeaDef>(seas: readonly T[], current: string): 
 export function canMoveOn(save: Save, seas: readonly SeaDef[], species: readonly SeaSpecies[]): boolean {
   const here = seas.find((s) => s.id === save.sea.current);
   if (!here || here.nextKnown === null || !nextSea(seas, here.id)) return false;
-  return knownInSea(save, species, here.id) >= here.nextKnown;
+  // Weiter geht es erst mit genug Arten UND der Legende: In ihrem Bauch steckt das Kartenstück zum nächsten Meer
+  return knownInSea(save, species, here.id) >= here.nextKnown && !missingLegend(save, species, here.id);
 }
 
 /** Dauerhafter Münzbonus aus verlassenen Meeren (0.25 = +25 %). */

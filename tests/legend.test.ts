@@ -45,7 +45,7 @@ describe('Legenden', () => {
   });
 
   it('erscheint nur am richtigen Platz, zur richtigen Zeit, mit genug Leine', () => {
-    const l = legendOf(species, 'atlantic')!;
+    const l = legendOf(species, 'pacific')!;
     const deep = l.depthMeters[1] + 100;
     let hits = 0;
     for (let i = 0; i < 50; i++) {
@@ -67,18 +67,18 @@ describe('Legenden', () => {
 
   it('Knut verrät Hinweise der Reihe nach, mit Pause dazwischen', () => {
     let s = markSeen(newSave(1), hp.legendRequires);
-    expect(hintReady(s, 'atlantic', 3, hp)).toBe(true);
-    s = takeHint(s, 'atlantic', hp);
-    expect(hintsGiven(s, 'atlantic')).toBe(1);
-    expect(hintReady(s, 'atlantic', 3, hp)).toBe(false);
+    expect(hintReady(s, 'pacific', 3, hp)).toBe(true);
+    s = takeHint(s, 'pacific', hp);
+    expect(hintsGiven(s, 'pacific')).toBe(1);
+    expect(hintReady(s, 'pacific', 3, hp)).toBe(false);
     s = { ...s, stats: { ...s.stats, casts: hp.legendHintEveryCasts } };
-    expect(hintReady(s, 'atlantic', 3, hp)).toBe(true);
+    expect(hintReady(s, 'pacific', 3, hp)).toBe(true);
     expect(hintsGiven(s, 'northsea')).toBe(0);
-    expect(markSnapped(markSnapped(s, 'atlantic'), 'atlantic').legend.snapped).toEqual(['atlantic']);
+    expect(markSnapped(markSnapped(s, 'pacific'), 'pacific').legend.snapped).toEqual(['pacific']);
   });
 
   it('eine losgerissene Legende verschwindet vom Haken und beißt nicht wieder an', () => {
-    const l = legendOf(species, 'atlantic')!;
+    const l = legendOf(species, 'pacific')!;
     const map: DepthMap = { zones: seasJson[0]!.zones as unknown as DepthMap['zones'], unitsPerZone: 2600, surfaceY: 260 };
     const p = gameJson.fishing as unknown as FishingParams;
     const r = createRound('x', 390, 600, 3, [], map, p, 0, [{ species: l, meters: 300 }]);

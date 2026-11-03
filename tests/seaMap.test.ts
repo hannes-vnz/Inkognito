@@ -9,7 +9,7 @@ import type { SpeciesDef } from '../src/systems/fishing';
 import { newSave } from '../src/systems/save';
 
 const allSpots = spotsJson as SpotDef[];
-const spots = allSpots.filter((s) => s.sea === 'atlantic');
+const spots = allSpots.filter((s) => s.sea === 'pacific');
 const home = spots.find((s) => s.harbor)!;
 const mp = gameJson.map as MapParams;
 const engine = upgradesJson.find((u) => u.id === 'engine')!.values;

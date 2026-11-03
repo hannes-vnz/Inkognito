@@ -121,11 +121,11 @@
           }
         ]
       },
-      "northsea": {
-        "textKey": "npc.hilde.northsea",
+      "moved": {
+        "textKey": "npc.hilde.moved",
         "options": [
           {
-            "textKey": "npc.hilde.northsea.opt",
+            "textKey": "npc.hilde.moved.opt",
             "next": null
           }
         ],
@@ -441,16 +441,6 @@
           }
         ]
       },
-      "northsea": {
-        "textKey": "npc.knut.northsea",
-        "options": [
-          {
-            "textKey": "npc.knut.northsea.opt",
-            "next": null
-          }
-        ],
-        "face": "happy"
-      },
       "beard": {
         "textKey": "npc.knut.beard",
         "reaction": {
@@ -493,6 +483,26 @@
         "options": [
           {
             "textKey": "npc.knut.caught.opt",
+            "next": "mappiece"
+          }
+        ]
+      },
+      "moved": {
+        "textKey": "npc.knut.moved",
+        "options": [
+          {
+            "textKey": "npc.knut.moved.opt",
+            "next": null
+          }
+        ],
+        "face": "happy"
+      },
+      "mappiece": {
+        "textKey": "npc.knut.mappiece",
+        "face": "shock",
+        "options": [
+          {
+            "textKey": "npc.knut.mappiece.opt",
             "next": null
           }
         ]

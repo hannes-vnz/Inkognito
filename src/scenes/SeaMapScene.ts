@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { bottles, timeParams, homeOf, mapParams, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
 import { isNight } from '../systems/legend';
-import { canMoveOn, knownInSea, moveOn, nextSea } from '../systems/prestige';
+import { isLegend } from '../systems/legend';
+import { canMoveOn, missingLegend, knownInSea, moveOn, nextSea } from '../systems/prestige';
 import type { SpotDef } from '../systems/seaMap';
 import { Sheet } from '../ui/Sheet';
 import { clampToRange, flotsam, flotsamTaken, spotAt, spotUnlocked, stepBoat, takeFlotsam, type Boat, type Flotsam, type Point } from '../systems/seaMap';
@@ -188,6 +189,12 @@ export class SeaMapScene extends Phaser.Scene {
     }
   }
 
+  /** Name der noch fehlenden Legende dieses Meeres (für den Hinweis auf der Karte). */
+  private legendName(sea: string): string | null {
+    const l = missingLegend(this.save, species, sea);
+    return l && isLegend(l) ? t(l.legend.nameKey) : null;
+  }
+
   private spotHere() {
     const s = spotAt(this.boat, this.seaSpots, mapParams.spotRadius);
     return s && spotUnlocked(s, this.home, this.range) ? s : null;
@@ -204,7 +211,9 @@ export class SeaMapScene extends Phaser.Scene {
     const sea = seaById(this.save.sea.current);
     const next = nextSea(seas, sea.id);
     this.ui.showPrestige(
-      next && sea.nextKnown !== null ? { known: knownInSea(this.save, species, sea.id), need: sea.nextKnown, nextName: t(next.nameKey) } : null,
+      next && sea.nextKnown !== null
+        ? { known: knownInSea(this.save, species, sea.id), need: sea.nextKnown, nextName: t(next.nameKey), legend: this.legendName(sea.id) }
+        : null,
       canMoveOn(this.save, seas, species),
     );
     for (const s of this.seaSpots) {

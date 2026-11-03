@@ -7,11 +7,12 @@
     "y": 1000,
     "maxMeters": 200,
     "boost": [
-      "herring",
-      "mackerel"
+      "clownfish",
+      "parrotfish",
+      "flying_fish"
     ],
     "harbor": true,
-    "sea": "atlantic",
+    "sea": "pacific",
     "current": 0
   },
   {
@@ -26,7 +27,7 @@
       "hatchetfish"
     ],
     "harbor": false,
-    "sea": "atlantic",
+    "sea": "pacific",
     "current": 0
   },
   {
@@ -41,7 +42,7 @@
       "viperfish"
     ],
     "harbor": false,
-    "sea": "atlantic",
+    "sea": "pacific",
     "current": 0
   },
   {
@@ -56,7 +57,7 @@
       "sea_pig"
     ],
     "harbor": false,
-    "sea": "atlantic",
+    "sea": "pacific",
     "current": 0
   },
   {
@@ -71,7 +72,7 @@
       "amphipod"
     ],
     "harbor": false,
-    "sea": "atlantic",
+    "sea": "pacific",
     "current": 0
   },
   {
@@ -84,7 +85,8 @@
     "boost": [
       "brown_shrimp",
       "plaice",
-      "weever"
+      "weever",
+      "mackerel"
     ],
     "harbor": true,
     "sea": "northsea",
@@ -100,7 +102,8 @@
     "boost": [
       "cod",
       "garfish",
-      "gurnard"
+      "gurnard",
+      "herring"
     ],
     "harbor": false,
     "sea": "northsea",

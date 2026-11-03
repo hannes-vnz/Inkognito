@@ -69,12 +69,14 @@ describe('Dialog', () => {
 });
 
 describe('Story', () => {
-  it('Hilde begrüßt zuerst, danach kommt die nächste fällige Szene', () => {
+  it('Hilde begrüßt zuerst, nach dem ersten Wurf kauft Bruno den Fang, dann erklärt Hilde die Upgrades', () => {
     let s = newSave(T);
     expect(nextBeat(s, beats)?.id).toBe('hilde_intro');
     s = markSeen(s, 'hilde_intro');
     expect(nextBeat(s, beats)).toBeNull();
     s = { ...s, stats: { casts: 1, deepestMeters: 50 } };
+    expect(nextBeat(s, beats)?.id).toBe('bruno_intro');
+    s = { ...markSeen(s, 'bruno_intro'), stats: { casts: 2, deepestMeters: 50 } };
     expect(nextBeat(s, beats)?.id).toBe('hilde_upgrades');
   });
 

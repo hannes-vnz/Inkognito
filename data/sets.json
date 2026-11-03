@@ -4,16 +4,15 @@
     "nameKey": "set.surface.name",
     "species": [
       "flying_fish",
-      "herring",
-      "mackerel",
       "tuna",
-      "sunfish"
+      "sunfish",
+      "man_o_war"
     ],
     "bonus": {
       "type": "crew",
       "value": 0.15
     },
-    "sea": "atlantic"
+    "sea": "pacific"
   },
   {
     "id": "glow",
@@ -29,7 +28,7 @@
       "type": "coins",
       "value": 0.1
     },
-    "sea": "atlantic"
+    "sea": "pacific"
   },
   {
     "id": "teeth",
@@ -44,7 +43,7 @@
       "type": "coins",
       "value": 0.1
     },
-    "sea": "atlantic"
+    "sea": "pacific"
   },
   {
     "id": "not_fish",
@@ -61,7 +60,7 @@
       "type": "coins",
       "value": 0.15
     },
-    "sea": "atlantic"
+    "sea": "pacific"
   },
   {
     "id": "legends",
@@ -76,7 +75,7 @@
       "type": "coins",
       "value": 0.25
     },
-    "sea": "atlantic"
+    "sea": "pacific"
   },
   {
     "id": "camouflage",
@@ -125,5 +124,20 @@
       "value": 0.1
     },
     "sea": "northsea"
+  },
+  {
+    "id": "reef",
+    "nameKey": "set.reef.name",
+    "species": [
+      "clownfish",
+      "parrotfish",
+      "barracuda",
+      "man_o_war"
+    ],
+    "bonus": {
+      "type": "crew",
+      "value": 0.15
+    },
+    "sea": "pacific"
   }
 ]

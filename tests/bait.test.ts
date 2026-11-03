@@ -44,7 +44,7 @@ describe('Köder', () => {
   it('Legendenköder lockt die Legende sicher an, aber nur unter ihren Bedingungen', () => {
     const lb = baits.find((b) => b.effect.type === 'legend')!;
     expect(baitCallsLegend(lb)).toBe(true);
-    const l = legendOf(species, 'atlantic')!;
+    const l = legendOf(species, 'pacific')!;
     for (let i = 0; i < 20; i++) {
       expect(legendSpawn(`b${i}`, l, l.legend.spot, l.legend.night, 1000, true)).not.toBeNull();
       expect(legendSpawn(`b${i}`, l, 'harbor', l.legend.night, 1000, true)).toBeNull();

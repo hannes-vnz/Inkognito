@@ -2,7 +2,7 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
 
@@ -103,11 +103,15 @@ export interface SaveV14 extends Omit<SaveV13, 'version'> {
   gadgets: { owned: string[]; equipped: string | null };
 }
 
-export type Save = SaveV14;
+export interface SaveV15 extends Omit<SaveV14, 'version'> {
+  version: 15;
+}
+
+export type Save = SaveV15;
 
 export function newSave(now: number): Save {
   return {
-    version: 14,
+    version: 15,
     createdAt: now,
     updatedAt: now,
     coins: 0,
@@ -119,9 +123,9 @@ export function newSave(now: number): Save {
     story: { seen: [] },
     request: null,
     quiz: { nextAtCast: 0, correct: 0, asked: 0 },
-    map: { spot: 'harbor', flotsamCast: -1, flotsamTaken: [], bottlesRead: 0 },
+    map: { spot: 'watt', flotsamCast: -1, flotsamTaken: [], bottlesRead: 0 },
     daily: { lastDay: '', streak: 0 },
-    sea: { current: 'atlantic', left: [] },
+    sea: { current: 'northsea', left: [] },
     legend: { hints: {}, hintAtCast: 0, snapped: [] },
     bait: null,
     harbor: { life: [], chatter: {} },
@@ -185,6 +189,21 @@ const migrations: Record<number, Migration> = {
   12: (old) => ({ ...old, crate: {} }),
   // v13 → v14: Gadgets von Professor Blinker.
   13: (old) => ({ ...old, gadgets: { owned: [], equipped: null } }),
+  // v14 → v15: Neue Reihenfolge der Meere. Die Nordsee ist Meer 1, der Atlantik wird zur Südsee (Meer 2).
+  // Wer noch im ersten Meer war, beginnt in der Nordsee; Fischbuch, Münzen und Upgrades bleiben.
+  14: (old) => {
+    const rename = (id: string) => (id === 'atlantic' ? 'pacific' : id);
+    const sea = old.sea as { current: string; left: string[] };
+    const legend = old.legend as { hints: Record<string, number>; hintAtCast: number; snapped: string[] };
+    const left = sea.left.map(rename);
+    const startOver = rename(sea.current) === 'pacific' && !left.includes('northsea');
+    return {
+      ...old,
+      sea: startOver ? { current: 'northsea', left } : { current: rename(sea.current), left },
+      map: startOver ? { ...(old.map as Record<string, unknown>), spot: 'watt', flotsamCast: -1, flotsamTaken: [] } : old.map,
+      legend: { ...legend, hints: Object.fromEntries(Object.entries(legend.hints).map(([k, v]) => [rename(k), v])), snapped: legend.snapped.map(rename) },
+    };
+  },
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

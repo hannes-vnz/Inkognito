@@ -108,21 +108,27 @@ Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 
 | Meer | Legende | Echtes Tier | Wo und wann |
 | --- | --- | --- | --- |
-| Atlantik | Die Seeschlange | Riemenfisch | Offene See, nachts, 200–500 m, Haken ab 8 |
-| Nordsee | Das Ungeheuer von Stronsay | Riesenhai | Doggerbank, tagsüber, 0–40 m, Haken ab 6 |
+| Nordsee | Der Uralt-Stör | Europäischer Stör | Helgoländer Felsen, tagsüber, 40–100 m, Haken ab 6 |
+| Südsee | Der Titan-Krake | Riesenkalmar | Offene See, nachts, 300–1000 m, Haken ab 8 |
 
 **Köder (Bruno):** gelten für einen Wurf, Preis wächst mit Leine und Haken. Leuchtköder (leuchtende Arten ×3), Krabbelköder (alles außer Fischen ×3), Legendenköder (Legende kommt sicher, wenn Platz, Zeit und Tiefe stimmen). Daten in data/baits.json.
 
-## Prestige: Neue Meere
+## Prestige: Sechs Meere
 
-Kennt Bert genug Arten eines Meeres (Atlantik: 15 von 21), leuchtet auf der Seekarte „Neues Meer“. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde lässt sich „rein zufällig“ mitversetzen.
+Weiter ins nächste Meer geht es erst, wenn Bert genug Arten des Meeres kennt (Nordsee: 10) **und** die Legende gefangen hat: In ihrem Bauch steckt ein Stück Seekarte der Meeresbehörde, das zum nächsten Meer führt. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde und Knut lassen sich „rein zufällig“ mitversetzen.
 
-| Meer | Besonderheit | Stand |
-| --- | --- | --- |
-| Offener Atlantik | alle Zonen bis 11000 m, 21 Arten | fertig |
-| Nordsee | flach (bis 700 m), **Strömung** treibt den Haken, 14 Arten, 3 Sets | fertig |
-| Korallenriff | bunt, Schwärme, giftige Arten | später |
-| Arktis | Eis an der Oberfläche, langsame Riesen | später |
+| Nr. | Meer | Besonderheit | Legende | Stand |
+| --- | --- | --- | --- | --- |
+| 1 | Nordsee & Küste | Heimathafen, flach (bis 700 m), **Strömung**, 17 Arten | Uralt-Stör | fertig |
+| 2 | Südsee (Korallenriff & Pazifik) | Riff oben, darunter alle Zonen bis zum Marianengraben, 24 Arten | Titan-Krake | fertig (Riff noch ausbauen) |
+| 3 | Arktisches Eismeer | Eis an der Oberfläche, U-Boot-Basis der Behörde | offen | später |
+| 4 | Traum-Ozean | surreal, biolumineszent; wer hinter allem steckt | offen | später |
+| 5 | Fegefeuer-Abgrund | Lava-Schlote, die Black Box der Behörde | offen | später |
+| 6 | Urzeit-Riss | prähistorisch, Finale gegen den Ur-Leviathan | Ur-Leviathan | später |
+
+## Geschichte: Bert gegen die Meeresbehörde
+
+Bert ist ein Oktopus, der seit dem Intro als Fischer verkleidet lebt. Die **Meeresbehörde** (Inspektorin Klementine, Wachtmeister Scholle) schnüffelt ihm hinterher, weil ihr der Fischer mit dem Riesenbart verdächtig vorkommt. Gleichzeitig findet Bert heraus, dass die Behörde **Müll in sein Meer kippt** und in einem Riff-Labor Experimente macht. Hinweise kommen per **Flaschenpost** (data/bottles.json) und von Opa Knut; jede besiegte Legende liefert ein Kartenstück zum nächsten Meer. Klementine und Scholle bekommen eigene Auftritte, sobald ihre Grafiken im einheitlichen Stil fertig sind.
 
 ## Online
 

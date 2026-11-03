@@ -2,13 +2,14 @@
   "id": "octopus",
   "nameKey": "player.name",
   "sprite": "player_octopus",
-  "frameWidth": 32,
-  "frameHeight": 32,
-  "scale": 3,
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "scale": 1.5,
   "animations": [
-    { "key": "idle", "row": 0, "frames": 6, "fps": 6, "repeat": -1 },
-    { "key": "cast", "row": 1, "frames": 4, "fps": 12, "repeat": 0 },
-    { "key": "cheer", "row": 2, "frames": 4, "fps": 10, "repeat": -1 },
-    { "key": "sweat", "row": 3, "frames": 4, "fps": 8, "repeat": -1 }
+    { "key": "idle", "row": 0, "frames": 4, "fps": 3, "repeat": -1 },
+    { "key": "cast", "row": 1, "frames": 4, "fps": 10, "repeat": 0 },
+    { "key": "cheer", "row": 2, "frames": 4, "fps": 6, "repeat": -1 },
+    { "key": "sweat", "row": 3, "frames": 4, "fps": 6, "repeat": -1 },
+    { "key": "busted", "row": 4, "frames": 4, "fps": 4, "repeat": 0 }
   ]
 }

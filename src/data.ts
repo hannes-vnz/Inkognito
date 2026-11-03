@@ -31,6 +31,7 @@ import cutscenesJson from '../data/cutscenes.json';
 import type { ActingAnim, Shot } from './ui/Cutscene';
 import animsJson from '../data/anims.json';
 import sheetsJson from '../data/sheets.json';
+import harborDecorJson from '../data/harbor_decor.json';
 import type { PerkParams } from './systems/perks';
 import creditsJson from '../data/credits.json';
 import type { ChatterGag, LifeDef } from './systems/harborLife';
@@ -119,6 +120,17 @@ export interface SheetDef {
   anims: Record<string, { from?: number; to?: number; fps: number; once?: boolean }>;
 }
 export const sheets = sheetsJson as unknown as Record<string, SheetDef>;
+
+/** Gebäude und Requisiten im Hafen: x = [Anteil der Weltbreite, Versatz in px], y = Versatz zur Wasserlinie. */
+export interface HarborDecor {
+  key: string;
+  x: [number, number];
+  y: number;
+  scale: number;
+  depth: number;
+  wideOnly: boolean;
+}
+export const harborDecor = harborDecorJson as unknown as HarborDecor[];
 export const creditLines = creditsJson as string[];
 export const baitById = (id: string | null): BaitDef | null => baits.find((b) => b.id === id) ?? null;
 export const texts = textsJson as TextTable;

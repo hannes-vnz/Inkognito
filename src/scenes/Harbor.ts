@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { baitById, baits, gags, harbor, homeOf, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gags, harbor, harborDecor, homeOf, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
 import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters, unlockedSpots } from '../systems/seaMap';
@@ -59,6 +59,9 @@ export class Harbor {
     // Hafenstadt hinter dem Steg (Pixel ×6 im Bild, auf dem Schirm ×2)
     this.scene.add.image(0, surface + 4, 'bg_harbor_0').setOrigin(0, 1).setScale(1 / 3).setDepth(-18);
     this.gagIndex = this.host.save.stats.casts;
+    // Gebäude und Requisiten vor der Stadt und auf dem Steg (data/harbor_decor.json)
+    for (const d of harborDecor)
+      if (wide || !d.wideOnly) this.scene.add.image(d.x[0] * width + d.x[1], surface + d.y, d.key).setOrigin(0.5, 1).setScale(d.scale).setDepth(d.depth);
     const g = this.scene.add.graphics().setDepth(2);
     if (wide) {
       // Quer ist Platz für die Fischerhütte auf Stelzen (CraftPix, siehe CREDITS.md); ihr Steg liegt auf Höhe der Figuren

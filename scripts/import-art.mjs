@@ -13,7 +13,9 @@
 //   --bg B         auto (Standard: einfarbigen Rand entfernen) oder none
 //   --fps N        nur Acting-Streifen: Tempo in data/anims.json setzen
 //   --once         nur Acting-Streifen: Animation läuft einmal und hält das letzte Bild
+//   --rows 4,4,4   Frames pro Zeile erzwingen (z. B. wenn das Sheet neue Zeilen bekommt)
 //   --dry          nichts schreiben, nur anzeigen
+//   --out DATEI    Vorschau: nur diese Datei schreiben, Spieldaten bleiben unberührt
 // Fische: Ein einzelnes Bild genügt, die vier Zeilen (idle, swim, turn, catch) werden daraus abgeleitet.
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join } from 'node:path';
@@ -73,34 +75,111 @@ function split(img, cols, rows) {
 }
 
 /**
- * Entfernt einen einfarbigen (oder karierten) Hintergrund: Flutfüllung vom Bildrand aus über alle Pixel,
- * die einer der häufigen Randfarben ähneln. Bilder mit echter Transparenz bleiben unverändert.
+ * Entfernt den Hintergrund: Flutfüllung vom Bildrand aus über transparente Pixel, helle Grautöne
+ * (eingebranntes Karo aus Bildgeneratoren) und Farben aus den vier Bildecken. Figuren mit dunkler Kontur
+ * bleiben dabei ganz, auch wenn sie selbst hell sind.
  */
 function removeBackground(img) {
   const { width: w, height: h, data } = img;
-  const border = [];
-  for (let x = 0; x < w; x++) border.push(x, (h - 1) * w + x);
-  for (let y = 0; y < h; y++) border.push(y * w, y * w + w - 1);
-  if (border.some((p) => data[p * 4 + 3] < 250)) return img;
-  const counts = new Map();
-  for (const p of border) {
-    const k = [0, 1, 2].map((c) => data[p * 4 + c] >> 4).join(',');
-    counts.set(k, (counts.get(k) ?? 0) + 1);
-  }
-  const refs = [...counts].filter(([, n]) => n >= border.length * 0.02).map(([k]) => k.split(',').map((v) => Number(v) * 16 + 8));
-  const near = (p) => refs.some((r) => Math.hypot(data[p * 4] - r[0], data[p * 4 + 1] - r[1], data[p * 4 + 2] - r[2]) < 48);
-  const seen = new Uint8Array(w * h);
-  const stack = border.filter(near);
-  for (const p of stack) seen[p] = 1;
-  while (stack.length) {
-    const p = stack.pop();
-    data[p * 4 + 3] = 0;
-    const x = p % w;
-    for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w])
-      if (q >= 0 && q < w * h && !seen[q] && near(q)) {
-        seen[q] = 1;
-        stack.push(q);
+  const refs = [];
+  for (const [cx, cy] of [[0, 0], [w - 4, 0], [0, h - 4], [w - 4, h - 4]])
+    for (let y = cy; y < cy + 4; y++)
+      for (let x = cx; x < cx + 4; x++) {
+        const p = (y * w + x) * 4;
+        if (data[p + 3] > 127) refs.push([data[p], data[p + 1], data[p + 2]]);
       }
+  const lum = (q) => 0.3 * data[q * 4] + 0.59 * data[q * 4 + 1] + 0.11 * data[q * 4 + 2];
+  const bgLike = (q) => {
+    const p = q * 4;
+    if (data[p + 3] <= 127) return true;
+    const [r, g, b] = [data[p], data[p + 1], data[p + 2]];
+    if (Math.min(r, g, b) >= 180 && Math.max(r, g, b) - Math.min(r, g, b) <= 28) return true;
+    return refs.some((c) => Math.hypot(r - c[0], g - c[1], b - c[2]) < 30);
+  };
+  // Ein Pixel direkt an einer dunklen Kontur bleibt in der ersten Runde stehen: schließt Lücken im Umriss
+  const nearOutline = (q) => {
+    const x = q % w;
+    const y = (q - x) / w;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const n = ny * w + nx;
+        if (data[n * 4 + 3] > 127 && lum(n) < 140) return true;
+      }
+    return false;
+  };
+  const passable = (q) => data[q * 4 + 3] <= 127 || (bgLike(q) && !nearOutline(q));
+  const seen = new Uint8Array(w * h);
+  const stack = [];
+  const seed = (q) => {
+    if (!seen[q] && passable(q)) {
+      seen[q] = 1;
+      stack.push(q);
+    }
+  };
+  for (let x = 0; x < w; x++) seed(x), seed((h - 1) * w + x);
+  for (let y = 0; y < h; y++) seed(y * w), seed(y * w + w - 1);
+  while (stack.length) {
+    const q = stack.pop();
+    const x = q % w;
+    if (x > 0) seed(q - 1);
+    if (x < w - 1) seed(q + 1);
+    if (q >= w) seed(q - w);
+    if (q < w * (h - 1)) seed(q + w);
+  }
+  // Zweite Runde: den stehengebliebenen hellen Saum direkt am Hintergrund entfernen
+  const fringe = [];
+  for (let q = 0; q < w * h; q++) {
+    if (seen[q] || !bgLike(q)) continue;
+    const x = q % w;
+    if ((x > 0 && seen[q - 1]) || (x < w - 1 && seen[q + 1]) || (q >= w && seen[q - w]) || (q < w * (h - 1) && seen[q + w])) fringe.push(q);
+  }
+  for (const q of fringe) seen[q] = 1;
+  for (let q = 0; q < w * h; q++) if (seen[q]) data[q * 4 + 3] = 0;
+  return img;
+}
+
+/**
+ * Entfernt Bildreste: kleine Inseln am Bildrand (angeschnittene Nachbarfelder aus Gemini-Rastern)
+ * und alles Lose im unteren Fünftel (Beschriftungen unter den Feldern). Schweißtropfen usw. bleiben.
+ */
+function removeDebris(img) {
+  const { width: w, height: h, data } = img;
+  const label = new Int32Array(w * h).fill(-1);
+  const parts = [];
+  for (let start = 0; start < w * h; start++) {
+    if (label[start] >= 0 || data[start * 4 + 3] <= 127) continue;
+    const part = { pixels: [], top: h, border: false };
+    const stack = [start];
+    label[start] = parts.length;
+    while (stack.length) {
+      const p = stack.pop();
+      part.pixels.push(p);
+      const x = p % w;
+      const y = (p - x) / w;
+      part.top = Math.min(part.top, y);
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) part.border = true;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const q = ny * w + nx;
+          if (label[q] < 0 && data[q * 4 + 3] > 127) {
+            label[q] = parts.length;
+            stack.push(q);
+          }
+        }
+    }
+    parts.push(part);
+  }
+  const largest = Math.max(0, ...parts.map((p) => p.pixels.length));
+  for (const part of parts) {
+    if (part.pixels.length === largest) continue;
+    const small = part.pixels.length < largest * 0.08;
+    if ((small && part.border) || part.top >= h * 0.8) for (const p of part.pixels) data[p * 4 + 3] = 0;
   }
   return img;
 }
@@ -210,7 +289,7 @@ function layoutOf(target, opts) {
   const name = target.split('/').pop().replace(/\.png$/, '');
   const existing = existsSync(join(root, 'assets', target)) ? PNG.sync.read(readFileSync(join(root, 'assets', target))) : null;
   if (name.startsWith('anim_')) return { kind: 'acting', key: name.slice(5), cell: [existing?.height ?? 96, existing?.height ?? 96], rows: null };
-  if (name.startsWith('portrait_')) return { kind: 'single', cell: [64, 64], rows: [1] };
+  if (name.startsWith('portrait_')) return { kind: 'single', cell: [96, 96], rows: [1] };
   const player = readJson('data/player.json');
   if (name === player.sprite) return { kind: 'sheet', cell: [player.frameWidth, player.frameHeight], rows: player.animations.map((a) => a.frames) };
   const npc = readJson('data/npcs.json').find((n) => n.sprite === name);
@@ -242,6 +321,8 @@ function parseArgs(argv) {
     else if (a === '--fps') opts.fps = Number(next());
     else if (a === '--once') opts.once = true;
     else if (a === '--dry') opts.dry = true;
+    else if (a === '--out') opts.out = next();
+    else if (a === '--rows') opts.rows = next().split(',').map(Number);
     else if (!opts.target) opts.target = a.replace(/^assets\//, '');
     else opts.sources.push(a);
   }
@@ -275,7 +356,7 @@ function main() {
   for (const file of sourceFiles(opts.sources)) {
     const img = load(file);
     const parts = opts.grid ? split(img, opts.grid[0], opts.grid[1]) : opts.frames ? split(img, opts.frames, 1) : [img];
-    frames.push(...parts.map((f) => (opts.bg === 'none' ? f : removeBackground(f))));
+    frames.push(...parts.map((f) => removeDebris(opts.bg === 'none' ? f : removeBackground(f))));
   }
   const boxes = frames.map(bounds);
   frames = frames.filter((_, i) => boxes[i]);
@@ -284,7 +365,8 @@ function main() {
 
   // Ein gemeinsamer Maßstab für alle Frames, damit die Figur nicht pulsiert
   const margin = layout.kind === 'fish' ? 1 : 0;
-  const k = Math.min((cw - margin * 2) / Math.max(...solid.map((b) => b.w)), (ch - margin * 2) / Math.max(...solid.map((b) => b.h)));
+  // Nie vergrößern: Pixel-Art in Zielgröße bleibt 1:1 scharf
+  const k = Math.min(1, (cw - margin * 2) / Math.max(...solid.map((b) => b.w)), (ch - margin * 2) / Math.max(...solid.map((b) => b.h)));
   const cells = solid.map((b, i) => {
     const part = scale(crop(frames[i], b.x, b.y, b.w, b.h), k);
     const cell = blank(cw, ch);
@@ -294,7 +376,7 @@ function main() {
     return cell;
   });
 
-  let rows = layout.rows;
+  let rows = opts.rows ?? layout.rows;
   let list = cells;
   if (layout.kind === 'fish' && cells.length === 1) list = deriveFish(cells[0]);
   if (layout.kind === 'acting') rows = [list.length];
@@ -309,6 +391,7 @@ function main() {
 
   console.log(`${opts.target}: ${list.length} Frames à ${cw}×${ch} → ${sheet.width}×${sheet.height} (Maßstab ${k.toFixed(3)})`);
   if (opts.dry) return;
+  if (opts.out) return savePng(opts.out, sheet);
   savePng(join(root, 'assets', opts.target), sheet);
 
   // Acting-Streifen: Frame-Anzahl (und auf Wunsch Tempo) in data/anims.json nachziehen

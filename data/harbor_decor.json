@@ -1,0 +1,9 @@
+[
+  { "key": "building_harbor_office", "x": [0.3, 0], "y": -4, "scale": 1, "depth": -17.5, "wideOnly": false },
+  { "key": "building_pub", "x": [0.66, 0], "y": -4, "scale": 1, "depth": -17.5, "wideOnly": false },
+  { "key": "prop_street_lamp", "x": [0.82, 0], "y": -4, "scale": 1, "depth": -17.4, "wideOnly": true },
+  { "key": "prop_barrel_net", "x": [0, 230], "y": -2, "scale": 0.6, "depth": 2.5, "wideOnly": true },
+  { "key": "prop_buoy_stack", "x": [0, 40], "y": -2, "scale": 0.8, "depth": 2.5, "wideOnly": false },
+  { "key": "prop_crate_fish", "x": [1, -215], "y": -2, "scale": 0.7, "depth": 2.6, "wideOnly": false },
+  { "key": "prop_lobster_trap", "x": [0, 115], "y": -2, "scale": 0.7, "depth": 2.5, "wideOnly": true }
+]

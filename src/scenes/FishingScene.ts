@@ -274,7 +274,7 @@ export class FishingScene extends Phaser.Scene {
     this.rays = fx;
 
     this.boat = this.add.image(width / 2, surface + 18, 'boat_1').setOrigin(0.5, 1).setScale(3).setDepth(4);
-    this.bert = this.add.sprite(width / 2 - 54, surface - 36, player.sprite, 0).setOrigin(0.5, 1).setScale(2).setDepth(3);
+    this.bert = this.add.sprite(width / 2 - 54, surface - 27, player.sprite, 0).setOrigin(0.5, 1).setScale(player.scale).setDepth(3);
     this.bert.play(animKey(player.id, 'idle'));
     if (this.spot.harbor) this.harbor.build(width, surface);
     else islands.setVisible(false);
@@ -303,7 +303,7 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private rodTip(): { x: number; y: number } {
-    return { x: this.bert.x + 30, y: this.bert.y - 50 };
+    return { x: this.bert.x + 26, y: this.bert.y - 44 };
   }
 
   // ---------------------------------------------------------------- Eingabe

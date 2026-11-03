@@ -316,6 +316,13 @@ function particles(kind: ShotParticles): HTMLDivElement {
 
 function figure(art: CutsceneArt, f: ShotFigure, cls: string): HTMLElement {
   const anim = f.anim ? art.anim(`${f.who}_${f.anim}`) : undefined;
+  if (anim && anim.frames === 1) {
+    // Einzelbild (gezeichnete Großaufnahme): wie ein Porträt mit Atmen und Einspringen
+    const still = el('img', `cut-figure ${cls}${f.dim ? ' dim' : ''}`);
+    still.src = anim.file;
+    still.alt = '';
+    return still;
+  }
   if (anim) {
     // Bildstreifen hinter einem quadratischen Fenster, Bild für Bild verschoben
     const box = el('div', `cut-figure anim ${cls}${f.dim ? ' dim' : ''}`);

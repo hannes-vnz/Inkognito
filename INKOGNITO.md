@@ -27,6 +27,8 @@ Inkognito ist ein lustiges Angel-Incremental für Mobile: Ein Oktopus mit Fake-B
 
 **Kein Idle:** Es gibt keine Offline-Einnahmen. Wer täglich vorbeischaut, bekommt den **Tagesbonus** (wächst mit Serie und Upgrade-Stufen).
 
+**Shop statt Dialogfenster:** Werft (Hilde), Gadgets (Professor) und Kiste (Bruno) sind Reiter eines eigenen Shop-Bildschirms mit Karten, Stufen-Balken und großem Kaufknopf; die Figur spricht oben in einer Sprechblase.
+
 **Bedienung:** Unten eine feste Leiste: Karte, Kiste (Inventar, Verkauf an Bruno), Upgrades (bei Hilde) und Gadgets (Professor Blinker) gibt es nur in der Stadt, dazu das Fischbuch; darunter Auswerfen.
 
 **Tutorial (Stadt):** Der Heimathafen ist das Tutorial: auswerfen, Kiste verkaufen (Bruno legt einen Willkommensbonus drauf), erstes Upgrade bei Hilde, Karte öffnen. Danach geht es direkt raus auf Meer 1.
@@ -41,7 +43,10 @@ Gefangenes landet erst in der **Fischkiste** (Knopf oben rechts) und wird bei **
 | --- | --- | --- |
 | Leine | Maximale Tiefe | Tiny Fishing |
 | Haken | Wie viele Fische pro Aufstieg | Tiny Fishing |
-| Kiste | Platz für Fische; ist sie voll, schwimmt der Rest zurück | Dredge |
+| Kiste | Platz für Fische (Start: 5); ist sie voll, schwimmt der Rest zurück | Dredge |
+| Rolle | Haken lenkt schneller | eigene Idee |
+| Lockstoff | Mehr Fische im Wasser | eigene Idee |
+| Großausbau (einmalig) | Kühlraum (Kiste ×2), Bruno-Vertrag (+20 % Preis), Echolot (wertvolle Fische leuchten), Großer Kescher (Fangradius) | Dave the Diver |
 | Köder (später) | Bestimmte Arten tauchen öfter auf | Cat Goes Fishing |
 | Sonar (später) | Zeigt seltene Arten am Rand an | eigene Idee |
 

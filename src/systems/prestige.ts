@@ -52,7 +52,7 @@ export function moveOn(save: Save, to: string, home: string, now: number): Save 
     coins: 0,
     idleCarry: 0,
     lastTick: now,
-    upgrades: { line: 0, hook: 0, crate: 0, engine: 0 },
+    upgrades: { line: 0, hook: 0, crate: 0, steer: 0, lure: 0, engine: 0 },
     request: null,
     quiz: { ...save.quiz, nextAtCast: save.stats.casts },
     map: { ...save.map, spot: home, flotsamCast: -1, flotsamTaken: [] },

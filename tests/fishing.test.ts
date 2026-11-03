@@ -189,9 +189,10 @@ describe('Balance: die ersten Minuten', () => {
       save = sellFish(save, Object.keys(save.crate), (id) => fishValue(byId.get(id)!, (priced.fishbook[id]?.count ?? 0) >= 2, false, p, 0, priceFactor(String(priced.createdAt), id, tick, market)), p.comboMultiplier).save;
       const bought: string[] = [];
       for (;;) {
+        // Motor zuerst, sobald bezahlbar (neue Plätze), sonst das günstigste Upgrade
         const affordable = upgrades
           .filter((u) => !isMaxed(u, save.upgrades[u.id]) && upgradeCost(u, save.upgrades[u.id]) <= save.coins)
-          .sort((a, b) => upgradeCost(a, save.upgrades[a.id]) - upgradeCost(b, save.upgrades[b.id]))[0];
+          .sort((a, b) => Number(b.id === 'engine') - Number(a.id === 'engine') || upgradeCost(a, save.upgrades[a.id]) - upgradeCost(b, save.upgrades[b.id]))[0];
         if (!affordable) break;
         save = buyUpgrade(save, affordable, T);
         bought.push(affordable.id);
@@ -221,7 +222,7 @@ describe('Spielstand v3', () => {
   it('migriert v0, v1 und v2 (Muscheln werden Münzen)', () => {
     expect(migrate({ shells: 42 }, T).coins).toBe(42);
     expect(migrate({ version: 1, shells: 7, createdAt: 5 }, T)).toMatchObject({ coins: 7, createdAt: 5 });
-    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 17, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "watt", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "northsea", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
+    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 18, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "watt", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "northsea", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
   });
   it('kaputte Daten ergeben einen neuen Stand, zu neue Versionen werfen', () => {
     expect(deserialize('{nicht json', T)).toEqual(newSave(T));

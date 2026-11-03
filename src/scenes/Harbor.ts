@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { baitById, baits, gadgets, gags, harbor, homeOf, upgrades, marketParams, params, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gags, harbor, homeOf, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
 import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters, unlockedSpots } from '../systems/seaMap';
@@ -10,10 +10,9 @@ import { animKey } from '../entities/Octopus';
 import { dialogNode, faceOf, type Face, type NpcDef } from '../systems/dialog';
 import { markSeen, nextBeat, npcMet } from '../systems/story';
 import { newRequest } from '../systems/requests';
-import { buyGadget, equipGadget } from '../systems/gadgets';
-import { castsUntilTick, crateCount, marketTick, priceTrend, sellFish } from '../systems/market';
+import { crateCount } from '../systems/market';
 import { answerQuiz, pickQuiz, quizReady } from '../systems/quiz';
-import { isMaxed, upgradeCost, upgradeValue, type UpgradeDef } from '../systems/economy';
+import { upgradeValue } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { t } from '../i18n';
 import type { Sheet } from '../ui/Sheet';
@@ -26,12 +25,8 @@ export interface HarborHost {
   /** Darf gerade jemand angesprochen werden (an Deck, nichts offen)? */
   canTalk(): boolean;
   say(text: string): void;
-  /** Heutiger Stückpreis einer Art bei Bruno (angetippt: `combo`). */
-  priceOf(speciesId: string, combo?: boolean): number;
-  /** Münzen fliegen von dieser Stelle (Weltkoordinaten, sonst vom Boot) zum Zähler. */
-  celebrate(coins: number, x?: number, y?: number): void;
-  /** Etwas wurde verkauft (Tutorial). */
-  sold(): void;
+  /** Shop-Bildschirm öffnen (Werft bei Hilde, Gadgets beim Professor, Kiste bei Bruno). */
+  openShop(tab: 'werft' | 'gadgets' | 'crate'): void;
 }
 
 const SCALE = 2;
@@ -178,163 +173,12 @@ export class Harbor {
     this.scene.time.delayedCall(300, () => this.talk(npc, beat.node, done));
   }
 
-  /** Professor Blinkers Werkstatt: Gadgets kaufen oder das angehängte wechseln. */
-  private showGadgets(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
-    const save = this.host.save;
-    this.anim(npc, 'talk');
-    this.sheet.show(
-      t('gadget.title'),
-      t('gadget.text'),
-      [
-        ...gadgets.map((g) => {
-          const owned = save.gadgets.owned.includes(g.id);
-          const on = save.gadgets.equipped === g.id;
-          return {
-            label: `${t(g.nameKey)} · ${t(g.descKey)}`,
-            meta: on ? t('gadget.equipped') : owned ? t('gadget.equip') : g.price.toLocaleString('de-DE'),
-            onSelect: () => {
-              if (on) return;
-              if (owned) {
-                this.host.setSave(equipGadget(this.host.save, g.id));
-                play('tap');
-                return this.showGadgets(npc, portrait, done);
-              }
-              const bought = buyGadget(this.host.save, g);
-              if (!bought) {
-                play('error');
-                this.host.say(t('gadget.poor'));
-                return;
-              }
-              this.host.setSave(bought);
-              play('upgrade');
-              this.anim(npc, 'react');
-              this.host.say(t('gadget.bought', { name: t(g.nameKey) }));
-              this.finish(npc, done);
-            },
-          };
-        }),
-        { label: t('npc.bye'), onSelect: () => this.finish(npc, done) },
-      ],
-      undefined,
-      portrait,
-    );
-  }
-
-  /** Hildes Werft: Upgrades als Liste, kaufen bleibt im Fenster, bis man fertig ist. */
-  openUpgrades(buy: (u: UpgradeDef) => boolean): void {
-    const hilde = npcById.get('hilde')!;
-    const portrait = this.portrait(hilde, 'normal');
-    const show = () => {
-      const save = this.host.save;
-      this.anim(hilde, 'talk');
-      this.sheet.show(
-        t('werft.title'),
-        t('werft.text'),
-        [
-          ...upgrades
-            .filter((u) => u.id !== 'engine')
-            .map((u) => {
-              const level = save.upgrades[u.id];
-              const maxed = isMaxed(u, level);
-              return {
-                label: `${t(u.nameKey)} Lv ${level + 1} · ${t(u.effectKey, { value: upgradeValue(u, level) })}${maxed ? '' : ` ${t('deck.next', { value: upgradeValue(u, level + 1) })}`}`,
-                meta: maxed ? t('upgrade.max') : upgradeCost(u, level).toLocaleString('de-DE'),
-                onSelect: () => {
-                  if (maxed) return;
-                  if (!buy(u)) {
-                    play('error');
-                    this.host.say(t('werft.poor'));
-                    return;
-                  }
-                  this.anim(hilde, 'react');
-                  show();
-                },
-              };
-            }),
-          { label: t('npc.bye'), onSelect: () => this.finish(hilde) },
-        ],
-        undefined,
-        portrait,
-      );
-    };
-    show();
-  }
-
-  /** Professor Blinkers Werkstatt direkt aus der Leiste. */
-  openGadgets(): void {
-    const prof = npcById.get('prof');
-    if (prof) this.showGadgets(prof, this.portrait(prof, 'happy'));
-  }
-
-  /** Inventar: Fang ansehen und an Bruno verkaufen (er kauft per Funk auch auf See). */
-  openSale(): void {
-    const bruno = npcById.get('bruno');
-    if (bruno) this.talk(bruno, 'sell');
-  }
-
-  /** Bruno kauft den Fang zum Tageskurs; einzeln oder alles. Der Wunschfisch bringt die Prämie obendrauf. */
-  private sellFish(npc: NpcDef, portrait: string | undefined, done?: () => void): void {
-    const save = this.host.save;
-    const ids = Object.keys(save.crate).filter((id) => (save.crate[id]?.n ?? 0) > 0);
-    if (ids.length === 0) {
-      this.sheet.show(t('sell.title'), t('sell.empty'), [{ label: t('npc.ok'), onSelect: () => this.finish(npc, done) }], undefined, portrait);
-      return;
-    }
-    const tick = marketTick(save.stats.casts, marketParams);
-    const seed = String(save.createdAt);
-    const arrows = ['↘', '→', '↗'];
-    const total = (id: string) => {
-      const c = save.crate[id]!;
-      const price = this.host.priceOf(id);
-      return price * (c.n - c.premium) + Math.round(price * params.comboMultiplier) * c.premium;
-    };
-    const sorted = [...ids].sort((x, y) => total(y) - total(x));
-    const sell = (which: readonly string[]) => {
-      const r = sellFish(this.host.save, which, (id) => this.host.priceOf(id), params.comboMultiplier);
-      this.host.setSave(r.save);
-      const at = this.sprites.get('bruno');
-      this.host.celebrate(r.coins, at?.visible ? at.x : undefined, at?.visible ? at.y - 40 : undefined);
-      this.host.sold();
-      play('coin', 1.2);
-      this.anim(npc, 'react');
-      if (r.request) {
-        this.lastRequest = r.request.speciesId;
-        const fish = t(speciesById.get(r.request.speciesId)!.nameKey);
-        this.sheet.close();
-        playScene(this.scene, this.uiRoot, 'bruno_deal', { fish }, () => this.host.say(t('request.done', { fish, reward: r.request!.reward })));
-        this.refresh();
-        return true;
-      }
-      this.host.say(t('sell.done', { coins: r.coins.toLocaleString('de-DE') }));
-      return false;
-    };
-    const wish = save.request ? speciesById.get(save.request.speciesId) : undefined;
-    this.anim(npc, 'talk');
-    this.sheet.show(
-      t('sell.title'),
-      `${castsUntilTick(save.stats.casts, marketParams) === 1 ? t('sell.textSoon') : t('sell.text', { casts: castsUntilTick(save.stats.casts, marketParams) })}${wish ? ` ${t('sell.wish', { fish: t(wish.nameKey), reward: save.request!.reward })}` : ''}`,
-      [
-        ...sorted.map((id) => ({
-          label: t('sell.line', { name: t(speciesById.get(id)!.nameKey), n: save.crate[id]!.n, price: this.host.priceOf(id), trend: arrows[priceTrend(seed, id, tick, marketParams) + 1]! }),
-          meta: total(id).toLocaleString('de-DE'),
-          onSelect: () => {
-            if (sell([id])) return;
-            if (crateCount(this.host.save.crate) > 0) this.sellFish(npc, portrait, done);
-            else this.finish(npc, done);
-          },
-        })),
-        {
-          label: t('sell.all'),
-          meta: sorted.reduce((a, id) => a + total(id), 0).toLocaleString('de-DE'),
-          onSelect: () => {
-            if (!sell(sorted)) this.finish(npc, done);
-          },
-        },
-        { label: t('sell.later'), onSelect: () => this.finish(npc, done) },
-      ],
-      undefined,
-      portrait,
-    );
+  /** Bruno hat seinen Wunschfisch bekommen: kleine Zwischensequenz, danach die Prämie als Meldung. */
+  requestFulfilled(speciesId: string, reward: number): void {
+    this.lastRequest = speciesId;
+    const fish = t(speciesById.get(speciesId)!.nameKey);
+    playScene(this.scene, this.uiRoot, 'bruno_deal', { fish }, () => this.host.say(t('request.done', { fish, reward })));
+    this.refresh();
   }
 
   private portrait(npc: NpcDef, face: Face = 'normal'): string | undefined {
@@ -370,8 +214,13 @@ export class Harbor {
       if (node.action?.type === 'startQuiz') return this.startQuiz(npc, portrait, done);
       if (node.action?.type === 'legendHint') return this.legendHint(npc, portrait, done);
       if (node.action?.type === 'showBaits') return this.showBaits(npc, portrait, done);
-      if (node.action?.type === 'showGadgets') return this.showGadgets(npc, portrait, done);
-      if (node.action?.type === 'sellFish') return this.sellFish(npc, portrait, done);
+      // Läden öffnen den Shop-Bildschirm statt eines Dialogfensters
+      if (node.action?.type === 'showGadgets' || node.action?.type === 'sellFish') {
+        this.finish(npc);
+        this.host.openShop(node.action.type === 'showGadgets' ? 'gadgets' : 'crate');
+        done?.();
+        return;
+      }
       if (node.action?.type === 'giselaTip') return this.giselaTip(npc, portrait, done);
       if (node.action?.type === 'charter') return this.charter(npc, portrait, done);
       if (node.action?.type === 'gag') return this.gag(npc, this.portrait(npc, 'annoyed'), done);

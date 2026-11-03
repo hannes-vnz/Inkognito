@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
-import { baitById, gadgets, tutorialParams, marketParams, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
+import { baitById, bigUpgrades, gadgets, tutorialParams, marketParams, perkParams, dailyParams, fightParams, depthMapFor, juice, species, timeParams, fixedStepHz, mapParams, params, player, prestigeParams, seas, sets, speciesById, speciesIn, spotById, upgradeById, upgrades } from '../data';
 import type { SeaDepthMap } from '../data';
 import { prestigeBonus } from '../systems/prestige';
 import { charterHooks, charterPay, landCharter, tipHooks, useTip } from '../systems/perks';
-import { crateCount, marketTick, priceFactor } from '../systems/market';
-import { gadgetEffect } from '../systems/gadgets';
+import { castsUntilTick, crateCount, marketTick, priceFactor, priceTrend, sellFish } from '../systems/market';
+import { buyGadget, equipGadget, gadgetEffect } from '../systems/gadgets';
+import { Shop, shopCard, shopHeading, type ShopTab } from '../ui/Shop';
+import { el } from '../ui/dom';
+import { setRichText } from '../ui/rich';
+import { bigEffect, buyBig } from '../systems/bigUpgrades';
 import { advanceTutorial, mapAllowed, type TutorialEvent } from '../systems/tutorial';
 import { createFight, following, stepFight, type FightState } from '../systems/fight';
 import { baitCallsLegend, baitSpecies, consumeBait } from '../systems/bait';
@@ -25,7 +29,7 @@ import { FixedStepper } from '../systems/movement';
 import { createRng } from '../systems/rng';
 import { metersToY, yToMeters, zoneIndexAt } from '../systems/depthMap';
 import { createRound, releaseFish, stepRound, type RoundEvent, type RoundFish, type RoundState, type SpeciesDef } from '../systems/fishing';
-import { buyUpgrade, fishValue, upgradeCost, upgradeValue, landCatch, type UpgradeDef } from '../systems/economy';
+import { buyUpgrade, fishValue, isMaxed, upgradeCost, upgradeValue, landCatch, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { loadSave, writeSave } from '../storage';
 import { t } from '../i18n';
@@ -44,6 +48,10 @@ const color = (hex: string): number => Phaser.Display.Color.HexStringToColor(hex
 /** Was Hilde in der Stadt ausbaut (der Motor sitzt auf der Seekarte). */
 const townUpgrades = upgrades.filter((u) => u.id !== 'engine');
 /** Anteil der Bildschirmhöhe, an dem der Haken im Abstieg steht (darunter sieht man, was kommt). */
+/** Ab diesem Grundwert leuchtet eine Art mit dem Echolot. */
+const SONAR_MIN_VALUE = 25;
+/** Symbol je Upgrade auf den Shop-Karten. */
+const UPGRADE_ICON: Partial<Record<string, string>> = { line: 'hook', hook: 'hook', crate: 'fx_crate', steer: 'icon_map', lure: 'fx_bubble' };
 const HOOK_SCREEN_DESCENT = 0.32;
 const HOOK_SCREEN_ASCENT = 0.62;
 /** Story-Marke für das Backstory-Intro (in save.story.seen). */
@@ -126,12 +134,12 @@ export class FishingScene extends Phaser.Scene {
     this.uiRoot.className = 'fishing';
     this.ui = new DeckUi(this.uiRoot, townUpgrades, {
       cast: () => this.cast(),
-      upgrades: () => this.openUpgrades(),
-      gadgets: () => this.openGadgets(),
+      upgrades: () => this.openShop('werft'),
+      gadgets: () => this.openShop('gadgets'),
       book: () => this.openFishbook(),
       map: () => this.openMap(),
       menu: () => this.openMenu(),
-      crate: () => this.openInventory(),
+      crate: () => this.openShop('crate'),
     });
     this.sheet = new Sheet(this.uiRoot);
     this.account = new AccountMenu(this.uiRoot, this.sheet, (r) => this.applySync(r), (text) => this.ui.say(text, 3));
@@ -149,20 +157,7 @@ export class FishingScene extends Phaser.Scene {
       },
       canTalk: () => this.mode === 'deck' && !this.overlayOpen() && !this.dragged,
       say: (text) => this.ui.say(text, 3.5),
-      priceOf: (id, combo) => this.priceOf(id, combo),
-      celebrate: (coins, x = this.boat.x, y = this.depth.surfaceY - 60) => {
-        const cam = this.cameras.main;
-        this.ui.coinBurst(x - cam.scrollX, y - cam.scrollY, Math.min(30, Math.ceil(coins / 10)));
-        this.ui.floater(`+${coins.toLocaleString('de-DE')}`, x - cam.scrollX, y - cam.scrollY - 30, '#ffd23f');
-      },
-      sold: () => {
-        // Erster Verkauf im Tutorial: Bruno legt einen Willkommensbonus drauf, damit das erste Upgrade drin ist
-        if (this.save.tutorial === 'sell') {
-          this.save = { ...this.save, coins: this.save.coins + tutorialParams.saleBonus };
-          this.ui.say(t('tut.bonus', { coins: tutorialParams.saleBonus }), 3.5);
-        }
-        this.tutorialEvent('sold');
-      },
+      openShop: (tab) => this.openShop(tab),
     });
     this.buildWorld();
     this.setupInput();
@@ -397,7 +392,16 @@ export class FishingScene extends Phaser.Scene {
     const extra = this.legend && legendMeters !== null ? [{ species: this.legend, meters: legendMeters }] : [];
     // Professor Blinkers Gadget wirkt auf Sinken, Fangradius und Bisse im Abstieg
     const gadget = gadgetEffect(this.save, gadgets);
-    this.roundParams = { ...params, fallSpeed: params.fallSpeed * gadget.fallSpeed, catchRadius: params.catchRadius * gadget.catchRadius };
+    // Rolle (Lenken), Lockstoff (Fischdichte), Großer Kescher (Fangradius) und das Gadget
+    const big = bigEffect(this.save, bigUpgrades);
+    const lv = (id: 'steer' | 'lure') => upgradeValue(upgradeById(id), this.save.upgrades[id]) / 100;
+    this.roundParams = {
+      ...params,
+      fallSpeed: params.fallSpeed * gadget.fallSpeed,
+      catchRadius: params.catchRadius * gadget.catchRadius * big.catchRadius,
+      steerSpeed: params.steerSpeed * lv('steer'),
+      fishPerThousandUnits: params.fishPerThousandUnits * lv('lure'),
+    };
     this.round = createRound(seed, this.scale.width, line, hooks, pool, this.depth, this.roundParams, this.spot.current, extra);
     this.round.shield = gadget.shield;
     const equipped = gadgets.find((g) => g.id === this.save.gadgets.equipped);
@@ -431,7 +435,14 @@ export class FishingScene extends Phaser.Scene {
     const def = speciesById.get(f.speciesId)!;
     const s = this.add.sprite(f.x + this.offsetX, f.y, def.sprite, 0).setScale(params.spriteScale).setDepth(8);
     s.play(animKey(def.sprite, 'swim'));
+    // Echolot: wertvolle Arten leuchten (nur mit WebGL-Effekten)
+    if (bigEffect(this.save, bigUpgrades).sonar && def.value >= SONAR_MIN_VALUE) s.preFX?.addGlow(0xffd23f, 4, 0, false, 0.1, 12);
     this.fishSprites.set(f.uid, s);
+  }
+
+  /** Platz in der Kiste: Upgrade-Stufe mal Kühlraum. */
+  crateCapacity(): number {
+    return upgradeValue(upgradeById('crate'), this.save.upgrades.crate) * bigEffect(this.save, bigUpgrades).crateMul;
   }
 
   private handle(events: readonly RoundEvent[]): void {
@@ -558,7 +569,7 @@ export class FishingScene extends Phaser.Scene {
       for (const s of flying) s.destroy();
       const catches = r.caught.map((f, i) => ({ speciesId: f.speciesId, combo: combos.has(i) }));
       const catchValue = catches.reduce((a, c) => a + this.priceOf(c.speciesId, c.combo), 0);
-      const landed = landCatch(this.save, catches, deepest, speciesById, Date.now(), upgradeValue(upgradeById('crate'), this.save.upgrades.crate));
+      const landed = landCatch(this.save, catches, deepest, speciesById, Date.now(), this.crateCapacity());
       if (landed.overflow > 0) this.time.delayedCall(600, () => this.ui.say(t('round.crateFull', { n: landed.overflow }), 3.5));
       // Giselas Schwarm zählt einen Wurf herunter, Schulze zahlt die Tour bar, geht von Bord und klebt Fotos ins Album
       const pay = charterPay(this.save, catchValue, perkParams);
@@ -604,7 +615,8 @@ export class FishingScene extends Phaser.Scene {
     if (!def) return 0;
     const factor = priceFactor(String(this.save.createdAt), speciesId, marketTick(this.save.stats.casts, marketParams), marketParams);
     const known = (this.save.fishbook[speciesId]?.count ?? 0) >= 2;
-    return fishValue(def, known, combo, params, setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams), factor);
+    const bonus = setBonus(this.save, sets, 'coins') + prestigeBonus(this.save, prestigeParams) + bigEffect(this.save, bigUpgrades).priceBonus;
+    return fishValue(def, known, combo, params, bonus, factor);
   }
 
   /** Was die Kiste heute bei Bruno bringen würde. */
@@ -838,20 +850,6 @@ export class FishingScene extends Phaser.Scene {
     showFishbook(this.uiRoot, book, sets.filter((x) => visited.includes(x.sea)), this.save, (s) => this.imageOf(s), (s) => this.zoneName(s), (s) => this.showFact(s, false, () => this.openFishbook()));
   }
 
-  /** Hildes Werft: Leine, Haken und Kiste ausbauen (nur in der Stadt). */
-  private openUpgrades(): void {
-    if (this.mode !== 'deck' || this.overlayOpen()) return;
-    play('tap');
-    this.harbor.openUpgrades((u) => this.buy(u));
-  }
-
-  /** Professor Blinkers Werkstatt (nur in der Stadt). */
-  private openGadgets(): void {
-    if (this.mode !== 'deck' || this.overlayOpen()) return;
-    play('tap');
-    this.harbor.openGadgets();
-  }
-
   private buy(u: UpgradeDef): boolean {
     if (this.mode !== 'deck') return false;
     const level = this.save.upgrades[u.id];
@@ -868,11 +866,195 @@ export class FishingScene extends Phaser.Scene {
     return true;
   }
 
-  /** Inventar: Kiste ansehen und an Bruno verkaufen. */
-  private openInventory(): void {
-    if (this.mode !== 'deck' || this.overlayOpen()) return;
+  // ---------------------------------------------------------------- Shop
+
+  private shop: Shop | null = null;
+
+  private portraitOf(id: string, face = ''): string | undefined {
+    try {
+      return this.textures.getBase64(face ? `portrait_${id}_${face}` : `portrait_${id}`);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Shop-Bildschirm: in der Stadt Werft (Hilde), Gadgets (Professor) und Kiste (Bruno),
+   * auf See nur die Kiste (Bruno kauft per Funk).
+   */
+  private openShop(tab: 'werft' | 'gadgets' | 'crate'): void {
+    if (this.mode !== 'deck' || this.shop) return;
     play('tap');
-    this.harbor.openSale();
+    const town = this.spot.harbor;
+    const profMet = this.save.story.seen.includes('prof_intro');
+    const tabs: ShopTab[] = [];
+    if (town) tabs.push({ id: 'werft', label: t('shop.tab.werft'), portrait: this.portraitOf('hilde'), quote: t('werft.text'), render: (b) => this.renderWerft(b) });
+    if (town && profMet) tabs.push({ id: 'gadgets', label: t('shop.tab.gadgets'), portrait: this.portraitOf('prof', 'happy'), quote: t('npc.prof.hub'), render: (b) => this.renderGadgets(b) });
+    tabs.push({ id: 'crate', label: t('shop.tab.crate'), portrait: this.portraitOf('bruno', 'happy'), quote: town ? t('sell.quote') : t('sell.quoteRadio'), render: (b) => this.renderCrate(b) });
+    this.shop = new Shop(this.uiRoot, tabs, () => this.save.coins, () => {
+      this.shop = null;
+      this.refresh();
+      this.showTutorial();
+    });
+    this.shop.show(tab);
+  }
+
+  /** Werft: normale Upgrades als Karten, darunter die Großausbauten. */
+  private renderWerft(body: HTMLElement): void {
+    for (const u of townUpgrades) {
+      const level = this.save.upgrades[u.id];
+      const maxed = isMaxed(u, level);
+      const cost = upgradeCost(u, level);
+      body.append(
+        shopCard({
+          icon: UPGRADE_ICON[u.id] ?? 'icon_coin',
+          title: t(u.nameKey),
+          level: { now: level + 1, max: u.values.length },
+          lines: [maxed ? t(u.effectKey, { value: upgradeValue(u, level) }) : `${t(u.effectKey, { value: upgradeValue(u, level) })} → *${upgradeValue(u, level + 1)}*`],
+          action: maxed ? { state: 'done', label: t('upgrade.max') } : { state: this.save.coins >= cost ? 'buy' : 'poor', cost },
+          onClick: () => {
+            if (maxed) return;
+            if (!this.buy(u)) return this.shop?.say(t('werft.poor'));
+            this.shop?.refresh();
+          },
+        }),
+      );
+    }
+    body.append(shopHeading(t('big.title')));
+    for (const g of bigUpgrades) {
+      const owned = this.save.big.includes(g.id);
+      body.append(
+        shopCard({
+          icon: g.icon,
+          title: t(g.nameKey),
+          lines: [t(g.descKey)],
+          big: true,
+          action: owned ? { state: 'done', label: t('big.owned') } : { state: this.save.coins >= g.price ? 'buy' : 'poor', cost: g.price },
+          onClick: () => {
+            if (owned) return;
+            const bought = buyBig(this.save, g);
+            if (!bought) {
+              play('error');
+              return this.shop?.say(t('werft.poor'));
+            }
+            this.save = bought;
+            writeSave(this.save);
+            play('levelUp');
+            this.ui.confetti(this.scale.width / 2, this.scale.height / 3, 40);
+            this.shop?.say(t('big.done', { name: t(g.nameKey) }));
+            this.shop?.refresh();
+            this.refresh(true);
+          },
+        }),
+      );
+    }
+  }
+
+  /** Professor Blinkers Gadgets: kaufen, anhängen. */
+  private renderGadgets(body: HTMLElement): void {
+    for (const g of gadgets) {
+      const owned = this.save.gadgets.owned.includes(g.id);
+      const on = this.save.gadgets.equipped === g.id;
+      body.append(
+        shopCard({
+          icon: 'hook',
+          title: t(g.nameKey),
+          lines: [t(g.descKey)],
+          action: on ? { state: 'done', label: t('gadget.equipped') } : owned ? { state: 'plain', label: t('gadget.equip') } : { state: this.save.coins >= g.price ? 'buy' : 'poor', cost: g.price },
+          onClick: () => {
+            if (on) return;
+            if (owned) {
+              this.save = equipGadget(this.save, g.id);
+              play('tap');
+            } else {
+              const bought = buyGadget(this.save, g);
+              if (!bought) {
+                play('error');
+                return this.shop?.say(t('gadget.poor'));
+              }
+              this.save = bought;
+              play('upgrade');
+              this.shop?.say(t('gadget.bought', { name: t(g.nameKey) }));
+            }
+            writeSave(this.save);
+            this.shop?.refresh();
+            this.refresh(true);
+          },
+        }),
+      );
+    }
+  }
+
+  /** Kiste: Füllstand, jede Art mit Tageskurs und Trend, einzeln oder alles verkaufen. */
+  private renderCrate(body: HTMLElement): void {
+    const cap = this.crateCapacity();
+    const n = crateCount(this.save.crate);
+    const bar = el('div', 'shop-capacity');
+    const fill = el('div', 'shop-capacity-fill');
+    fill.style.width = `${Math.min(100, (n / cap) * 100)}%`;
+    const label = el('span', '');
+    label.textContent = t('crate.fill', { n, cap });
+    bar.append(fill, label);
+    body.append(bar);
+    const ids = Object.keys(this.save.crate).filter((id) => (this.save.crate[id]?.n ?? 0) > 0);
+    if (ids.length === 0) {
+      const empty = el('p', 'shop-empty');
+      setRichText(empty, t('sell.empty'));
+      body.append(empty);
+      return;
+    }
+    const tick = marketTick(this.save.stats.casts, marketParams);
+    const seed = String(this.save.createdAt);
+    const total = (id: string) => {
+      const c = this.save.crate[id]!;
+      return this.priceOf(id) * (c.n - c.premium) + Math.round(this.priceOf(id) * params.comboMultiplier) * c.premium;
+    };
+    const sorted = [...ids].sort((x, y) => total(y) - total(x));
+    const until = castsUntilTick(this.save.stats.casts, marketParams);
+    const info = el('p', 'shop-empty');
+    const wish = this.save.request ? speciesById.get(this.save.request.speciesId) : undefined;
+    setRichText(info, `${until === 1 ? t('sell.textSoon') : t('sell.text', { casts: until })}${wish ? ` ${t('sell.wish', { fish: t(wish.nameKey), reward: this.save.request!.reward })}` : ''}`);
+    body.append(info);
+    for (const id of sorted) {
+      const def = speciesById.get(id)!;
+      const trend = priceTrend(seed, id, tick, marketParams);
+      body.append(
+        shopCard({
+          icon: this.imageOf(def) ?? 'fx_crate',
+          title: `${t(def.nameKey)} ×${this.save.crate[id]!.n}`,
+          lines: [t('sell.price', { price: this.priceOf(id), trend: ['↘', '→', '↗'][trend + 1]! })],
+          action: { state: 'plain', label: t('sell.one', { coins: total(id).toLocaleString('de-DE') }) },
+          onClick: () => this.sellFromCrate([id]),
+        }),
+      );
+    }
+    const all = el('button', 'button primary shop-sell-all');
+    all.type = 'button';
+    all.textContent = t('sell.allFor', { coins: sorted.reduce((a, id) => a + total(id), 0).toLocaleString('de-DE') });
+    all.addEventListener('click', () => this.sellFromCrate(sorted));
+    body.append(all);
+  }
+
+  /** Verkaufen: Münzen fliegen, Tutorial-Bonus, Wunschfisch mit Zwischensequenz. */
+  private sellFromCrate(ids: readonly string[]): void {
+    const r = sellFish(this.save, ids, (id) => this.priceOf(id), params.comboMultiplier);
+    this.save = r.save;
+    play('coin', 1.2);
+    this.ui.coinBurst(this.scale.width / 2, this.scale.height / 2, Math.min(30, Math.ceil(r.coins / 10)));
+    // Erster Verkauf im Tutorial: Bruno legt einen Willkommensbonus drauf, damit das erste Upgrade drin ist
+    if (this.save.tutorial === 'sell') {
+      this.save = { ...this.save, coins: this.save.coins + tutorialParams.saleBonus };
+      this.shop?.say(t('tut.bonus', { coins: tutorialParams.saleBonus }));
+    } else this.shop?.say(t('sell.done', { coins: r.coins.toLocaleString('de-DE') }));
+    writeSave(this.save);
+    this.tutorialEvent('sold');
+    this.refresh(true);
+    if (r.request) {
+      this.shop?.close();
+      this.harbor.requestFulfilled(r.request.speciesId, r.request.reward);
+      return;
+    }
+    this.shop?.refresh();
   }
 
   /** Tutorial weiterschalten und den nächsten Hinweis zeigen. */

@@ -43,10 +43,10 @@ describe('Prestige: neue Meere', () => {
   });
 
   it('setzt Münzen und Upgrades zurück, behält Wissen, gibt dauerhaften Bonus', () => {
-    const before: Save = { ...knowing(15), coins: 999, upgrades: { line: 5, hook: 4, crate: 3, engine: 2 }, story: { seen: ['hilde_intro'] } };
+    const before: Save = { ...knowing(15), coins: 999, upgrades: { line: 5, hook: 4, crate: 3, steer: 0, lure: 0, engine: 2 }, story: { seen: ['hilde_intro'] } };
     const after = moveOn(before, 'pacific', 'harbor', T + 1);
     expect(after.coins).toBe(0);
-    expect(after.upgrades).toEqual({ line: 0, hook: 0, crate: 0, engine: 0 });
+    expect(after.upgrades).toEqual({ line: 0, hook: 0, crate: 0, steer: 0, lure: 0, engine: 0 });
     expect(after.fishbook).toEqual(before.fishbook);
     expect(after.story).toEqual(before.story);
     expect(after.map.spot).toBe('harbor');

@@ -2,9 +2,9 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
-export type UpgradeId = 'line' | 'hook' | 'crate' | 'engine';
+export type UpgradeId = 'line' | 'hook' | 'crate' | 'steer' | 'lure' | 'engine';
 
 export interface FishbookEntry {
   count: number;
@@ -117,15 +117,21 @@ export interface SaveV17 extends Omit<SaveV16, 'version'> {
   version: 17;
 }
 
-export type Save = SaveV17;
+export interface SaveV18 extends Omit<SaveV17, 'version'> {
+  version: 18;
+  /** Eingebaute Großausbauten (data/big_upgrades.json). */
+  big: string[];
+}
+
+export type Save = SaveV18;
 
 export function newSave(now: number): Save {
   return {
-    version: 17,
+    version: 18,
     createdAt: now,
     updatedAt: now,
     coins: 0,
-    upgrades: { line: 0, hook: 0, crate: 0, engine: 0 },
+    upgrades: { line: 0, hook: 0, crate: 0, steer: 0, lure: 0, engine: 0 },
     fishbook: {},
     stats: { casts: 0, deepestMeters: 0 },
     lastTick: now,
@@ -143,6 +149,7 @@ export function newSave(now: number): Save {
     crate: {},
     gadgets: { owned: [], equipped: null },
     tutorial: 'cast',
+    big: [],
   };
 }
 
@@ -222,6 +229,8 @@ const migrations: Record<number, Migration> = {
     const { crew, ...rest } = old.upgrades as Record<string, number>;
     return { ...old, upgrades: { ...rest, crate: num(crew) } };
   },
+  // v17 → v18: Rolle und Lockstoff als neue Upgrades, Großausbauten.
+  17: (old) => ({ ...old, upgrades: { steer: 0, lure: 0, ...(old.upgrades as Record<string, number>) }, big: [] }),
 };
 
 /** Bringt einen beliebigen gelesenen Stand auf die aktuelle Version. Unbrauchbares ergibt einen neuen Stand. */

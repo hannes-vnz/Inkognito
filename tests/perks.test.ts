@@ -9,7 +9,7 @@ const rich = (): Save => ({ ...newSave(1), coins: 10_000 });
 describe('Giselas Schwarm-Tipp', () => {
   it('kostet mehr mit jedem Upgrade', () => {
     const s = rich();
-    expect(tipPrice({ ...s, upgrades: { line: 3, hook: 2, crate: 0, engine: 1 } }, p)).toBe(tipPrice(s, p) + 6 * p.tip.pricePerLevel);
+    expect(tipPrice({ ...s, upgrades: { line: 3, hook: 2, crate: 0, steer: 0, lure: 0, engine: 1 } }, p)).toBe(tipPrice(s, p) + 6 * p.tip.pricePerLevel);
   });
 
   it('nennt einen erreichbaren Platz, zieht Münzen ab und gilt für ein paar Würfe', () => {

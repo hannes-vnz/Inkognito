@@ -15,7 +15,7 @@ describe('Köder', () => {
   it('Texte vorhanden, Preis wächst mit den Upgrades', () => {
     for (const b of baits) for (const key of [b.nameKey, b.descKey]) expect(texts).toHaveProperty([key]);
     const b = baits[0]!;
-    const later: Save = { ...rich(), upgrades: { line: 5, hook: 3, crate: 0, engine: 0 } };
+    const later: Save = { ...rich(), upgrades: { line: 5, hook: 3, crate: 0, steer: 0, lure: 0, engine: 0 } };
     expect(baitCost(b, later)).toBeGreaterThan(baitCost(b, rich()));
   });
 

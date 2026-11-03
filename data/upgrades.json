@@ -52,9 +52,10 @@
     "id": "crate",
     "nameKey": "upgrade.crate.name",
     "effectKey": "upgrade.crate.effect",
-    "costBase": 20,
+    "costBase": 15,
     "costGrowth": 1.6,
     "values": [
+      5,
       8,
       12,
       16,
@@ -66,8 +67,42 @@
       82,
       100,
       120,
+      145
+    ]
+  },
+  {
+    "id": "steer",
+    "nameKey": "upgrade.steer.name",
+    "effectKey": "upgrade.steer.effect",
+    "costBase": 20,
+    "costGrowth": 1.7,
+    "values": [
+      100,
+      115,
+      130,
       145,
-      175
+      160,
+      180,
+      200,
+      225,
+      250
+    ]
+  },
+  {
+    "id": "lure",
+    "nameKey": "upgrade.lure.name",
+    "effectKey": "upgrade.lure.effect",
+    "costBase": 30,
+    "costGrowth": 1.8,
+    "values": [
+      100,
+      115,
+      130,
+      150,
+      170,
+      195,
+      225,
+      260
     ]
   },
   {

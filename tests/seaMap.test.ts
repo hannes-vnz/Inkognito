@@ -27,15 +27,15 @@ describe('Seekarte', () => {
     }
   });
 
-  it('jede Motorstufe schaltet genau einen neuen Platz frei (in jedem Meer), der letzte erreicht den Graben', () => {
+  it('der Startmotor erreicht Heimathafen und ersten Platz, jede weitere Stufe genau einen neuen (in jedem Meer)', () => {
     for (const sea of new Set(allSpots.map((s) => s.sea))) {
       const here = allSpots.filter((s) => s.sea === sea);
       const h = here.find((s) => s.harbor)!;
       const counts = engine.map((r) => here.filter((s) => spotUnlocked(s, h, r)).length);
-      expect(counts, sea).toEqual(engine.map((_, i) => Math.min(i + 1, here.length)));
+      expect(counts, sea).toEqual(engine.map((_, i) => Math.min(i + 2, here.length)));
     }
     expect(reachableMeters(99999, spots, home, engine[engine.length - 1]!)).toBe(11000);
-    expect(reachableMeters(500, spots, home, engine[0]!)).toBe(200);
+    expect(reachableMeters(5000, spots, home, engine[0]!)).toBe(1000);
   });
 
   it('Boot fährt zum Ziel und bleibt in Reichweite', () => {

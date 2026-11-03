@@ -12,7 +12,6 @@
     "spawnStartBelowSurface": 160,
     "knowledgeBonus": 0.25,
     "comboMultiplier": 2,
-    "maxOfflineHours": 8,
     "spriteScale": 3,
     "flightSeconds": 1.4,
     "rareWeight": 2
@@ -57,14 +56,14 @@
       110,
       200
     ],
-    "crewMinutes": [
+    "perLevel": [
+      2,
+      3,
+      4,
+      6,
+      8,
       10,
-      15,
-      20,
-      30,
-      40,
-      60,
-      120
+      20
     ]
   },
   "prestige": {
@@ -169,5 +168,8 @@
     "castsPerTick": 3,
     "swing": 0.45,
     "noise": 0.12
+  },
+  "tutorial": {
+    "saleBonus": 20
   }
 }

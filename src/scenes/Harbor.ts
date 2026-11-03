@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { baitById, baits, gadgets, gags, harbor, homeOf, marketParams, params, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
+import { baitById, baits, gadgets, gags, harbor, homeOf, upgrades, marketParams, params, npcById, npcs, perkParams, quiz, species, speciesById, speciesIn, spotById, spotsIn, story, upgradeById } from '../data';
 import { baitCost, buyBait } from '../systems/bait';
 import { hintReady, hintsGiven, legendOf, takeHint } from '../systems/legend';
 import { reachableMeters, unlockedSpots } from '../systems/seaMap';
@@ -13,7 +13,7 @@ import { newRequest } from '../systems/requests';
 import { buyGadget, equipGadget } from '../systems/gadgets';
 import { castsUntilTick, crateCount, marketTick, priceTrend, sellFish } from '../systems/market';
 import { answerQuiz, pickQuiz, quizReady } from '../systems/quiz';
-import { upgradeValue } from '../systems/economy';
+import { isMaxed, upgradeCost, upgradeValue, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { t } from '../i18n';
 import type { Sheet } from '../ui/Sheet';
@@ -28,8 +28,10 @@ export interface HarborHost {
   say(text: string): void;
   /** Heutiger Stückpreis einer Art bei Bruno (angetippt: `combo`). */
   priceOf(speciesId: string, combo?: boolean): number;
-  /** Münzen fliegen von dieser Stelle (Weltkoordinaten) zum Zähler. */
-  celebrate(coins: number, x: number, y: number): void;
+  /** Münzen fliegen von dieser Stelle (Weltkoordinaten, sonst vom Boot) zum Zähler. */
+  celebrate(coins: number, x?: number, y?: number): void;
+  /** Etwas wurde verkauft (Tutorial). */
+  sold(): void;
 }
 
 const SCALE = 2;
@@ -218,12 +220,53 @@ export class Harbor {
     );
   }
 
-  /** Bruno steht am Stand und darf angesprochen werden. */
-  canOpenSale(): boolean {
-    return Boolean(this.sprites.get('bruno')?.visible) && this.host.canTalk();
+  /** Hildes Werft: Upgrades als Liste, kaufen bleibt im Fenster, bis man fertig ist. */
+  openUpgrades(buy: (u: UpgradeDef) => boolean): void {
+    const hilde = npcById.get('hilde')!;
+    const portrait = this.portrait(hilde, 'normal');
+    const show = () => {
+      const save = this.host.save;
+      this.anim(hilde, 'talk');
+      this.sheet.show(
+        t('werft.title'),
+        t('werft.text'),
+        [
+          ...upgrades
+            .filter((u) => u.id !== 'engine')
+            .map((u) => {
+              const level = save.upgrades[u.id];
+              const maxed = isMaxed(u, level);
+              return {
+                label: `${t(u.nameKey)} Lv ${level + 1} · ${t(u.effectKey, { value: upgradeValue(u, level) })}${maxed ? '' : ` ${t('deck.next', { value: upgradeValue(u, level + 1) })}`}`,
+                meta: maxed ? t('upgrade.max') : upgradeCost(u, level).toLocaleString('de-DE'),
+                onSelect: () => {
+                  if (maxed) return;
+                  if (!buy(u)) {
+                    play('error');
+                    this.host.say(t('werft.poor'));
+                    return;
+                  }
+                  this.anim(hilde, 'react');
+                  show();
+                },
+              };
+            }),
+          { label: t('npc.bye'), onSelect: () => this.finish(hilde) },
+        ],
+        undefined,
+        portrait,
+      );
+    };
+    show();
   }
 
-  /** Kiste antippen im Hafen: direkt zu Brunos Ankauf. */
+  /** Professor Blinkers Werkstatt direkt aus der Leiste. */
+  openGadgets(): void {
+    const prof = npcById.get('prof');
+    if (prof) this.showGadgets(prof, this.portrait(prof, 'happy'));
+  }
+
+  /** Inventar: Fang ansehen und an Bruno verkaufen (er kauft per Funk auch auf See). */
   openSale(): void {
     const bruno = npcById.get('bruno');
     if (bruno) this.talk(bruno, 'sell');
@@ -250,7 +293,8 @@ export class Harbor {
       const r = sellFish(this.host.save, which, (id) => this.host.priceOf(id), params.comboMultiplier);
       this.host.setSave(r.save);
       const at = this.sprites.get('bruno');
-      if (at) this.host.celebrate(r.coins, at.x, at.y - 40);
+      this.host.celebrate(r.coins, at?.visible ? at.x : undefined, at?.visible ? at.y - 40 : undefined);
+      this.host.sold();
       play('coin', 1.2);
       this.anim(npc, 'react');
       if (r.request) {

@@ -5,7 +5,7 @@ export interface SetDef {
   id: string;
   nameKey: string;
   species: string[];
-  bonus: { type: 'coins' | 'crew'; value: number };
+  bonus: { type: 'coins'; value: number };
   sea: string;
 }
 
@@ -24,7 +24,7 @@ export function setProgress(save: Save, sets: readonly SetDef[]): SetProgress[] 
 }
 
 /** Summe der Boni aller vollständigen Sets eines Typs (0.25 = +25 %). */
-export function setBonus(save: Save, sets: readonly SetDef[], type: 'coins' | 'crew'): number {
+export function setBonus(save: Save, sets: readonly SetDef[], type: 'coins'): number {
   return setProgress(save, sets)
     .filter((p) => p.complete && p.def.bonus.type === type)
     .reduce((n, p) => n + p.def.bonus.value, 0);

@@ -91,6 +91,7 @@ export const npcById = new Map(npcs.map((n) => [n.id, n]));
 export const story = storyJson as unknown as StoryBeat[];
 export const quiz = quizJson as QuizQuestion[];
 export const perkParams = gameJson.perks as PerkParams;
+export const tutorialParams = gameJson.tutorial as { saleBonus: number };
 export const gadgets = gadgetsJson as GadgetDef[];
 export const marketParams = gameJson.market as MarketParams;
 export const harbor = gameJson.harbor as QuizParams & HintParams & { requestReward: RewardParams; requestRequires: string };

@@ -6,30 +6,35 @@ import { isMaxed, upgradeCost, type UpgradeDef } from '../systems/economy';
 import type { SpotDef } from '../systems/seaMap';
 import type { Save } from '../systems/save';
 
+/** Ein Ziel in der Liste der Seekarte. */
+export interface Destination {
+  id: string;
+  name: string;
+  desc: string;
+  /** here = Boot liegt hier, open = anfahrbar, locked = Motor zu schwach. */
+  state: 'here' | 'open' | 'locked';
+  badge?: string;
+}
+
 /**
- * Oberfläche der Seekarte: Münzen, Zurück, unten der Platz unter dem Boot mit „Hier angeln“
+ * Oberfläche der Seekarte: Münzen, Zurück, unten die Zielliste (antippen, der Kutter fährt von allein)
  * und die Motor-Karte (Reichweite = neue Plätze).
  */
 export class MapUi {
   private readonly coins: HTMLDivElement;
-  private readonly spotCard: HTMLDivElement;
-  private readonly spotName: HTMLDivElement;
-  private readonly spotDesc: HTMLParagraphElement;
-  private readonly fishButton: HTMLButtonElement;
+  private readonly list: HTMLDivElement;
   private readonly engine: HTMLButtonElement;
   private readonly engineLevel: HTMLSpanElement;
   private readonly engineEffect: HTMLSpanElement;
   private readonly engineCost: HTMLSpanElement;
-  private readonly hint: HTMLDivElement;
   private readonly prestige: HTMLButtonElement;
   private readonly toast: Toast;
   private lastCoins = -1;
-  private shownSpot: string | null | undefined;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly engineDef: UpgradeDef,
-    handlers: { back: () => void; fish: () => void; buyEngine: () => void; prestige: () => void },
+    private readonly handlers: { back: () => void; pick: (id: string) => void; buyEngine: () => void; prestige: () => void },
   ) {
     const coinCard = el('div', 'card hud-coins');
     this.coins = el('div', 'value');
@@ -41,14 +46,7 @@ export class MapUi {
     back.addEventListener('click', handlers.back);
 
     const panel = el('div', 'map-panel');
-    this.spotCard = el('div', 'card map-spot');
-    this.spotName = el('div', 'map-spot-name');
-    this.spotDesc = el('p', 'map-spot-desc');
-    this.fishButton = el('button', 'button primary');
-    this.fishButton.type = 'button';
-    this.fishButton.textContent = t('map.fish');
-    this.fishButton.addEventListener('click', handlers.fish);
-    this.spotCard.append(this.spotName, this.spotDesc, this.fishButton);
+    this.list = el('div', 'card map-list');
 
     this.engine = el('button', 'upgrade map-engine');
     this.engine.type = 'button';
@@ -59,15 +57,13 @@ export class MapUi {
     this.engineCost = el('span', 'upgrade-cost');
     this.engine.append(name, this.engineLevel, this.engineEffect, this.engineCost);
     this.engine.addEventListener('click', handlers.buyEngine);
-    panel.append(this.spotCard, this.engine);
+    panel.append(this.list, this.engine);
 
     this.prestige = el('button', 'button map-prestige');
     this.prestige.type = 'button';
     this.prestige.addEventListener('click', handlers.prestige);
 
-    this.hint = el('div', 'card hint');
-    setRichText(this.hint, t('map.hint'));
-    root.append(coinCard, back, this.prestige, panel, this.hint);
+    root.append(coinCard, back, this.prestige, panel);
     this.toast = new Toast(root);
   }
 
@@ -107,16 +103,41 @@ export class MapUi {
     this.prestige.classList.toggle('ready', ready);
   }
 
-  /** Platz unter dem Boot zeigen (oder ausblenden). */
-  showSpot(spot: SpotDef | null): void {
-    const id = spot?.id ?? null;
-    if (id === this.shownSpot) return;
-    this.shownSpot = id;
-    this.spotCard.classList.toggle('hidden', !spot);
-    if (!spot) return;
-    this.hint.classList.add('hidden');
-    this.spotName.textContent = t(spot.nameKey);
-    setRichText(this.spotDesc, t(spot.descKey, { max: spot.maxMeters.toLocaleString('de-DE') }));
+  /** Zielliste in Abschnitten (Heimathafen, Meer, nächstes Meer). `focus`: dieses Ziel leuchtet (Tutorial). */
+  showDestinations(sections: readonly { title: string; items: readonly Destination[]; note?: string }[], focus: string | null = null): void {
+    this.list.replaceChildren();
+    for (const sec of sections) {
+      const head = el('div', 'map-list-title');
+      head.textContent = sec.title;
+      this.list.append(head);
+      for (const d of sec.items) {
+        const b = el('button', `map-dest ${d.state}${d.id === focus ? ' tut-focus' : ''}`);
+        b.type = 'button';
+        const name = el('span', 'map-dest-name');
+        name.textContent = d.state === 'here' ? `${d.name} ✓` : d.name;
+        const desc = el('span', 'map-dest-desc');
+        setRichText(desc, d.desc);
+        b.append(name, desc);
+        if (d.badge) {
+          const badge = el('span', 'map-dest-badge');
+          badge.textContent = d.badge;
+          b.append(badge);
+        }
+        b.addEventListener('click', () => this.handlers.pick(d.id));
+        this.list.append(b);
+      }
+      if (sec.note) {
+        const note = el('p', 'map-list-note');
+        setRichText(note, sec.note);
+        this.list.append(note);
+      }
+    }
+    if (focus) this.list.querySelector('.tut-focus')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  /** Während der Fahrt: Liste gesperrt. */
+  setTravelling(on: boolean): void {
+    this.list.classList.toggle('travelling', on);
   }
 
   say(text: string, seconds?: number): void {

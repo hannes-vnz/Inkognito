@@ -49,25 +49,25 @@
     ]
   },
   {
-    "id": "crew",
-    "nameKey": "upgrade.crew.name",
-    "effectKey": "upgrade.crew.effect",
-    "costBase": 25,
-    "costGrowth": 1.7,
+    "id": "crate",
+    "nameKey": "upgrade.crate.name",
+    "effectKey": "upgrade.crate.effect",
+    "costBase": 20,
+    "costGrowth": 1.6,
     "values": [
-      0,
-      4,
-      10,
-      18,
+      8,
+      12,
+      16,
+      22,
       30,
-      48,
-      75,
-      110,
-      160,
-      230,
-      320,
-      450,
-      620
+      40,
+      52,
+      66,
+      82,
+      100,
+      120,
+      145,
+      175
     ]
   },
   {
@@ -77,11 +77,11 @@
     "costBase": 60,
     "costGrowth": 5,
     "values": [
-      300,
-      520,
-      760,
-      1000,
-      1250
+      420,
+      640,
+      920,
+      1250,
+      1500
     ]
   }
 ]

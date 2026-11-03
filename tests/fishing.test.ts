@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { metersToY, yToMeters, zoneIndexAt, type DepthMap } from '../src/systems/depthMap';
 import { createRound, pickSpecies, stepRound, type FishingParams, type RoundEvent, type SpeciesDef } from '../src/systems/fishing';
 import { marketTick, priceFactor, sellFish, type MarketParams } from '../src/systems/market';
-import { buyUpgrade, collectIdle, fishValue, isMaxed, landCatch, upgradeCost, upgradeValue, type EconomyParams, type UpgradeDef } from '../src/systems/economy';
-import { deserialize, migrate, newSave, SAVE_VERSION, serialize, type Save } from '../src/systems/save';
+import { buyUpgrade, fishValue, isMaxed, landCatch, upgradeCost, upgradeValue, type EconomyParams, type UpgradeDef } from '../src/systems/economy';
+import { deserialize, migrate, newSave, SAVE_VERSION, serialize } from '../src/systems/save';
 import { createRng } from '../src/systems/rng';
 import fishJson from '../data/fish.json';
 import seasJson from '../data/seas.json';
@@ -150,14 +150,11 @@ describe('Wirtschaft', () => {
     expect(r.save.crate).toEqual({ herring: { n: 2, premium: 1 } });
   });
 
-  it('Crew verdient offline, gedeckelt, ohne Münzen zu verlieren', () => {
-    const s: Save = { ...newSave(T), upgrades: { line: 0, hook: 0, crew: 3, engine: 0 } };
-    const rate = upgradeValue(up('crew'), 3);
-    const r = collectIdle(s, T + 10 * 60000 + 30000, up('crew'), p);
-    expect(r.coins).toBe(Math.floor(rate * 10.5));
-    const again = collectIdle(r.save, T + 11 * 60000, up('crew'), p);
-    expect(r.coins + again.coins).toBe(Math.floor(rate * 11));
-    expect(collectIdle(s, T + 1000 * 3600e3, up('crew'), p).coins).toBe(Math.floor(rate * 60 * p.maxOfflineHours));
+  it('Kiste voll: was nicht mehr passt, schwimmt zurück, zählt aber fürs Fischbuch', () => {
+    const r = landCatch(newSave(T), [{ speciesId: 'herring', combo: false }, { speciesId: 'herring', combo: false }, { speciesId: 'cod', combo: false }], 10, byId, T, 2);
+    expect(r.overflow).toBe(1);
+    expect(r.save.crate).toEqual({ herring: { n: 2, premium: 0 } });
+    expect(r.save.fishbook.cod!.count).toBe(1);
   });
 });
 
@@ -224,7 +221,7 @@ describe('Spielstand v3', () => {
   it('migriert v0, v1 und v2 (Muscheln werden Münzen)', () => {
     expect(migrate({ shells: 42 }, T).coins).toBe(42);
     expect(migrate({ version: 1, shells: 7, createdAt: 5 }, T)).toMatchObject({ coins: 7, createdAt: 5 });
-    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 15, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "watt", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "northsea", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
+    expect(migrate({ version: 2, shells: 12.7, fish: [], buildings: {} }, T)).toMatchObject({ version: 17, coins: 12, upgrades: { line: 0, engine: 0 }, story: { seen: [] }, request: null, map: { spot: "watt", bottlesRead: 0 }, daily: { streak: 0 }, sea: { current: "northsea", left: [] }, legend: { hints: {}, snapped: [] }, bait: null, harbor: { life: [], chatter: {} }, perks: { tip: null, charter: { aboard: false, album: [] } } });
   });
   it('kaputte Daten ergeben einen neuen Stand, zu neue Versionen werfen', () => {
     expect(deserialize('{nicht json', T)).toEqual(newSave(T));

@@ -5,7 +5,7 @@ import { isLegend } from '../systems/legend';
 import { canMoveOn, missingLegend, knownInSea, moveOn, nextSea } from '../systems/prestige';
 import type { SpotDef } from '../systems/seaMap';
 import { Sheet } from '../ui/Sheet';
-import { clampToRange, flotsam, flotsamTaken, spotAt, spotUnlocked, stepBoat, takeFlotsam, type Boat, type Flotsam, type Point } from '../systems/seaMap';
+import { clampToRange, flotsam, flotsamTaken, spotUnlocked, stepBoat, takeFlotsam, type Boat, type Flotsam, type Point } from '../systems/seaMap';
 import { buyUpgrade, isMaxed, upgradeCost, upgradeValue } from '../systems/economy';
 import { createRng } from '../systems/rng';
 import type { Save } from '../systems/save';
@@ -17,8 +17,8 @@ import { play } from '../audio/sfx';
 const BOAT_SCALE = 2;
 
 /**
- * Seekarte von oben: Kutter frei fahren (Daumen ziehen oder Pfeiltasten), Bojen sind Angelplätze.
- * Die Motor-Reichweite um den Hafen bestimmt, wie weit man rauskommt; Treibgut gibt Münzen.
+ * Seekarte von oben: Ziel antippen (in der Liste oder die Boje), der Kutter fährt von allein hin und angelt los.
+ * Treibgut antippen holt es ab. Die Motor-Reichweite um den Hafen bestimmt, wie weit man rauskommt.
  */
 export class SeaMapScene extends Phaser.Scene {
   private save!: Save;
@@ -31,10 +31,10 @@ export class SeaMapScene extends Phaser.Scene {
   private wake!: Phaser.GameObjects.Graphics;
   private rangeRing!: Phaser.GameObjects.Graphics;
   private target: Point | null = null;
+  /** Wohin die Fahrt geht: ein Angelplatz (dort wird gleich geangelt) oder Treibgut. */
+  private trip: { spot: SpotDef } | { crate: number } | null = null;
   private crates = new Map<number, { piece: Flotsam; sprite: Phaser.GameObjects.Image }>();
   private buoys = new Map<string, { icon: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text }>();
-  private limitedSaid = 0;
-  private keys: Phaser.Input.Keyboard.Key[] = [];
   private wakeDots: { x: number; y: number; age: number }[] = [];
 
   constructor() {
@@ -51,9 +51,9 @@ export class SeaMapScene extends Phaser.Scene {
     this.seaSpots = spotsIn(this.save.sea.current);
     this.crates = new Map();
     this.buoys = new Map();
-    this.keys = [];
     this.wakeDots = [];
     this.target = null;
+    this.trip = null;
     const start = spotById(this.save.map.spot);
     this.boat = { x: start.x + 40, y: start.y + 10, heading: -Math.PI / 4 };
 
@@ -62,10 +62,7 @@ export class SeaMapScene extends Phaser.Scene {
     root.className = 'map-ui';
     this.ui = new MapUi(root, upgradeById('engine'), {
       back: () => this.leave(this.save.map.spot),
-      fish: () => {
-        const here = this.spotHere();
-        if (here) this.leave(here.id);
-      },
+      pick: (id) => this.goTo(id),
       buyEngine: () => this.buyEngine(),
       prestige: () => this.offerPrestige(),
     });
@@ -110,20 +107,52 @@ export class SeaMapScene extends Phaser.Scene {
     cam.setBounds(-200, -200, mapParams.worldSize + 400, mapParams.worldSize + 400);
     cam.startFollow(this.boatSprite, true, 0.12, 0.12);
 
+    // Antippen statt Steuern: Boje = hinfahren und angeln, Treibgut = abholen
     const input = this.input;
-    const aim = (p: Phaser.Input.Pointer) => {
-      if (p.isDown && !this.sheet.open) this.target = { x: p.worldX, y: p.worldY };
+    const tap = (p: Phaser.Input.Pointer) => {
+      if (this.sheet.open || this.trip || p.getDistance() > 12) return;
+      const spot = this.seaSpots.find((s) => Math.hypot(s.x - p.worldX, s.y - p.worldY) < 70);
+      if (spot) return this.goTo(spot.id);
+      for (const [id, c] of this.crates) if (Math.hypot(c.piece.x - p.worldX, c.piece.y - p.worldY) < 60) return this.fetch(id);
     };
-    input.on(Phaser.Input.Events.POINTER_DOWN, aim);
-    input.on(Phaser.Input.Events.POINTER_MOVE, aim);
-    input.on(Phaser.Input.Events.POINTER_UP, () => (this.target = null));
+    input.on(Phaser.Input.Events.POINTER_UP, tap);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      input.off(Phaser.Input.Events.POINTER_DOWN);
-      input.off(Phaser.Input.Events.POINTER_MOVE);
-      input.off(Phaser.Input.Events.POINTER_UP);
+      input.off(Phaser.Input.Events.POINTER_UP, tap);
       this.ui.destroy();
     });
     this.refresh();
+    // Erste Ausfahrt nach dem Tutorial: Meer 1 zeigen
+    if (this.registry.get('firstTrip')) {
+      this.registry.set('firstTrip', false);
+      this.time.delayedCall(500, () => this.ui.say(t('tut.firstTrip'), 4));
+    }
+  }
+
+  /** Ziel aus Liste oder Karte: gesperrt erklären, sonst hinfahren (oder gleich angeln, wenn das Boot schon dort ist). */
+  private goTo(id: string): void {
+    if (this.trip || this.sheet.open) return;
+    const spot = this.seaSpots.find((s) => s.id === id);
+    if (!spot) return;
+    if (!spotUnlocked(spot, this.home, this.range)) {
+      play('error');
+      this.ui.say(t('map.locked', { name: t(spot.nameKey) }), 3);
+      return;
+    }
+    play('tap');
+    if (Math.hypot(spot.x - this.boat.x, spot.y - this.boat.y) < mapParams.spotRadius) return this.leave(spot.id);
+    this.trip = { spot };
+    this.target = { x: spot.x, y: spot.y };
+    this.ui.setTravelling(true);
+    this.ui.say(t('map.sailing', { name: t(spot.nameKey) }), 2);
+  }
+
+  /** Treibgut abholen: der Kutter fährt hin, einsammeln passiert unterwegs von selbst. */
+  private fetch(id: number): void {
+    const c = this.crates.get(id);
+    if (!c) return;
+    play('tap');
+    this.trip = { crate: id };
+    this.target = { x: c.piece.x, y: c.piece.y };
   }
 
   /** Meer mit Wellenstrichen, Inseln am Hafen und dunkler Hochsee. */
@@ -195,11 +224,6 @@ export class SeaMapScene extends Phaser.Scene {
     return l && isLegend(l) ? t(l.legend.nameKey) : null;
   }
 
-  private spotHere() {
-    const s = spotAt(this.boat, this.seaSpots, mapParams.spotRadius);
-    return s && spotUnlocked(s, this.home, this.range) ? s : null;
-  }
-
   private nextSpot() {
     if (isMaxed(upgradeById('engine'), this.save.upgrades.engine)) return null;
     const next = upgradeValue(upgradeById('engine'), this.save.upgrades.engine + 1);
@@ -222,6 +246,32 @@ export class SeaMapScene extends Phaser.Scene {
       b.icon.setTint(open ? 0xffffff : 0x6a7a8a);
       b.label.setAlpha(open ? 1 : 0.55);
     }
+    this.ui.showDestinations(this.destinations(), this.registry.get('firstTrip') ? (this.seaSpots.find((s) => !s.harbor)?.id ?? null) : null);
+  }
+
+  /** Zielliste: Heimathafen (die Stadt), die Plätze dieses Meeres, Hinweis aufs nächste Meer. */
+  private destinations() {
+    const here = this.save.map.spot;
+    const tip = this.save.perks.tip;
+    const legend = missingLegend(this.save, species, this.save.sea.current);
+    const item = (s: SpotDef) => ({
+      id: s.id,
+      name: t(s.nameKey),
+      desc: spotUnlocked(s, this.home, this.range) ? t(s.descKey, { max: s.maxMeters.toLocaleString('de-DE') }) : t('map.needEngine'),
+      state: (s.id === here ? 'here' : spotUnlocked(s, this.home, this.range) ? 'open' : 'locked') as 'here' | 'open' | 'locked',
+      badge: tip?.spot === s.id ? t('tip.map', { casts: tip.casts }) : legend && isLegend(legend) && legend.legend.spot === s.id && this.save.legend.hints[this.save.sea.current] ? t('map.legendHere') : undefined,
+    });
+    const sea = seaById(this.save.sea.current);
+    const index = seas.findIndex((x) => x.id === sea.id) + 1;
+    const next = nextSea(seas, sea.id);
+    return [
+      { title: t('map.section.home'), items: [item(this.home)] },
+      {
+        title: t('map.section.sea', { n: index, name: t(sea.nameKey) }),
+        items: this.seaSpots.filter((s) => !s.harbor).map(item),
+        note: next ? (canMoveOn(this.save, seas, species) ? t('map.nextReady', { name: t(next.nameKey) }) : t('map.nextLocked', { n: index + 1, name: t(next.nameKey) })) : undefined,
+      },
+    ];
   }
 
   private buyEngine(): void {
@@ -245,7 +295,6 @@ export class SeaMapScene extends Phaser.Scene {
   }
 
   private readBottle(letter: string, coins: number): void {
-    this.target = null;
     play('chest');
     let portrait: string | undefined;
     try {
@@ -295,19 +344,16 @@ export class SeaMapScene extends Phaser.Scene {
 
   update(_time: number, deltaMs: number): void {
     const dt = Math.min(deltaMs / 1000, 0.1);
-    let target = this.target;
-    const kb = this.input.keyboard;
-    if (kb) {
-      if (this.keys.length === 0) this.keys = ['LEFT', 'RIGHT', 'UP', 'DOWN'].map((k) => kb.addKey(k));
-      const [l, r, u, d] = this.keys.map((k) => (k.isDown ? 1 : 0)) as [number, number, number, number];
-      if (l || r || u || d) target = { x: this.boat.x + (r - l) * 100, y: this.boat.y + (d - u) * 100 };
-    }
+    const target = this.target;
     const moved = stepBoat(this.boat, target, mapParams.boatSpeed, dt);
     const clamped = clampToRange(moved, this.home, this.range, mapParams.worldSize);
-    if (clamped.limited && this.time.now - this.limitedSaid > 4000) {
-      this.limitedSaid = this.time.now;
-      this.ui.say(t('map.range'), 2.5);
-      this.cameras.main.shake(120, 0.004);
+    // Angekommen: am Angelplatz geht es direkt los, beim Treibgut bleibt das Boot stehen
+    if (this.trip && target && Math.hypot(target.x - clamped.x, target.y - clamped.y) < 14) {
+      const trip = this.trip;
+      this.trip = null;
+      this.target = null;
+      this.ui.setTravelling(false);
+      if ('spot' in trip) this.leave(trip.spot.id);
     }
     const moving = clamped.x !== this.boat.x || clamped.y !== this.boat.y;
     this.boat = { x: clamped.x, y: clamped.y, heading: moved.heading };
@@ -338,6 +384,5 @@ export class SeaMapScene extends Phaser.Scene {
       this.refresh();
     }
 
-    this.ui.showSpot(this.spotHere());
   }
 }

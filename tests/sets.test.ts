@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { newlyCompleted, setBonus, setProgress, type SetDef } from '../src/systems/sets';
-import { collectIdle, fishValue, type EconomyParams, type UpgradeDef } from '../src/systems/economy';
+import { fishValue, type EconomyParams } from '../src/systems/economy';
 import { newSave, type Save } from '../src/systems/save';
 import type { SpeciesDef } from '../src/systems/fishing';
 import setsJson from '../data/sets.json';
 import fishJson from '../data/fish.json';
-import upgradesJson from '../data/upgrades.json';
 import gameJson from '../data/game.json';
 import texts from '../data/texts.de.json';
 
@@ -47,13 +46,8 @@ describe('Sammel-Sets', () => {
     expect(newlyCompleted(full, full, sets)).toEqual([]);
   });
 
-  it('Bonus wirkt auf Münzen und Crew', () => {
+  it('Bonus wirkt auf den Preis', () => {
     const tuna = species.find((s) => s.id === 'tuna')!;
     expect(fishValue(tuna, false, false, p, 0.5)).toBe(Math.round(tuna.value * 1.5));
-    const crew = (upgradesJson as UpgradeDef[]).find((u) => u.id === 'crew')!;
-    const s: Save = { ...newSave(T), upgrades: { line: 0, hook: 0, crew: 4, engine: 0 } };
-    const plain = collectIdle(s, T + 60 * 60000, crew, p).coins;
-    const boosted = collectIdle(s, T + 60 * 60000, crew, p, 0.15).coins;
-    expect(boosted).toBe(Math.floor(plain * 1.15));
   });
 });

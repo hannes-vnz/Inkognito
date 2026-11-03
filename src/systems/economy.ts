@@ -1,6 +1,6 @@
 import type { Save, UpgradeId } from './save';
 import type { SpeciesDef } from './fishing';
-import { addToCrate } from './market';
+import { addToCrate, crateCount } from './market';
 
 /** Eintrag aus data/upgrades.json: Wert je Stufe und exponentielle Kosten. */
 export interface UpgradeDef {
@@ -15,7 +15,6 @@ export interface UpgradeDef {
 export interface EconomyParams {
   knowledgeBonus: number;
   comboMultiplier: number;
-  maxOfflineHours: number;
 }
 
 export const upgradeValue = (def: UpgradeDef, level: number): number => def.values[Math.min(level, def.values.length - 1)]!;
@@ -51,7 +50,9 @@ export function landCatch(
   deepestMeters: number,
   species: ReadonlyMap<string, SpeciesDef>,
   now: number,
-): { save: Save; firstCatches: string[] } {
+  /** Platz in der Kiste; was nicht mehr passt, schwimmt zurück ins Meer (zählt trotzdem fürs Fischbuch). */
+  capacity = Infinity,
+): { save: Save; firstCatches: string[]; overflow: number } {
   const fishbook = { ...save.fishbook };
   const firstCatches: string[] = [];
   const known = catches.filter((c) => species.has(c.speciesId));
@@ -63,23 +64,17 @@ export function landCatch(
       firstCatches.push(c.speciesId);
     }
   }
+  const space = Math.max(0, capacity - crateCount(save.crate));
+  const kept = known.slice(0, space);
   return {
     firstCatches,
+    overflow: known.length - kept.length,
     save: {
       ...save,
       fishbook,
-      crate: addToCrate(save.crate, known),
+      crate: addToCrate(save.crate, kept),
       stats: { casts: save.stats.casts + 1, deepestMeters: Math.max(save.stats.deepestMeters, deepestMeters) },
       updatedAt: now,
     },
   };
-}
-
-/** Crew-Einnahmen seit dem letzten Abrechnen (auch offline, gedeckelt), `bonus` aus Sammel-Sets. */
-export function collectIdle(save: Save, now: number, crew: UpgradeDef, p: EconomyParams, bonus = 0): { save: Save; coins: number } {
-  const from = Math.max(save.lastTick, now - p.maxOfflineHours * 3600e3);
-  const minutes = Math.max(0, (now - from) / 60000);
-  const exact = save.idleCarry + minutes * upgradeValue(crew, save.upgrades.crew) * (1 + bonus);
-  const coins = Math.floor(exact);
-  return { coins, save: { ...save, coins: save.coins + coins, idleCarry: exact - coins, lastTick: now, updatedAt: coins > 0 ? now : save.updatedAt } };
 }

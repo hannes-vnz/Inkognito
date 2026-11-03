@@ -9,8 +9,8 @@
       "man_o_war"
     ],
     "bonus": {
-      "type": "crew",
-      "value": 0.15
+      "type": "coins",
+      "value": 0.1
     },
     "sea": "pacific"
   },
@@ -104,8 +104,8 @@
       "langoustine"
     ],
     "bonus": {
-      "type": "crew",
-      "value": 0.15
+      "type": "coins",
+      "value": 0.1
     },
     "sea": "northsea"
   },
@@ -135,8 +135,8 @@
       "man_o_war"
     ],
     "bonus": {
-      "type": "crew",
-      "value": 0.15
+      "type": "coins",
+      "value": 0.1
     },
     "sea": "pacific"
   }

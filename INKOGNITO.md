@@ -13,7 +13,6 @@ Inkognito ist ein lustiges Angel-Incremental für Mobile: Ein Oktopus mit Fake-B
 - **Ein Oktopus, inkognito:** Fake-Bart, schlechte Ausreden, misstrauische Hafenleute. Daraus entstehen die Dialoge und Gags.
 - **Lernen nebenbei:** Jede Art ist echt, jeder Erstfang zeigt einen echten Fakt. Wissen bringt im Spiel Vorteile.
 - **Echte Tiefe:** Die Zonen entsprechen den echten Meereszonen, von Sonnenlicht bis Tiefseegraben.
-- **Acht Arme, acht Angeln:** Jeder Arm ist ein Angel-Platz für die Idle-Crew. Mehr Arme frei = mehr Einnahmen.
 
 **Zielplattform:** Mobile (hochkant zuerst, quer unterstützt) und Browser. **Runde:** 20–40 Sekunden. **Session:** 2–10 Minuten.
 
@@ -26,7 +25,11 @@ Inkognito ist ein lustiges Angel-Incremental für Mobile: Ein Oktopus mit Fake-B
 5. **Neue Art?** Fakt-Karte mit echtem Fakt und einem Kommentar des verkleideten Oktopus. Eintrag ins Fischbuch.
 6. **Upgrades kaufen,** nächster Wurf.
 
-**Idle:** Die Crew angelt weiter, auch wenn das Spiel zu ist. Beim Zurückkommen zeigt ein Pop-up die Ausbeute.
+**Kein Idle:** Es gibt keine Offline-Einnahmen. Wer täglich vorbeischaut, bekommt den **Tagesbonus** (wächst mit Serie und Upgrade-Stufen).
+
+**Bedienung:** Unten eine feste Leiste: Karte, Kiste (Inventar, Verkauf an Bruno), Upgrades (bei Hilde) und Gadgets (Professor Blinker) gibt es nur in der Stadt, dazu das Fischbuch; darunter Auswerfen.
+
+**Tutorial (Stadt):** Der Heimathafen ist das Tutorial: auswerfen, Kiste verkaufen (Bruno legt einen Willkommensbonus drauf), erstes Upgrade bei Hilde, Karte öffnen. Danach geht es direkt raus auf Meer 1.
 
 ## Fischkiste und Markt
 
@@ -38,24 +41,22 @@ Gefangenes landet erst in der **Fischkiste** (Knopf oben rechts) und wird bei **
 | --- | --- | --- |
 | Leine | Maximale Tiefe | Tiny Fishing |
 | Haken | Wie viele Fische pro Aufstieg | Tiny Fishing |
-| Crew | Münzen pro Minute, auch offline | Tiny Fishing |
+| Kiste | Platz für Fische; ist sie voll, schwimmt der Rest zurück | Dredge |
 | Köder (später) | Bestimmte Arten tauchen öfter auf | Cat Goes Fishing |
 | Sonar (später) | Zeigt seltene Arten am Rand an | eigene Idee |
-| Arme (später) | Weitere Angel-Plätze für die Crew | eigene Idee |
 
 Kosten steigen exponentiell, so abgestimmt, dass das nächste Upgrade immer erreichbar ist und das übernächste knapp nicht.
 
 ## Seekarte & Angelplätze
 
-Kleine Karte von oben, kein Open World: Bert fährt den Kutter frei (Daumen ziehen), Bojen markieren Angelplätze. Jeder Platz hat eine maximale Tiefe und Lieblingsarten, die dort öfter anbeißen. Der **Motor** (Boot-Upgrade) bestimmt die Reichweite um den Hafen, jede Stufe schaltet einen Platz frei. Unterwegs treibt Treibgut mit Münzen, nach jedem Wurf neu. Figuren gibt es nur im Hafen.
+Kleine Karte von oben, kein Open World und **kein Steuern**: Eine Zielliste zeigt Heimathafen (Stadt), die Plätze des aktuellen Meeres und was zum nächsten Meer fehlt. Ziel antippen (oder die Boje), der Kutter fährt von allein hin und angelt sofort los. Treibgut antippen holt es ab. Jeder Platz hat eine maximale Tiefe und Lieblingsarten. Der **Motor** bestimmt die Reichweite: Der Startmotor erreicht Heimathafen und ersten Platz, jede weitere Stufe genau einen neuen. Figuren, Upgrades und Gadgets gibt es nur in der Stadt.
 
-| Platz | Bis | Motor |
+| Nordsee | Bis | Motor |
 | --- | --- | --- |
-| Hafenbucht | 200 m | Start |
-| Schelfkante | 1000 m | Stufe 2 |
-| Offene See | 4000 m | Stufe 3 |
-| Tiefsee-Ebene | 6000 m | Stufe 4 |
-| Tiefseegraben | 11000 m | Stufe 5 |
+| Wattkante (Heimathafen) | 20 m | Start |
+| Doggerbank | 50 m | Start |
+| Helgoländer Felsen | 100 m | Stufe 2 |
+| Norwegische Rinne | 700 m | Stufe 3 |
 
 Daten in data/spots.json, Werte in data/game.json (map). Später: weitere Boot-Upgrades (Licht, Rumpf, Laderaum), Ereignisse auf der Fahrt.
 

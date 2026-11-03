@@ -2,9 +2,9 @@
  * Spielstand. Jede Formatänderung bekommt eine neue Version und eine Migration,
  * damit alte Stände (lokal oder aus Supabase) weiter laden.
  */
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 17;
 
-export type UpgradeId = 'line' | 'hook' | 'crew' | 'engine';
+export type UpgradeId = 'line' | 'hook' | 'crate' | 'engine';
 
 export interface FishbookEntry {
   count: number;
@@ -107,15 +107,25 @@ export interface SaveV15 extends Omit<SaveV14, 'version'> {
   version: 15;
 }
 
-export type Save = SaveV15;
+export interface SaveV16 extends Omit<SaveV15, 'version'> {
+  version: 16;
+  /** Tutorial im Heimathafen (siehe systems/tutorial.ts). */
+  tutorial: 'cast' | 'sell' | 'upgrade' | 'map' | 'done';
+}
+
+export interface SaveV17 extends Omit<SaveV16, 'version'> {
+  version: 17;
+}
+
+export type Save = SaveV17;
 
 export function newSave(now: number): Save {
   return {
-    version: 15,
+    version: 17,
     createdAt: now,
     updatedAt: now,
     coins: 0,
-    upgrades: { line: 0, hook: 0, crew: 0, engine: 0 },
+    upgrades: { line: 0, hook: 0, crate: 0, engine: 0 },
     fishbook: {},
     stats: { casts: 0, deepestMeters: 0 },
     lastTick: now,
@@ -132,6 +142,7 @@ export function newSave(now: number): Save {
     perks: { tip: null, charter: { day: '', aboard: false, album: [] } },
     crate: {},
     gadgets: { owned: [], equipped: null },
+    tutorial: 'cast',
   };
 }
 
@@ -203,6 +214,13 @@ const migrations: Record<number, Migration> = {
       map: startOver ? { ...(old.map as Record<string, unknown>), spot: 'watt', flotsamCast: -1, flotsamTaken: [] } : old.map,
       legend: { ...legend, hints: Object.fromEntries(Object.entries(legend.hints).map(([k, v]) => [rename(k), v])), snapped: legend.snapped.map(rename) },
     };
+  },
+  // v15 → v16: Tutorial im Heimathafen; wer schon geangelt hat, ist durch.
+  15: (old) => ({ ...old, tutorial: num((old.stats as { casts?: unknown } | undefined)?.casts) > 0 ? 'done' : 'cast' }),
+  // v16 → v17: Keine Offline-Einnahmen mehr; aus der Crew wird die Kiste (Platz für Fische), die Stufe bleibt.
+  16: (old) => {
+    const { crew, ...rest } = old.upgrades as Record<string, number>;
+    return { ...old, upgrades: { ...rest, crate: num(crew) } };
   },
 };
 

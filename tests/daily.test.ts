@@ -30,10 +30,10 @@ describe('Tagesbonus', () => {
     expect(dailyStreak(s, '2026-10-01')).toBeNull();
   });
 
-  it('wächst mit der Crew und bleibt nach Tag 7 beim Höchstwert', () => {
-    expect(dailyReward(1, 10, p)).toBe(p.base[0]! + 10 * p.crewMinutes[0]!);
+  it('wächst mit den Upgrade-Stufen und bleibt nach Tag 7 beim Höchstwert', () => {
+    expect(dailyReward(1, 10, p)).toBe(p.base[0]! + 10 * p.perLevel[0]!);
     expect(dailyReward(30, 0, p)).toBe(p.base[p.base.length - 1]);
-    expect(p.base).toHaveLength(p.crewMinutes.length);
+    expect(p.base).toHaveLength(p.perLevel.length);
   });
 });
 

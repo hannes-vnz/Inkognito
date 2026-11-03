@@ -2,13 +2,14 @@ import { el, iconImg } from './dom';
 import { Toast } from './Toast';
 import { setRichText } from './rich';
 import { t } from '../i18n';
-import { isMaxed, upgradeCost, upgradeValue, type UpgradeDef } from '../systems/economy';
+import { isMaxed, upgradeCost, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { play } from '../audio/sfx';
 
 /**
- * Oberfläche des Angel-Spiels: Münzen oben rechts, Tiefe oben links, unten das Deck mit
- * Auswerfen, Upgrade-Karten und Fischbuch. Knöpfe erscheinen erst, wenn sie gebraucht werden.
+ * Oberfläche des Angel-Spiels: Münzen oben rechts, Tiefe oben links, unten eine feste Leiste
+ * (Karte, Kiste, Upgrades bei Hilde, Gadgets beim Professor, Fischbuch) und darunter Auswerfen.
+ * Upgrades und Gadgets gibt es nur in der Stadt; Knöpfe erscheinen erst, wenn sie gebraucht werden.
  */
 export class DeckUi {
   private readonly coins: HTMLDivElement;
@@ -23,13 +24,13 @@ export class DeckUi {
   private readonly fightTension: HTMLDivElement;
   private readonly deck: HTMLDivElement;
   private readonly castButton: HTMLButtonElement;
-  private readonly upgradeRow: HTMLDivElement;
+  private readonly upgradesButton: HTMLButtonElement;
+  private readonly gadgetsButton: HTMLButtonElement;
   private readonly bookButton: HTMLButtonElement;
   private readonly bookCount: HTMLSpanElement;
   private readonly mapButton: HTMLButtonElement;
   private readonly hint: HTMLDivElement;
   private readonly toast: Toast;
-  private readonly cards = new Map<string, { root: HTMLButtonElement; level: HTMLSpanElement; effect: HTMLSpanElement; cost: HTMLSpanElement }>();
   private lastCoins = -1;
   private shownCoins = 0;
   private roll = 0;
@@ -40,7 +41,7 @@ export class DeckUi {
   constructor(
     private readonly root: HTMLElement,
     private readonly upgrades: readonly UpgradeDef[],
-    handlers: { cast: () => void; buy: (u: UpgradeDef) => void; book: () => void; map: () => void; menu: () => void; crate: () => void },
+    handlers: { cast: () => void; upgrades: () => void; gadgets: () => void; book: () => void; map: () => void; menu: () => void; crate: () => void },
   ) {
     const coinCard = el('div', 'card hud-coins');
     this.coinCard = coinCard;
@@ -63,25 +64,23 @@ export class DeckUi {
       handlers.cast();
     });
 
-    this.upgradeRow = el('div', 'upgrade-row');
-    for (const u of upgrades) {
-      const card = el('button', 'upgrade');
-      card.type = 'button';
-      const name = el('span', 'upgrade-name');
-      name.textContent = t(u.nameKey);
-      const level = el('span', 'upgrade-level');
-      const effect = el('span', 'upgrade-effect');
-      const cost = el('span', 'upgrade-cost');
-      card.append(name, level, effect, cost);
-      card.addEventListener('click', (e) => {
+    // Knopf der unteren Leiste: Symbol und kurze Beschriftung
+    const navButton = (icon: string, label: string, onClick: () => void) => {
+      const b = el('button', 'button nav-button');
+      b.type = 'button';
+      const text = el('span', 'nav-label');
+      text.textContent = label;
+      b.append(iconImg(icon), text);
+      b.addEventListener('click', (e) => {
         e.stopPropagation();
-        handlers.buy(u);
+        onClick();
       });
-      this.upgradeRow.append(card);
-      this.cards.set(u.id, { root: card, level, effect, cost });
-    }
+      return b;
+    };
+    this.upgradesButton = navButton('icon_coin', t('deck.upgrades'), handlers.upgrades);
+    this.gadgetsButton = navButton('hook', t('deck.gadgets'), handlers.gadgets);
 
-    this.bookButton = el('button', 'button book');
+    this.bookButton = el('button', 'button nav-button');
     this.bookButton.type = 'button';
     this.bookCount = el('span', '');
     this.bookButton.append(iconImg('icon_book'), this.bookCount);
@@ -91,8 +90,8 @@ export class DeckUi {
       handlers.book();
     });
 
-    // Fischkiste: Fang wartet hier auf den Verkauf bei Bruno
-    this.crateButton = el('button', 'account-button hud-crate');
+    // Inventar (Fischkiste): Fang ansehen und verkaufen
+    this.crateButton = el('button', 'button nav-button inventory-button');
     this.crateButton.type = 'button';
     this.crateCount = el('span', '');
     this.crateButton.append(iconImg('fx_crate'), this.crateCount);
@@ -102,7 +101,7 @@ export class DeckUi {
       handlers.crate();
     });
 
-    this.mapButton = el('button', 'button book map-button');
+    this.mapButton = el('button', 'button nav-button');
     this.mapButton.type = 'button';
     const mapLabel = el('span', '');
     mapLabel.textContent = t('map.open');
@@ -112,7 +111,9 @@ export class DeckUi {
       handlers.map();
     });
 
-    this.deck.append(this.upgradeRow, this.mapButton, this.bookButton, this.castButton);
+    const nav = el('div', 'deck-nav');
+    nav.append(this.mapButton, this.crateButton, this.upgradesButton, this.gadgetsButton, this.bookButton);
+    this.deck.append(nav, this.castButton);
     // Menü: Ton, Neu anfangen, Mitwirkende
     const sound = el('button', 'button sound-button');
     sound.type = 'button';
@@ -145,7 +146,7 @@ export class DeckUi {
     root.append(this.panLeft, this.panRight);
 
     this.hint = el('div', 'card hint hidden');
-    root.append(coinCard, this.crateButton, this.depthCard, sound, this.deck, this.hint);
+    root.append(coinCard, this.depthCard, sound, this.deck, this.hint);
     this.toast = new Toast(root);
   }
 
@@ -161,7 +162,7 @@ export class DeckUi {
   }
 
   /** Münzen, Upgrade-Karten und Fischbuch-Zähler aktualisieren; Knöpfe erst nach dem ersten Fang. */
-  update(save: Save, knownSpecies: number, totalSpecies: number, bump = false): void {
+  update(save: Save, knownSpecies: number, totalSpecies: number, bump = false, where: { mapAllowed: boolean; town: boolean; gadgets: boolean } = { mapAllowed: true, town: true, gadgets: true }): void {
     const coins = Math.floor(save.coins);
     if (coins !== this.lastCoins) {
       if (bump && this.lastCoins >= 0) this.rollTo(coins);
@@ -172,9 +173,13 @@ export class DeckUi {
       this.lastCoins = coins;
     }
     const started = save.stats.casts > 0;
-    this.upgradeRow.hidden = !started;
+    this.upgradesButton.hidden = !started || !where.town;
+    this.gadgetsButton.hidden = !where.town || !where.gadgets;
     this.bookButton.hidden = knownSpecies === 0;
-    this.mapButton.hidden = !started;
+    this.mapButton.hidden = !started || !where.mapAllowed;
+    // Hinweis-Punkt am Upgrade-Knopf, sobald etwas bezahlbar ist
+    const affordable = this.upgrades.some((u) => !isMaxed(u, save.upgrades[u.id]) && coins >= upgradeCost(u, save.upgrades[u.id]));
+    this.upgradesButton.classList.toggle('ready', affordable);
     this.bookCount.textContent = `${knownSpecies}/${totalSpecies}`;
     const inCrate = Object.values(save.crate).reduce((a, c) => a + c.n, 0);
     if (this.crateCount.textContent !== String(inCrate) && bump) {
@@ -184,19 +189,6 @@ export class DeckUi {
     }
     this.crateCount.textContent = String(inCrate);
     this.crateButton.hidden = !started;
-    for (const u of this.upgrades) {
-      const c = this.cards.get(u.id)!;
-      const level = save.upgrades[u.id];
-      const maxed = isMaxed(u, level);
-      const cost = upgradeCost(u, level);
-      c.level.textContent = `Lv ${level + 1}`;
-      c.effect.textContent = maxed
-        ? t(u.effectKey, { value: upgradeValue(u, level) })
-        : `${t(u.effectKey, { value: upgradeValue(u, level) })} ${t('deck.next', { value: upgradeValue(u, level + 1) })}`;
-      c.cost.textContent = maxed ? t('upgrade.max') : cost.toLocaleString('de-DE');
-      c.root.disabled = maxed || coins < cost;
-      c.root.classList.toggle('ready', !maxed && coins >= cost);
-    }
   }
 
   /** Zähler rollt hoch statt zu springen, mit Plopp am Ende. */
@@ -325,6 +317,12 @@ export class DeckUi {
     if (color) f.style.color = color;
     this.root.append(f);
     window.setTimeout(() => f.remove(), 1300);
+  }
+
+  /** Tutorial: genau ein Knopf leuchtet (oder keiner). */
+  focus(target: 'cast' | 'inventory' | 'upgrade' | 'map' | null): void {
+    const all = { cast: this.castButton, inventory: this.crateButton, upgrade: this.upgradesButton, map: this.mapButton };
+    for (const [k, node] of Object.entries(all)) node.classList.toggle('tut-focus', k === target);
   }
 
   showHint(text: string): void {

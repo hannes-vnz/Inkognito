@@ -3,8 +3,8 @@ import type { Save } from './save';
 export interface DailyParams {
   /** Feste Münzen je Serientag (Tag 1 … 7, danach bleibt es beim letzten). */
   base: number[];
-  /** Zusätzlich so viele Minuten Crew-Einnahmen, damit der Bonus mitwächst. */
-  crewMinutes: number[];
+  /** Zusätzlich so viele Münzen je Upgrade-Stufe, damit der Bonus mitwächst. */
+  perLevel: number[];
 }
 
 /** Kalendertag in Ortszeit als JJJJ-MM-TT; `offsetMinutes` wie Date#getTimezoneOffset. */
@@ -23,15 +23,16 @@ export function dailyStreak(save: Save, today: string): number | null {
   return dayNumber(today) - dayNumber(last) === 1 ? save.daily.streak + 1 : 1;
 }
 
-export function dailyReward(streak: number, crewPerMinute: number, p: DailyParams): number {
+/** Belohnung für den Serientag; `levels` = Summe aller Upgrade-Stufen. */
+export function dailyReward(streak: number, levels: number, p: DailyParams): number {
   const i = Math.min(streak, p.base.length) - 1;
-  return Math.round(p.base[i]! + crewPerMinute * p.crewMinutes[i]!);
+  return Math.round(p.base[i]! + levels * p.perLevel[i]!);
 }
 
 /** Bonus abholen; null, wenn heute schon geschehen. */
-export function claimDaily(save: Save, today: string, crewPerMinute: number, p: DailyParams): { save: Save; coins: number; streak: number } | null {
+export function claimDaily(save: Save, today: string, levels: number, p: DailyParams): { save: Save; coins: number; streak: number } | null {
   const streak = dailyStreak(save, today);
   if (streak === null) return null;
-  const coins = dailyReward(streak, crewPerMinute, p);
+  const coins = dailyReward(streak, levels, p);
   return { coins, streak, save: { ...save, coins: save.coins + coins, daily: { lastDay: today, streak } } };
 }

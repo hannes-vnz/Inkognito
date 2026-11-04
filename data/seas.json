@@ -61,7 +61,8 @@
         ],
         "sparkle": false
       }
-    ]
+    ],
+    "icon": "⚓"
   },
   {
     "id": "pacific",
@@ -139,6 +140,7 @@
         "enterKey": "zone.hadal.enter",
         "sparkle": true
       }
-    ]
+    ],
+    "icon": "🌴"
   }
 ]

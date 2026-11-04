@@ -1,11 +1,10 @@
 import Phaser from 'phaser';
 import { bottles, timeParams, homeOf, mapParams, prestigeParams, seaById, seas, species, spotById, spotsIn, upgradeById } from '../data';
-import { isNight } from '../systems/legend';
-import { isLegend } from '../systems/legend';
+import { isLegend, isNight } from '../systems/legend';
 import { canMoveOn, missingLegend, knownInSea, moveOn, nextSea } from '../systems/prestige';
-import type { SpotDef } from '../systems/seaMap';
+import { distance, flotsam, flotsamTaken, spotUnlocked, takeFlotsam, type Flotsam, type Point, type SpotDef } from '../systems/seaMap';
+import { routeBetween, routeCurve, routeLayout } from '../systems/route';
 import { Sheet } from '../ui/Sheet';
-import { clampToRange, flotsam, flotsamTaken, spotUnlocked, stepBoat, takeFlotsam, type Boat, type Flotsam, type Point } from '../systems/seaMap';
 import { buyUpgrade, isMaxed, upgradeCost, upgradeValue } from '../systems/economy';
 import { createRng } from '../systems/rng';
 import type { Save } from '../systems/save';
@@ -14,28 +13,46 @@ import { t } from '../i18n';
 import { MapUi } from '../ui/MapUi';
 import { play } from '../audio/sfx';
 
-const BOAT_SCALE = 2;
+const SPACING = 150;
+const NODE_R = 34;
+/** Meere, die nach den spielbaren noch kommen (Teaser auf der Route). */
+const FUTURE = [
+  { key: 'map.future.3', icon: '🧊' },
+  { key: 'map.future.4', icon: '✨' },
+  { key: 'map.future.5', icon: '🌋' },
+  { key: 'map.future.6', icon: '🦖' },
+];
+
+interface Station {
+  kind: 'spot' | 'sea' | 'future';
+  spot?: SpotDef;
+  seaId?: string;
+  name: string;
+  icon: string;
+  state: 'here' | 'open' | 'locked' | 'ready' | 'soon';
+  sub: string;
+  badge?: string;
+  ring?: Phaser.GameObjects.Arc;
+}
 
 /**
- * Seekarte von oben: Ziel antippen (in der Liste oder die Boje), der Kutter fährt von allein hin und angelt los.
- * Treibgut antippen holt es ab. Die Motor-Reichweite um den Hafen bestimmt, wie weit man rauskommt.
+ * Seekarte als Route nach Norden (wie Level-Karten in Mobile-Spielen): unten der Heimathafen,
+ * darüber die Plätze des Meeres als runde Symbole, ganz oben die nächsten Meere.
+ * Station antippen: der Kutter fährt die Route entlang und angelt dort los. Ziehen scrollt die Karte.
  */
 export class SeaMapScene extends Phaser.Scene {
   private save!: Save;
   private ui!: MapUi;
-  private home!: SpotDef;
-  private seaSpots: SpotDef[] = [];
   private sheet!: Sheet;
-  private boat!: Boat;
-  private boatSprite!: Phaser.GameObjects.Image;
-  private wake!: Phaser.GameObjects.Graphics;
-  private rangeRing!: Phaser.GameObjects.Graphics;
-  private target: Point | null = null;
-  /** Wohin die Fahrt geht: ein Angelplatz (dort wird gleich geangelt) oder Treibgut. */
-  private trip: { spot: SpotDef } | { crate: number } | null = null;
-  private crates = new Map<number, { piece: Flotsam; sprite: Phaser.GameObjects.Image }>();
-  private buoys = new Map<string, { icon: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text }>();
-  private wakeDots: { x: number; y: number; age: number }[] = [];
+  private home!: SpotDef;
+  private stations: Station[] = [];
+  private nodes: Point[] = [];
+  private boat!: Phaser.GameObjects.Image;
+  private boatAt = 0;
+  private travelling = false;
+  private dragY: number | null = null;
+  private dragged = 0;
+  private crates = new Map<number, Phaser.GameObjects.Image>();
 
   constructor() {
     super('SeaMap');
@@ -48,250 +65,342 @@ export class SeaMapScene extends Phaser.Scene {
   create(): void {
     this.save = loadSave(Date.now());
     this.home = homeOf(this.save.sea.current);
-    this.seaSpots = spotsIn(this.save.sea.current);
+    this.travelling = false;
     this.crates = new Map();
-    this.buoys = new Map();
-    this.wakeDots = [];
-    this.target = null;
-    this.trip = null;
-    const start = spotById(this.save.map.spot);
-    this.boat = { x: start.x + 40, y: start.y + 10, heading: -Math.PI / 4 };
 
     const root = document.getElementById('ui') as HTMLElement;
     root.replaceChildren();
     root.className = 'map-ui';
     this.ui = new MapUi(root, upgradeById('engine'), {
       back: () => this.leave(this.save.map.spot),
-      pick: (id) => this.goTo(id),
       buyEngine: () => this.buyEngine(),
       prestige: () => this.offerPrestige(),
     });
-
     this.sheet = new Sheet(root);
-    this.drawSea();
-    this.rangeRing = this.add.graphics().setDepth(2);
-    this.drawRange();
-    for (const s of this.seaSpots) {
-      const icon = this.add.image(s.x, s.y, 'buoy').setScale(3).setOrigin(0.5, 0.8).setDepth(3);
-      this.tweens.add({ targets: icon, angle: { from: -6, to: 6 }, duration: 900 + s.x, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-      const label = this.add
-        .text(s.x, s.y - 62, t(s.nameKey), { fontFamily: '"Baloo 2", sans-serif', fontSize: '18px', fontStyle: '800', color: '#fffaf0', stroke: '#0e1a2b', strokeThickness: 5 })
-        .setOrigin(0.5, 1)
-        .setDepth(6);
-      this.buoys.set(s.id, { icon, label });
-      // Giselas Schwarm-Tipp: Platz leuchtet mit Hinweis
-      const tip = this.save.perks.tip;
-      if (tip?.spot === s.id) {
-        const sign = this.add
-          .text(s.x, s.y - 86, t('tip.map', { casts: tip.casts }), { fontFamily: '"Baloo 2", sans-serif', fontSize: '16px', fontStyle: '800', color: '#ffd23f', stroke: '#0e1a2b', strokeThickness: 5 })
-          .setOrigin(0.5, 1)
-          .setDepth(6);
-        this.tweens.add({ targets: sign, scale: 1.12, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-        const ring = this.add.circle(s.x, s.y, 26).setStrokeStyle(4, 0xffd23f).setDepth(2);
-        this.tweens.add({ targets: ring, scale: 1.8, alpha: 0, duration: 1200, repeat: -1 });
-        this.time.delayedCall(400, () => this.ui.say(t('tip.mapSay', { spot: t(s.nameKey), casts: tip.casts }), 3));
-      }
-    }
+
+    this.buildStations();
+    const W = this.scale.width;
+    const layout = routeLayout(this.stations.length, W, SPACING);
+    this.nodes = layout.nodes;
+    this.drawSea(W, layout.height);
+    this.drawRoute();
+    this.drawStations();
     this.spawnFlotsam();
 
-    this.wake = this.add.graphics().setDepth(4);
-    this.boatSprite = this.add.image(this.boat.x, this.boat.y, 'boat_top').setScale(BOAT_SCALE).setDepth(5);
-    this.tweens.add({ targets: this.boatSprite, scale: BOAT_SCALE * 1.04, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    this.boatAt = Math.max(0, this.stations.findIndex((s) => s.spot?.id === this.save.map.spot));
+    const at = this.nodes[this.boatAt]!;
+    this.boat = this.add.image(at.x + (at.x > this.scale.width / 2 ? -66 : 66), at.y + 6, 'boat_top').setScale(2).setDepth(6).setRotation(-Math.PI / 2);
+    this.tweens.add({ targets: this.boat, scale: 2.1, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
-    if (isNight(this.save.stats.casts, timeParams)) {
-      // Nacht: dunkler Schleier über der Karte, die Bojen-Namen bleiben lesbar
-      this.add.rectangle(0, 0, 4000, 4000, 0x0b1630, 0.5).setOrigin(0).setScrollFactor(0).setDepth(4.5);
-    }
+    if (isNight(this.save.stats.casts, timeParams)) this.add.rectangle(0, 0, W, layout.height, 0x0b1630, 0.35).setOrigin(0).setDepth(4.5);
+
     const cam = this.cameras.main;
     cam.setBackgroundColor('#1f6f9a');
-    cam.setBounds(-200, -200, mapParams.worldSize + 400, mapParams.worldSize + 400);
-    cam.startFollow(this.boatSprite, true, 0.12, 0.12);
-
-    // Antippen statt Steuern: Boje = hinfahren und angeln, Treibgut = abholen
-    const input = this.input;
-    const tap = (p: Phaser.Input.Pointer) => {
-      if (this.sheet.open || this.trip || p.getDistance() > 12) return;
-      const spot = this.seaSpots.find((s) => Math.hypot(s.x - p.worldX, s.y - p.worldY) < 70);
-      if (spot) return this.goTo(spot.id);
-      for (const [id, c] of this.crates) if (Math.hypot(c.piece.x - p.worldX, c.piece.y - p.worldY) < 60) return this.fetch(id);
-    };
-    input.on(Phaser.Input.Events.POINTER_UP, tap);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      input.off(Phaser.Input.Events.POINTER_UP, tap);
-      this.ui.destroy();
-    });
+    cam.setBounds(0, 0, W, layout.height);
+    cam.centerOn(W / 2, at.y - this.scale.height * 0.1);
+    this.setupInput();
     this.refresh();
-    // Erste Ausfahrt nach dem Tutorial: Meer 1 zeigen
+    const toast = this.registry.get('mapToast') as string | undefined;
+    if (toast) {
+      this.registry.set('mapToast', undefined);
+      this.time.delayedCall(300, () => this.ui.say(toast, 3));
+    }
     if (this.registry.get('firstTrip')) {
       this.registry.set('firstTrip', false);
       this.time.delayedCall(500, () => this.ui.say(t('tut.firstTrip'), 4));
     }
+    if (location.hash.includes('debug')) (window as unknown as { inkognitoMap: unknown }).inkognitoMap = { pick: (i: number) => this.pick(i), stations: () => this.stations.map((x) => x.name) };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.ui.destroy());
   }
 
-  /** Ziel aus Liste oder Karte: gesperrt erklären, sonst hinfahren (oder gleich angeln, wenn das Boot schon dort ist). */
-  private goTo(id: string): void {
-    if (this.trip || this.sheet.open) return;
-    const spot = this.seaSpots.find((s) => s.id === id);
-    if (!spot) return;
-    if (!spotUnlocked(spot, this.home, this.range)) {
-      play('error');
-      this.ui.say(t('map.locked', { name: t(spot.nameKey) }), 3);
-      return;
+  // ---------------------------------------------------------------- Stationen
+
+  /** Heimathafen, die Plätze nach Reichweite sortiert, dann das nächste Meer und die kommenden. */
+  private buildStations(): void {
+    const sea = seaById(this.save.sea.current);
+    const spots = spotsIn(sea.id)
+      .filter((s) => !s.harbor)
+      .sort((a, b) => distance(a, this.home) - distance(b, this.home));
+    const tip = this.save.perks.tip;
+    const legend = missingLegend(this.save, species, sea.id);
+    const spotStation = (s: SpotDef): Station => {
+      const open = spotUnlocked(s, this.home, this.range);
+      return {
+        kind: 'spot',
+        spot: s,
+        name: t(s.nameKey),
+        icon: s.icon,
+        state: s.id === this.save.map.spot ? 'here' : open ? 'open' : 'locked',
+        sub: open ? t('map.depth', { max: s.maxMeters.toLocaleString('de-DE') }) : t('map.needEngineShort'),
+        badge:
+          tip?.spot === s.id
+            ? t('map.badge.swarm')
+            : legend && isLegend(legend) && legend.legend.spot === s.id && this.save.legend.hints[sea.id]
+              ? t('map.badge.legend')
+              : undefined,
+      };
+    };
+    this.stations = [spotStation(this.home), ...spots.map(spotStation)];
+    const index = seas.findIndex((x) => x.id === sea.id);
+    const next = nextSea(seas, sea.id);
+    if (next) {
+      const ready = canMoveOn(this.save, seas, species);
+      this.stations.push({ kind: 'sea', seaId: next.id, name: t('map.section.sea', { n: index + 2, name: t(next.nameKey) }), icon: next.icon, state: ready ? 'ready' : 'locked', sub: ready ? t('map.gate.ready') : t('map.gate.locked') });
     }
-    play('tap');
-    if (Math.hypot(spot.x - this.boat.x, spot.y - this.boat.y) < mapParams.spotRadius) return this.leave(spot.id);
-    this.trip = { spot };
-    this.target = { x: spot.x, y: spot.y };
-    this.ui.setTravelling(true);
-    this.ui.say(t('map.sailing', { name: t(spot.nameKey) }), 2);
+    // Die Meere, die noch gebaut werden, als Ausblick ganz oben
+    for (const f of FUTURE) {
+      const n = Number(f.key.split('.').pop());
+      if (n > seas.length) this.stations.push({ kind: 'future', name: t('map.section.sea', { n, name: t(f.key) }), icon: f.icon, state: 'soon', sub: t('map.soon') });
+    }
   }
 
-  /** Treibgut abholen: der Kutter fährt hin, einsammeln passiert unterwegs von selbst. */
-  private fetch(id: number): void {
-    const c = this.crates.get(id);
-    if (!c) return;
-    play('tap');
-    this.trip = { crate: id };
-    this.target = { x: c.piece.x, y: c.piece.y };
-  }
+  // ---------------------------------------------------------------- Zeichnen
 
-  /** Meer mit Wellenstrichen, Inseln am Hafen und dunkler Hochsee. */
-  private drawSea(): void {
+  /** Meer von hellem Küstenwasser (unten) zu dunkler Hochsee (Norden), Wellen, Inselchen, Kompass. */
+  private drawSea(W: number, H: number): void {
     const g = this.add.graphics().setDepth(0);
-    const size = mapParams.worldSize;
-    const rng = createRng('sea-map');
-    // Tiefe nach Entfernung vom Hafen: je weiter weg, desto dunkler (Farben aus den Zonen des Meeres)
-    const zones = seaById(this.save.sea.current).zones;
-    const near = Phaser.Display.Color.HexStringToColor(zones[0]!.water[0]);
-    const far = Phaser.Display.Color.HexStringToColor(zones[zones.length - 1]!.water[1]);
-    for (let r = size * 1.6; r > 0; r -= 60) {
-      const k = Math.min(1, r / (size * 1.4));
-      const c = Phaser.Display.Color.Interpolate.ColorWithColor(
-        near,
-        far,
-        100,
-        Math.round(k * 100),
-      );
-      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillCircle(this.home.x, this.home.y, r);
+    const bottom = Phaser.Display.Color.HexStringToColor('#7fdcd8');
+    const top = Phaser.Display.Color.HexStringToColor('#123a6e');
+    for (let y = 0; y < H; y += 24) {
+      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, H, y);
+      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1).fillRect(0, y, W, 25);
     }
-    g.fillStyle(0xffffff, 0.18);
-    for (let i = 0; i < 260; i++) g.fillRect(rng.range(-200, size + 200), rng.range(-200, size + 200), rng.range(6, 16), 2);
-    // Küste mit Hafen unten links
+    const rng = createRng('route-sea');
+    const waves = this.add.graphics().setDepth(1);
+    waves.lineStyle(2, 0xffffff, 0.22);
+    for (let i = 0; i < Math.round(H / 26); i++) {
+      const x = rng.range(10, W - 30);
+      const y = rng.range(40, H - 20);
+      waves.beginPath().arc(x, y, 8, Math.PI * 1.1, Math.PI * 1.9).strokePath();
+      waves.beginPath().arc(x + 14, y, 8, Math.PI * 1.1, Math.PI * 1.9).strokePath();
+    }
+    // Inselchen am Rand, damit die Route nicht im Leeren hängt
     const land = this.add.graphics().setDepth(1);
-    for (const [x, y, rx, ry, col] of [
-      [-60, 1260, 380, 300, 0xe8d29a],
-      [-80, 1280, 350, 270, 0x6fbf5a],
-      [-150, 800, 230, 200, 0xe8d29a],
-      [-170, 800, 205, 178, 0x6fbf5a],
-      [700, 1060, 70, 40, 0xe8d29a],
-      [700, 1058, 52, 28, 0x6fbf5a],
-      [1050, 600, 50, 34, 0xe8d29a],
-      [1050, 598, 36, 22, 0x4f9f4a],
-    ] as const) {
-      land.fillStyle(col, 1);
-      land.fillEllipse(x, y, rx * 2, ry * 2);
+    for (let i = 0; i < Math.round(H / 260); i++) {
+      const left = i % 2 === 0;
+      const x = left ? rng.range(-20, W * 0.12) : rng.range(W * 0.88, W + 20);
+      const y = rng.range(120, H - 160);
+      land.fillStyle(0xe8d29a, 1).fillEllipse(x, y, 90, 50);
+      land.fillStyle(0x6fbf5a, 1).fillEllipse(x, y - 4, 66, 32);
+      this.add.text(x, y - 10, rng.next() < 0.5 ? '🌴' : '🪨', { fontSize: '22px' }).setOrigin(0.5).setDepth(1.1);
     }
-    land.fillStyle(0x6b4a2b, 1);
-    land.fillRect(this.home.x - 60, this.home.y + 6, 10, 44);
+    // Heimatküste ganz unten
+    land.fillStyle(0xe8d29a, 1).fillEllipse(W / 2, H + 40, W * 1.4, 180);
+    land.fillStyle(0x6fbf5a, 1).fillEllipse(W / 2, H + 60, W * 1.3, 150);
+    // Kompass: Norden ist oben
+    this.add.text(W - 34, 70, '🧭', { fontSize: '30px' }).setOrigin(0.5).setDepth(2);
+    this.add
+      .text(W - 34, 100, t('map.north'), { fontFamily: '"Baloo 2", sans-serif', fontSize: '14px', fontStyle: '800', color: '#fffaf0', stroke: '#0e1a2b', strokeThickness: 4 })
+      .setOrigin(0.5)
+      .setDepth(2);
   }
 
-  /** Reichweite: gestrichelter Ring, dahinter Nebel. */
-  private drawRange(): void {
-    const g = this.rangeRing;
-    g.clear();
-    const r = this.range;
-    g.lineStyle(3000, 0x0b1a2e, 0.55);
-    g.strokeCircle(this.home.x, this.home.y, r + 1500);
-    g.fillStyle(0xffffff, 0.5);
-    for (let a = 0; a < Math.PI * 2; a += 0.04) g.fillCircle(this.home.x + Math.cos(a) * r, this.home.y + Math.sin(a) * r, 2.5);
+  /** Gepunktete Route; Abschnitte zu gesperrten Stationen blasser. */
+  private drawRoute(): void {
+    const g = this.add.graphics().setDepth(2);
+    for (let i = 0; i < this.nodes.length - 1; i++) {
+      const pts = routeCurve(this.nodes[i]!, this.nodes[i + 1]!, 22);
+      const open = ['here', 'open', 'ready'].includes(this.stations[i + 1]!.state);
+      g.fillStyle(0x0e1a2b, open ? 0.35 : 0.15);
+      for (const p of pts) g.fillCircle(p.x + 1, p.y + 2, 5);
+      g.fillStyle(0xfffaf0, open ? 0.95 : 0.35);
+      for (const p of pts) g.fillCircle(p.x, p.y, 4);
+    }
   }
 
+  /** Runde Symbole mit Namen; antippbar. */
+  private drawStations(): void {
+    const colors = { here: 0x7bd88f, open: 0xffd23f, ready: 0xff8ab8, locked: 0x8a93a3, soon: 0x5a6a80 } as const;
+    this.stations.forEach((s, i) => {
+      const p = this.nodes[i]!;
+      this.add.circle(p.x + 2, p.y + 5, NODE_R, 0x0e1a2b, 0.45).setDepth(3);
+      const ring = this.add.circle(p.x, p.y, NODE_R, colors[s.state]).setStrokeStyle(4, 0x0e1a2b).setDepth(3.1);
+      this.add.circle(p.x, p.y, NODE_R - 8, 0xfffaf0, s.state === 'locked' || s.state === 'soon' ? 0.55 : 1).setDepth(3.2);
+      this.add
+        .text(p.x, p.y + 1, s.state === 'locked' || s.state === 'soon' ? '🔒' : s.icon, { fontSize: '28px' })
+        .setOrigin(0.5)
+        .setDepth(3.3)
+        .setAlpha(s.state === 'soon' ? 0.7 : 1);
+      if (s.state === 'locked' && s.kind !== 'future') this.add.text(p.x + 20, p.y - 22, s.icon, { fontSize: '16px' }).setOrigin(0.5).setDepth(3.4);
+      const labelX = p.x + (i === 0 ? 0 : p.x < this.scale.width / 2 ? 0 : 0);
+      this.add
+        .text(labelX, p.y + NODE_R + 6, s.name, { fontFamily: '"Baloo 2", sans-serif', fontSize: '17px', fontStyle: '800', color: '#fffaf0', stroke: '#0e1a2b', strokeThickness: 5, align: 'center', wordWrap: { width: 170 } })
+        .setOrigin(0.5, 0)
+        .setDepth(3.5);
+      this.add
+        .text(labelX, p.y + NODE_R + 28, s.sub, { fontFamily: '"Nunito", sans-serif', fontSize: '13px', fontStyle: '800', color: '#dff6ff', stroke: '#0e1a2b', strokeThickness: 4, align: 'center', wordWrap: { width: 170 } })
+        .setOrigin(0.5, 0)
+        .setDepth(3.5);
+      if (s.badge) {
+        const b = this.add
+          .text(p.x + NODE_R - 4, p.y - NODE_R + 2, s.badge, { fontFamily: '"Baloo 2", sans-serif', fontSize: '13px', fontStyle: '800', color: '#0e1a2b', backgroundColor: '#ffd23f', padding: { x: 6, y: 1 } })
+          .setOrigin(0, 0.5)
+          .setDepth(3.6);
+        this.tweens.add({ targets: b, scale: 1.1, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+      }
+      if (s.state === 'ready' || (this.registry.get('firstTrip') && i === 1)) {
+        this.tweens.add({ targets: ring, scale: 1.15, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+      }
+      s.ring = ring;
+      ring.setInteractive(new Phaser.Geom.Circle(NODE_R, NODE_R, NODE_R + 12), Phaser.Geom.Circle.Contains);
+      ring.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => this.dragged < 10 && this.pick(i));
+    });
+  }
+
+  /** Treibgut liegt neben der Route zwischen erreichbaren Stationen; antippen sammelt es ein. */
   private spawnFlotsam(): void {
-    for (const c of this.crates.values()) c.sprite.destroy();
+    for (const c of this.crates.values()) c.destroy();
     this.crates.clear();
-    for (const piece of flotsam(`${this.save.createdAt}-flotsam-${this.save.stats.casts}`, this.home, this.range, mapParams)) {
+    const reachable = this.stations.filter((s) => s.state === 'here' || s.state === 'open').length;
+    if (reachable < 2) return;
+    const rng = createRng(`${this.save.createdAt}-route-${this.save.stats.casts}`);
+    // Höchstens zwei Fundstücke je Abschnitt, damit die Route übersichtlich bleibt
+    const pieces = flotsam(`${this.save.createdAt}-flotsam-${this.save.stats.casts}`, this.home, this.range, mapParams).slice(0, (reachable - 1) * 2);
+    for (const piece of pieces) {
       if (flotsamTaken(this.save, piece.id)) continue;
-      const sprite = this.add.image(piece.x, piece.y, piece.bottle ? 'fx_bottle' : 'fx_crate').setScale(2).setDepth(3);
-      this.tweens.add({ targets: sprite, y: piece.y - 4, angle: 8, duration: 1100 + piece.id * 90, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-      this.crates.set(piece.id, { piece, sprite });
+      // Mitte eines Abschnitts, seitlich neben der Route, nie auf einer Station
+      const seg = piece.id % (reachable - 1);
+      const pts = routeCurve(this.nodes[seg]!, this.nodes[seg + 1]!);
+      const p = pts[Math.round((pts.length - 1) * rng.range(0.25, 0.42))]!;
+      const x = Phaser.Math.Clamp(p.x + (rng.next() < 0.5 ? -1 : 1) * rng.range(60, 100), 30, this.scale.width - 30);
+      const sprite = this.add.image(x, p.y, piece.bottle ? 'fx_bottle' : 'fx_crate').setScale(2.5).setDepth(4);
+      this.tweens.add({ targets: sprite, y: p.y - 5, angle: 8, duration: 1100 + piece.id * 90, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+      sprite.setInteractive({ useHandCursor: true });
+      sprite.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => this.dragged < 10 && this.collect(piece, sprite));
+      this.crates.set(piece.id, sprite);
     }
   }
 
-  /** Name der noch fehlenden Legende dieses Meeres (für den Hinweis auf der Karte). */
-  private legendName(sea: string): string | null {
-    const l = missingLegend(this.save, species, sea);
-    return l && isLegend(l) ? t(l.legend.nameKey) : null;
+  // ---------------------------------------------------------------- Bedienung
+
+  /** Ziehen scrollt nach Norden/Süden; kurzes Antippen zählt als Tipp. */
+  private setupInput(): void {
+    const input = this.input;
+    input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => {
+      this.dragY = p.y;
+      this.dragged = 0;
+    });
+    input.on(Phaser.Input.Events.POINTER_MOVE, (p: Phaser.Input.Pointer) => {
+      if (this.dragY === null || !p.isDown || this.sheet.open) return;
+      const dy = p.y - this.dragY;
+      this.dragY = p.y;
+      this.dragged += Math.abs(dy);
+      this.cameras.main.scrollY -= dy;
+    });
+    input.on(Phaser.Input.Events.POINTER_UP, () => (this.dragY = null));
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      input.off(Phaser.Input.Events.POINTER_DOWN);
+      input.off(Phaser.Input.Events.POINTER_MOVE);
+      input.off(Phaser.Input.Events.POINTER_UP);
+    });
   }
 
-  private nextSpot() {
+  private pick(i: number): void {
+    if (this.travelling || this.sheet.open) return;
+    const s = this.stations[i]!;
+    if (s.kind === 'future') return this.ui.say(t('map.soonSay', { name: s.name }), 3);
+    if (s.kind === 'sea') {
+      if (s.state === 'ready') return this.offerPrestige();
+      play('error');
+      return this.ui.say(this.gateText(), 3.5);
+    }
+    if (s.state === 'locked') {
+      play('error');
+      this.tweens.add({ targets: s.ring, x: s.ring!.x + 6, duration: 50, yoyo: true, repeat: 3 });
+      return this.ui.say(t('map.locked', { name: s.name }), 3);
+    }
+    play('tap');
+    if (i === this.boatAt) return this.leave(s.spot!.id);
+    this.sail(i, () => this.leave(s.spot!.id));
+  }
+
+  /** Was zum nächsten Meer noch fehlt. */
+  private gateText(): string {
+    const sea = seaById(this.save.sea.current);
+    const known = knownInSea(this.save, species, sea.id);
+    const legend = missingLegend(this.save, species, sea.id);
+    if (sea.nextKnown !== null && known < sea.nextKnown) return t('prestige.progress', { known, need: sea.nextKnown });
+    return legend && isLegend(legend) ? t('prestige.legend', { legend: t(legend.legend.nameKey) }) : t('map.gate.locked');
+  }
+
+  /** Kutter fährt die Route entlang zur Station `to`, die Kamera folgt. */
+  private sail(to: number, done: () => void): void {
+    this.travelling = true;
+    const path = routeBetween(this.nodes, this.boatAt, to);
+    const name = this.stations[to]!.name;
+    this.ui.say(t('map.sailing', { name }), 2);
+    this.cameras.main.startFollow(this.boat, true, 0.1, 0.1);
+    const duration = Math.min(2600, 260 * Math.abs(to - this.boatAt) + 500);
+    this.tweens.addCounter({
+      from: 0,
+      to: path.length - 1,
+      duration,
+      ease: 'Sine.InOut',
+      onUpdate: (tw) => {
+        const k = tw.getValue() ?? 0;
+        const a = path[Math.floor(k)]!;
+        const b = path[Math.min(path.length - 1, Math.floor(k) + 1)]!;
+        const f = k - Math.floor(k);
+        const x = a.x + (b.x - a.x) * f;
+        const y = a.y + (b.y - a.y) * f;
+        if (b.x !== a.x || b.y !== a.y) this.boat.setRotation(Math.atan2(b.y - a.y, b.x - a.x));
+        this.boat.setPosition(x, y);
+      },
+      onComplete: () => {
+        this.boatAt = to;
+        done();
+      },
+    });
+  }
+
+  private collect(piece: Flotsam, sprite: Phaser.GameObjects.Image): void {
+    if (this.travelling) return;
+    const letter = bottles[this.save.map.bottlesRead % bottles.length]!;
+    this.save = takeFlotsam(this.save, piece);
+    writeSave(this.save);
+    this.crates.delete(piece.id);
+    play('coin');
+    const cam = this.cameras.main;
+    this.ui.floater(t('map.flotsam', { coins: piece.coins }), sprite.x - cam.worldView.x, sprite.y - cam.worldView.y - 20, '#ffd23f');
+    this.tweens.add({ targets: sprite, scale: 0, angle: 180, duration: 250, onComplete: () => sprite.destroy() });
+    if (piece.bottle) this.readBottle(letter, piece.coins);
+    this.refresh();
+  }
+
+  private nextSpot(): SpotDef | null {
     if (isMaxed(upgradeById('engine'), this.save.upgrades.engine)) return null;
     const next = upgradeValue(upgradeById('engine'), this.save.upgrades.engine + 1);
-    return this.seaSpots.find((s) => !spotUnlocked(s, this.home, this.range) && spotUnlocked(s, this.home, next)) ?? null;
+    return spotsIn(this.save.sea.current).find((s) => !spotUnlocked(s, this.home, this.range) && spotUnlocked(s, this.home, next)) ?? null;
   }
 
   private refresh(): void {
     this.ui.update(this.save, this.nextSpot());
     const sea = seaById(this.save.sea.current);
     const next = nextSea(seas, sea.id);
+    const legend = missingLegend(this.save, species, sea.id);
     this.ui.showPrestige(
       next && sea.nextKnown !== null
-        ? { known: knownInSea(this.save, species, sea.id), need: sea.nextKnown, nextName: t(next.nameKey), legend: this.legendName(sea.id) }
+        ? { known: knownInSea(this.save, species, sea.id), need: sea.nextKnown, nextName: t(next.nameKey), legend: legend && isLegend(legend) ? t(legend.legend.nameKey) : null }
         : null,
       canMoveOn(this.save, seas, species),
     );
-    for (const s of this.seaSpots) {
-      const b = this.buoys.get(s.id)!;
-      const open = spotUnlocked(s, this.home, this.range);
-      b.icon.setTint(open ? 0xffffff : 0x6a7a8a);
-      b.label.setAlpha(open ? 1 : 0.55);
-    }
-    this.ui.showDestinations(this.destinations(), this.registry.get('firstTrip') ? (this.seaSpots.find((s) => !s.harbor)?.id ?? null) : null);
   }
 
-  /** Zielliste: Heimathafen (die Stadt), die Plätze dieses Meeres, Hinweis aufs nächste Meer. */
-  private destinations() {
-    const here = this.save.map.spot;
-    const tip = this.save.perks.tip;
-    const legend = missingLegend(this.save, species, this.save.sea.current);
-    const item = (s: SpotDef) => ({
-      id: s.id,
-      name: t(s.nameKey),
-      desc: spotUnlocked(s, this.home, this.range) ? t(s.descKey, { max: s.maxMeters.toLocaleString('de-DE') }) : t('map.needEngine'),
-      state: (s.id === here ? 'here' : spotUnlocked(s, this.home, this.range) ? 'open' : 'locked') as 'here' | 'open' | 'locked',
-      badge: tip?.spot === s.id ? t('tip.map', { casts: tip.casts }) : legend && isLegend(legend) && legend.legend.spot === s.id && this.save.legend.hints[this.save.sea.current] ? t('map.legendHere') : undefined,
-    });
-    const sea = seaById(this.save.sea.current);
-    const index = seas.findIndex((x) => x.id === sea.id) + 1;
-    const next = nextSea(seas, sea.id);
-    return [
-      { title: t('map.section.home'), items: [item(this.home)] },
-      {
-        title: t('map.section.sea', { n: index, name: t(sea.nameKey) }),
-        items: this.seaSpots.filter((s) => !s.harbor).map(item),
-        note: next ? (canMoveOn(this.save, seas, species) ? t('map.nextReady', { name: t(next.nameKey) }) : t('map.nextLocked', { n: index + 1, name: t(next.nameKey) })) : undefined,
-      },
-    ];
-  }
-
+  /** Motor kaufen: neue Station wird erreichbar, die Karte baut sich neu auf. */
   private buyEngine(): void {
     const def = upgradeById('engine');
     const level = this.save.upgrades.engine;
-    if (isMaxed(def, level) || this.save.coins < upgradeCost(def, level)) return;
+    if (isMaxed(def, level) || this.save.coins < upgradeCost(def, level) || this.travelling) return;
     const unlocked = this.nextSpot();
     this.save = buyUpgrade(this.save, def, Date.now());
     writeSave(this.save);
     play('upgrade');
-    this.drawRange();
-    this.spawnFlotsam();
-    this.refresh();
     if (unlocked) {
       play('levelUp');
-      const b = this.buoys.get(unlocked.id)!;
-      this.tweens.add({ targets: b.icon, scale: 5, duration: 220, yoyo: true, ease: 'Back.Out' });
       this.cameras.main.flash(200, 255, 230, 120);
-      this.ui.say(t('spot.arrive', { name: t(unlocked.nameKey), max: unlocked.maxMeters.toLocaleString('de-DE') }), 3);
+      this.registry.set('mapToast', t('spot.arrive', { name: t(unlocked.nameKey), max: unlocked.maxMeters.toLocaleString('de-DE') }));
     }
+    this.scene.restart();
   }
 
   private readBottle(letter: string, coins: number): void {
@@ -309,80 +418,31 @@ export class SeaMapScene extends Phaser.Scene {
   private offerPrestige(): void {
     const next = nextSea(seas, this.save.sea.current);
     if (!next || !canMoveOn(this.save, seas, species)) return;
-    this.target = null;
     play('tap');
     const bonus = Math.round(prestigeParams.coinBonusPerSea * 100);
-    this.sheet.show(
-      t('prestige.title'),
-      t('prestige.text', { sea: t(next.nameKey), desc: t(next.descKey), bonus }),
-      [
-        {
-          label: t('prestige.go'),
-          onSelect: () => {
-            this.sheet.close();
-            const home = homeOf(next.id);
-            this.save = moveOn(this.save, next.id, home.id, Date.now());
-            writeSave(this.save);
-            play('fanfare');
-            this.cameras.main.flash(400, 255, 255, 255);
-            this.ui.say(t('prestige.arrive', { sea: t(next.nameKey), bonus: bonus * this.save.sea.left.length }), 4);
-            this.time.delayedCall(900, () => this.leave(home.id));
-          },
+    this.sheet.show(t('prestige.title'), t('prestige.text', { sea: t(next.nameKey), desc: t(next.descKey), bonus }), [
+      {
+        label: t('prestige.go'),
+        onSelect: () => {
+          this.sheet.close();
+          const home = homeOf(next.id);
+          this.save = moveOn(this.save, next.id, home.id, Date.now());
+          writeSave(this.save);
+          play('fanfare');
+          this.cameras.main.flash(400, 255, 255, 255);
+          this.ui.say(t('prestige.arrive', { sea: t(next.nameKey), bonus: bonus * this.save.sea.left.length }), 4);
+          this.time.delayedCall(900, () => this.leave(home.id));
         },
-        { label: t('prestige.stay'), onSelect: () => this.sheet.close() },
-      ],
-    );
+      },
+      { label: t('prestige.stay'), onSelect: () => this.sheet.close() },
+    ]);
   }
 
   private leave(spotId: string): void {
-    this.save = { ...this.save, map: { ...this.save.map, spot: spotId } };
+    this.save = { ...this.save, map: { ...this.save.map, spot: spotById(spotId).id } };
     writeSave(this.save);
     play('splash');
     this.cameras.main.fadeOut(250, 11, 53, 80);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Fishing'));
-  }
-
-  update(_time: number, deltaMs: number): void {
-    const dt = Math.min(deltaMs / 1000, 0.1);
-    const target = this.target;
-    const moved = stepBoat(this.boat, target, mapParams.boatSpeed, dt);
-    const clamped = clampToRange(moved, this.home, this.range, mapParams.worldSize);
-    // Angekommen: am Angelplatz geht es direkt los, beim Treibgut bleibt das Boot stehen
-    if (this.trip && target && Math.hypot(target.x - clamped.x, target.y - clamped.y) < 14) {
-      const trip = this.trip;
-      this.trip = null;
-      this.target = null;
-      this.ui.setTravelling(false);
-      if ('spot' in trip) this.leave(trip.spot.id);
-    }
-    const moving = clamped.x !== this.boat.x || clamped.y !== this.boat.y;
-    this.boat = { x: clamped.x, y: clamped.y, heading: moved.heading };
-    this.boatSprite.setPosition(this.boat.x, this.boat.y).setRotation(this.boat.heading);
-
-    // Kielwasser
-    if (moving) this.wakeDots.push({ x: this.boat.x - Math.cos(this.boat.heading) * 26, y: this.boat.y - Math.sin(this.boat.heading) * 26, age: 0 });
-    this.wake.clear();
-    for (const w of this.wakeDots) {
-      w.age += dt;
-      this.wake.fillStyle(0xffffff, Math.max(0, 0.5 - w.age * 0.5));
-      this.wake.fillCircle(w.x, w.y, 3 + w.age * 8);
-    }
-    this.wakeDots = this.wakeDots.filter((w) => w.age < 1);
-
-    // Treibgut einsammeln
-    for (const [id, c] of this.crates) {
-      if (Math.hypot(c.piece.x - this.boat.x, c.piece.y - this.boat.y) > mapParams.flotsamRadius) continue;
-      const letter = bottles[this.save.map.bottlesRead % bottles.length]!;
-      this.save = takeFlotsam(this.save, c.piece);
-      writeSave(this.save);
-      this.crates.delete(id);
-      play('coin');
-      const cam = this.cameras.main;
-      this.ui.floater(t('map.flotsam', { coins: c.piece.coins }), c.piece.x - cam.worldView.x, c.piece.y - cam.worldView.y - 20, '#ffd23f');
-      this.tweens.add({ targets: c.sprite, scale: 0, angle: 180, duration: 250, onComplete: () => c.sprite.destroy() });
-      if (c.piece.bottle) this.readBottle(letter, c.piece.coins);
-      this.refresh();
-    }
-
   }
 }

@@ -13,7 +13,8 @@
     ],
     "harbor": true,
     "sea": "pacific",
-    "current": 0
+    "current": 0,
+    "icon": "🏝️"
   },
   {
     "id": "shelf",
@@ -28,7 +29,8 @@
     ],
     "harbor": false,
     "sea": "pacific",
-    "current": 0
+    "current": 0,
+    "icon": "🐠"
   },
   {
     "id": "open",
@@ -43,7 +45,8 @@
     ],
     "harbor": false,
     "sea": "pacific",
-    "current": 0
+    "current": 0,
+    "icon": "🦑"
   },
   {
     "id": "plain",
@@ -58,7 +61,8 @@
     ],
     "harbor": false,
     "sea": "pacific",
-    "current": 0
+    "current": 0,
+    "icon": "🐙"
   },
   {
     "id": "trench",
@@ -73,7 +77,8 @@
     ],
     "harbor": false,
     "sea": "pacific",
-    "current": 0
+    "current": 0,
+    "icon": "🕳️"
   },
   {
     "id": "watt",
@@ -90,7 +95,8 @@
     ],
     "harbor": true,
     "sea": "northsea",
-    "current": 0
+    "current": 0,
+    "icon": "⚓"
   },
   {
     "id": "dogger",
@@ -107,7 +113,8 @@
     ],
     "harbor": false,
     "sea": "northsea",
-    "current": 90
+    "current": 90,
+    "icon": "🐟"
   },
   {
     "id": "helgoland",
@@ -123,7 +130,8 @@
     ],
     "harbor": false,
     "sea": "northsea",
-    "current": 140
+    "current": 140,
+    "icon": "🦀"
   },
   {
     "id": "rinne",
@@ -139,6 +147,7 @@
     ],
     "harbor": false,
     "sea": "northsea",
-    "current": 40
+    "current": 40,
+    "icon": "🌊"
   }
 ]

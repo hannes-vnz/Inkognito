@@ -20,6 +20,8 @@ export interface SpotDef extends Point {
   sea: string;
   /** Strömung: so stark (Einheiten pro Sekunde) treibt der Haken seitlich. */
   current: number;
+  /** Kleines Symbol auf der Route (Emoji). */
+  icon: string;
 }
 
 export interface MapParams {

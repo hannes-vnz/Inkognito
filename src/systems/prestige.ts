@@ -6,6 +6,8 @@ export interface SeaDef {
   descKey: string;
   /** So viele Arten dieses Meeres muss man kennen, um weiterzuziehen; null = letztes Meer. */
   nextKnown: number | null;
+  /** Symbol auf der Route. */
+  icon: string;
 }
 
 export interface PrestigeParams {

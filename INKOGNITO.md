@@ -54,7 +54,7 @@ Kosten steigen exponentiell, so abgestimmt, dass das nächste Upgrade immer erre
 
 ## Seekarte & Angelplätze
 
-Kleine Karte von oben, kein Open World und **kein Steuern**: Eine Zielliste zeigt Heimathafen (Stadt), die Plätze des aktuellen Meeres und was zum nächsten Meer fehlt. Ziel antippen (oder die Boje), der Kutter fährt von allein hin und angelt sofort los. Treibgut antippen holt es ab. Jeder Platz hat eine maximale Tiefe und Lieblingsarten. Der **Motor** bestimmt die Reichweite: Der Startmotor erreicht Heimathafen und ersten Platz, jede weitere Stufe genau einen neuen. Figuren, Upgrades und Gadgets gibt es nur in der Stadt.
+Die Seekarte ist eine **Route nach Norden** wie bei Level-Karten in Mobile-Spielen: unten der Heimathafen (Stadt), darüber die Plätze des Meeres als runde Symbole an einer gepunkteten Linie, ganz oben die nächsten Meere (gesperrt oder „kommt bald“). Station antippen: der Kutter fährt die Route entlang und angelt dort sofort los. Ziehen scrollt die Karte, Treibgut antippen sammelt es ein. Jeder Platz hat eine maximale Tiefe und Lieblingsarten. Der **Motor** bestimmt die Reichweite: Der Startmotor erreicht Heimathafen und ersten Platz, jede weitere Stufe genau einen neuen. Figuren, Upgrades und Gadgets gibt es nur in der Stadt.
 
 | Nordsee | Bis | Motor |
 | --- | --- | --- |

@@ -77,11 +77,126 @@ function split(img, cols, rows) {
 }
 
 /**
+ * Die Farben des eingebrannten Karos: bis zu vier häufige helle Randfarben (Weiß, Grau, Gitterlinien).
+ * Bei rein weißem Hintergrund nur eine. `explained`: Anteil heller Randpixel, die dazu passen.
+ */
+function checkerModel(img, tol) {
+  const { width: w, height: h, data } = img;
+  const ring = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if ((x < 3 || y < 3 || x >= w - 3 || y >= h - 3) && data[(y * w + x) * 4 + 3] > 127) ring.push((y * w + x) * 4);
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const bins = new Map();
+  for (const p of ring) {
+    const k = [0, 1, 2].map((c) => data[p + c] >> 2).join(',');
+    bins.set(k, (bins.get(k) ?? 0) + 1);
+  }
+  const sorted = [...bins].sort((x, y) => y[1] - x[1]).map(([k, n]) => ({ c: k.split(',').map((v) => Number(v) * 4), n }));
+  // Häufige helle Randfarben (Karo-Weiß, Karo-Grau, Gitterlinien), ähnliche zusammengefasst
+  const palette = [];
+  for (const { c } of sorted.slice(0, 60)) {
+    if (Math.min(...c) < 150 || palette.some((p) => dist(p, c) <= 14)) continue;
+    const share = sorted.reduce((n, x) => n + (dist(x.c, c) <= 8 ? x.n : 0), 0) / Math.max(1, ring.length);
+    if (share >= (palette.length === 0 ? 0.05 : 0.08)) palette.push(c);
+    if (palette.length === 4) break;
+  }
+  // genaue Farbe: Mittel der Randpixel nahe der Bin-Farbe
+  const colors = palette.map((c) => {
+    const sel = ring.filter((p) => dist([data[p], data[p + 1], data[p + 2]], c) <= 6);
+    return [0, 1, 2].map((k) => sel.reduce((a, p) => a + data[p + k], 0) / Math.max(1, sel.length));
+  });
+  if (colors.length === 0) colors.push([255, 255, 255]);
+  const segs = [];
+  for (let i = 0; i < colors.length; i++) for (let j = i; j < colors.length; j++) segs.push([colors[i], colors[j]]);
+  /** Abstand eines Pixels zu den Karo-Farben und ihren Mischtönen. */
+  const off = (p) => {
+    let best = Infinity;
+    for (const [A, B] of segs) {
+      const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+      const L = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+      const v = [data[p] - A[0], data[p + 1] - A[1], data[p + 2] - A[2]];
+      const t = L === 0 ? 0 : Math.max(0, Math.min(1, (v[0] * d[0] + v[1] * d[1] + v[2] * d[2]) / L));
+      best = Math.min(best, Math.hypot(v[0] - t * d[0], v[1] - t * d[1], v[2] - t * d[2]));
+    }
+    return best;
+  };
+  const light = ring.filter((p) => Math.min(data[p], data[p + 1], data[p + 2]) >= 150);
+  const explained = light.filter((p) => off(p) <= tol).length / Math.max(1, light.length);
+  /** Welche Karo-Farbe ein Pixel ist (−1: keine). */
+  const which = (p) => colors.findIndex((c) => dist([data[p], data[p + 1], data[p + 2]], c) < 12);
+  return { colors, twoTone: colors.length > 1, off, explained, which };
+}
+
+/**
+ * Entfernt den Hintergrund. Erklärt das Karo-Modell den Rand gut, werden nur Pixel entfernt, die farblich
+ * auf der Linie zwischen den beiden Karo-Farben liegen (so bleibt weißes Gefieder stehen, das leicht anders getönt ist);
+ * dazu eingeschlossene Karo-Inseln und einzelne helle Punkte. Sonst das konturbewusste Verfahren.
+ */
+function removeBackground(img) {
+  const { width: w, height: h, data } = img;
+  const tol = Math.max(w, h) > 64 ? 8 : 6;
+  const m = checkerModel(img, tol);
+  if (m.explained < 0.85) return removeBackgroundByOutline(img);
+  const isBg = (q) => data[q * 4 + 3] <= 127 || m.off(q * 4) <= tol;
+  const seen = new Uint8Array(w * h);
+  const stack = [];
+  const seed = (q) => {
+    if (!seen[q] && isBg(q)) {
+      seen[q] = 1;
+      stack.push(q);
+    }
+  };
+  for (let x = 0; x < w; x++) seed(x), seed((h - 1) * w + x);
+  for (let y = 0; y < h; y++) seed(y * w), seed(y * w + w - 1);
+  while (stack.length) {
+    const q = stack.pop();
+    const x = q % w;
+    if (x > 0) seed(q - 1);
+    if (x < w - 1) seed(q + 1);
+    if (q >= w) seed(q - w);
+    if (q < w * (h - 1)) seed(q + w);
+  }
+  const neighbours = (q) => {
+    const x = q % w;
+    return [x > 0 ? q - 1 : -1, x < w - 1 ? q + 1 : -1, q >= w ? q - w : -1, q < w * (h - 1) ? q + w : -1].filter((n) => n >= 0);
+  };
+  const components = (accept, limit = Infinity) => {
+    const done = new Uint8Array(w * h);
+    const out = [];
+    for (let s = 0; s < w * h; s++) {
+      if (seen[s] || done[s] || !accept(s)) continue;
+      const part = [s];
+      done[s] = 1;
+      for (let k = 0; k < part.length && part.length <= limit; k++)
+        for (const n of neighbours(part[k]))
+          if (!seen[n] && !done[n] && accept(n)) {
+            done[n] = 1;
+            part.push(n);
+          }
+      out.push(part);
+    }
+    return out;
+  };
+  // Eingeschlossene Karo-Inseln: enthalten Weiß UND Grau (nur bei echtem Karo, nicht bei weißem Hintergrund)
+  if (m.twoTone)
+    for (const part of components((q) => data[q * 4 + 3] > 127 && m.off(q * 4) <= tol))
+      if (part.length >= 4 && new Set(part.map((q) => m.which(q * 4)).filter((i) => i >= 0)).size >= 2) for (const q of part) seen[q] = 1;
+  // Helle Krümel (bis 16 Pixel) in Karofarbe, die an den Hintergrund grenzen; Glanzlichter innerhalb der Figur bleiben
+  for (let round = 0; round < 3; round++)
+    for (const part of components((q) => data[q * 4 + 3] > 127 && m.off(q * 4) <= 18, 16))
+      if (part.length <= 16 && part.some((q) => neighbours(q).some((n) => seen[n]))) for (const q of part) seen[q] = 1;
+  for (let q = 0; q < w * h; q++) if (seen[q]) data[q * 4 + 3] = 0;
+  return img;
+}
+
+/** Bis zu dieser Helligkeit zählt ein Pixel als Kontur (auch mittelgraue Konturen kleiner Figuren); Hintergrund ist heller (ab 180). */
+const OUTLINE_LUM = 175;
+
+/**
  * Entfernt den Hintergrund: Flutfüllung vom Bildrand aus über transparente Pixel, helle Grautöne
  * (eingebranntes Karo aus Bildgeneratoren) und Farben aus den vier Bildecken. Figuren mit dunkler Kontur
  * bleiben dabei ganz, auch wenn sie selbst hell sind.
  */
-function removeBackground(img) {
+function removeBackgroundByOutline(img) {
   const { width: w, height: h, data } = img;
   const refs = [];
   for (const [cx, cy] of [[0, 0], [w - 4, 0], [0, h - 4], [w - 4, h - 4]])
@@ -108,7 +223,7 @@ function removeBackground(img) {
         const ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
         const n = ny * w + nx;
-        if (data[n * 4 + 3] > 127 && lum(n) < 140) return true;
+        if (data[n * 4 + 3] > 127 && lum(n) < OUTLINE_LUM) return true;
       }
     return false;
   };
@@ -131,14 +246,42 @@ function removeBackground(img) {
     if (q >= w) seed(q - w);
     if (q < w * (h - 1)) seed(q + w);
   }
-  // Zweite Runde: den stehengebliebenen hellen Saum direkt am Hintergrund entfernen
-  const fringe = [];
-  for (let q = 0; q < w * h; q++) {
-    if (seen[q] || !bgLike(q)) continue;
-    const x = q % w;
-    if ((x > 0 && seen[q - 1]) || (x < w - 1 && seen[q + 1]) || (q >= w && seen[q - w]) || (q < w * (h - 1) && seen[q + w])) fringe.push(q);
+  // Eingeschlossene Karo-Inseln (z. B. zwischen Arm und Körper): helle Flächen, die die Füllung nicht erreicht,
+  // die aber wie Karo dicht zwischen Hell und Grau wechseln. Glatte helle Flächen (Federn, Kittel) bleiben.
+  const done = new Uint8Array(w * h);
+  for (let start = 0; start < w * h; start++) {
+    if (seen[start] || done[start] || data[start * 4 + 3] <= 127 || !bgLike(start)) continue;
+    const part = [start];
+    done[start] = 1;
+    for (let k = 0; k < part.length; k++) {
+      const q = part[k];
+      const x = q % w;
+      for (const n of [x > 0 ? q - 1 : -1, x < w - 1 ? q + 1 : -1, q - w, q + w])
+        if (n >= 0 && n < w * h && !seen[n] && !done[n] && data[n * 4 + 3] > 127 && bgLike(n)) {
+          done[n] = 1;
+          part.push(n);
+        }
+    }
+    const inPart = new Set(part);
+    let jumps = 0;
+    for (const q of part) {
+      const x = q % w;
+      if ([x > 0 ? q - 1 : -1, x < w - 1 ? q + 1 : -1, q - w, q + w].some((n) => inPart.has(n) && Math.abs(lum(n) - lum(q)) > 30)) jumps++;
+    }
+    if (part.length >= 6 && jumps / part.length >= 0.3) for (const q of part) seen[q] = 1;
   }
-  for (const q of fringe) seen[q] = 1;
+  // Danach den hellen Saum Schicht für Schicht abtragen, bis nichts Helles mehr am Hintergrund liegt.
+  // Die dunkle Kontur stoppt das: helle Flächen innerhalb der Figur (Möwengefieder, Kittel) bleiben.
+  for (let round = 0; round < 8; round++) {
+    const fringe = [];
+    for (let q = 0; q < w * h; q++) {
+      if (seen[q] || !bgLike(q)) continue;
+      const x = q % w;
+      if ((x > 0 && seen[q - 1]) || (x < w - 1 && seen[q + 1]) || (q >= w && seen[q - w]) || (q < w * (h - 1) && seen[q + w])) fringe.push(q);
+    }
+    if (fringe.length === 0) break;
+    for (const q of fringe) seen[q] = 1;
+  }
   for (let q = 0; q < w * h; q++) if (seen[q]) data[q * 4 + 3] = 0;
   return img;
 }

@@ -190,51 +190,6 @@
     ]
   },
   {
-    "id": "jens",
-    "steps": [
-      [
-        {
-          "speaker": "jens",
-          "textKey": "chatter.jens.1.1"
-        },
-        {
-          "speaker": "knut",
-          "textKey": "chatter.jens.1.2"
-        }
-      ],
-      [
-        {
-          "speaker": "jens",
-          "textKey": "chatter.jens.2.1"
-        },
-        {
-          "speaker": "bruno",
-          "textKey": "chatter.jens.2.2"
-        }
-      ],
-      [
-        {
-          "speaker": "jens",
-          "textKey": "chatter.jens.3.1"
-        },
-        {
-          "speaker": "hilde",
-          "textKey": "chatter.jens.3.2"
-        }
-      ],
-      [
-        {
-          "speaker": "jens",
-          "textKey": "chatter.jens.4.1"
-        },
-        {
-          "speaker": "knut",
-          "textKey": "chatter.jens.4.2"
-        }
-      ]
-    ]
-  },
-  {
     "id": "qualle",
     "steps": [
       [

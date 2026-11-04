@@ -8,14 +8,6 @@
     }
   },
   {
-    "id": "jens",
-    "nameKey": "life.jens.name",
-    "unlock": {
-      "type": "casts",
-      "value": 4
-    }
-  },
-  {
     "id": "kruemel",
     "nameKey": "life.kruemel.name",
     "unlock": {
@@ -24,27 +16,11 @@
     }
   },
   {
-    "id": "rower",
-    "nameKey": "life.rower.name",
-    "unlock": {
-      "type": "casts",
-      "value": 9
-    }
-  },
-  {
     "id": "lights",
     "nameKey": "life.lights.name",
     "unlock": {
       "type": "casts",
       "value": 14
-    }
-  },
-  {
-    "id": "ole",
-    "nameKey": "life.ole.name",
-    "unlock": {
-      "type": "species",
-      "value": 10
     }
   }
 ]

@@ -13,6 +13,8 @@
 //   --bg B         auto (Standard: einfarbigen Rand entfernen) oder none
 //   --fps N        nur Acting-Streifen: Tempo in data/anims.json setzen
 //   --once         nur Acting-Streifen: Animation läuft einmal und hält das letzte Bild
+//   --trim N       oberste N px jeder Quelle löschen (Füße der Rasterzelle darüber in Gemini-Rastern)
+//   --outline      an unseren Stil anpassen: 1 px dunkle Kontur (#1b1030) um die Figur, Platz dafür im Feld
 //   --rows 4,4,4   Frames pro Zeile erzwingen (z. B. wenn das Sheet neue Zeilen bekommt)
 //   --dry          nichts schreiben, nur anzeigen
 //   --out DATEI    Vorschau: nur diese Datei schreiben, Spieldaten bleiben unberührt
@@ -240,6 +242,17 @@ function scale(img, k) {
   return out;
 }
 
+/** Farbige Kontur wie bei den Spielfiguren: jeder freie Pixel neben der Figur wird dunkel. */
+function outline(img) {
+  const { width: w, height: h, data } = img;
+  const solid = (x, y) => x >= 0 && y >= 0 && x < w && y < h && data[(y * w + x) * 4 + 3] > 0;
+  const pts = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) pts.push((y * w + x) * 4);
+  for (const p of pts) data.set([27, 16, 48, 255], p);
+  return img;
+}
+
 /** Kopiert `src` nach `dst` an (dx, dy), nur deckende Pixel. */
 function paste(dst, src, dx, dy) {
   for (let y = 0; y < src.height; y++)
@@ -323,6 +336,8 @@ function parseArgs(argv) {
     else if (a === '--dry') opts.dry = true;
     else if (a === '--out') opts.out = next();
     else if (a === '--rows') opts.rows = next().split(',').map(Number);
+    else if (a === '--outline') opts.outline = true;
+    else if (a === '--trim') opts.trim = Number(next());
     else if (!opts.target) opts.target = a.replace(/^assets\//, '');
     else opts.sources.push(a);
   }
@@ -356,7 +371,8 @@ function main() {
   for (const file of sourceFiles(opts.sources)) {
     const img = load(file);
     const parts = opts.grid ? split(img, opts.grid[0], opts.grid[1]) : opts.frames ? split(img, opts.frames, 1) : [img];
-    frames.push(...parts.map((f) => removeDebris(opts.bg === 'none' ? f : removeBackground(f))));
+    const trimmed = opts.trim ? parts.map((f) => crop(f, 0, opts.trim, f.width, f.height - opts.trim)) : parts;
+    frames.push(...trimmed.map((f) => removeDebris(opts.bg === 'none' ? f : removeBackground(f))));
   }
   const boxes = frames.map(bounds);
   frames = frames.filter((_, i) => boxes[i]);
@@ -364,7 +380,7 @@ function main() {
   if (solid.length === 0) throw new Error('Keine Figur gefunden (alles transparent?)');
 
   // Ein gemeinsamer Maßstab für alle Frames, damit die Figur nicht pulsiert
-  const margin = layout.kind === 'fish' ? 1 : 0;
+  const margin = layout.kind === 'fish' || opts.outline ? 1 : 0;
   // Nie vergrößern: Pixel-Art in Zielgröße bleibt 1:1 scharf
   const k = Math.min(1, (cw - margin * 2) / Math.max(...solid.map((b) => b.w)), (ch - margin * 2) / Math.max(...solid.map((b) => b.h)));
   const cells = solid.map((b, i) => {
@@ -373,7 +389,7 @@ function main() {
     const dx = Math.round((cw - part.width) / 2);
     const dy = anchor === 'center' ? Math.round((ch - part.height) / 2) : ch - margin - part.height;
     paste(cell, part, dx, dy);
-    return cell;
+    return opts.outline ? outline(removeDebris(cell)) : cell;
   });
 
   let rows = opts.rows ?? layout.rows;

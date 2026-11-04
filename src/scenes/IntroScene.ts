@@ -372,14 +372,14 @@ export class IntroScene extends Phaser.Scene {
     this.waveG!.setData('horizon', horizon);
     const b = this.boat(this.W * 0.5, horizon + 18 * u, 4.2 * u);
     const deckY = horizon - 40 * u;
-    const octo = this.add.sprite(b.x + 70 * u, deckY + 18 * u, 'anim_bert_shock', 0).setOrigin(0.5, 1).setScale(1.1 * u);
+    const octo = this.add.sprite(b.x + 70 * u, deckY + 18 * u, 'anim_bert_raw', this.frameOf('anim_bert_raw', 4)).setOrigin(0.5, 1).setScale(1.1 * u);
     const f = this.fisher(b.x - 70 * u, deckY + 6 * u, 3 * u, 'life-angler-walk');
     this.stage.add(octo);
     // Bert geht neugierig auf den Fang zu
     this.tweens.add({ targets: f, x: b.x + 10 * u, duration: 1800, ease: 'Linear' });
     this.time.delayedCall(1800, () => {
       f.play('life-angler-idle');
-      octo.play('in-octo-shock');
+      octo.play('in-octo-raw');
       play('bite', 0.6);
       // Tintenwolke auf dem Deck
       for (let i = 0; i < 10; i++) {

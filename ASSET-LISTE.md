@@ -4,6 +4,37 @@ Stand: 29.10.2026. Alle Grafiken, die das Spiel braucht, mit Maß, Dateiname und
 Alles unter **A** ersetzt vorhandene Platzhalter 1:1: Datei mit gleichem Namen und gleichem Maß in den Ordner legen, fertig.
 **B** ist neu und braucht eine kleine Code-Anpassung (mache ich, sobald die Bilder da sind).
 
+## Figuren im Bert-Stil (Stand 04.11.2026, wichtigste Vorgabe)
+
+**Warum Bert passt und die anderen nicht:** Dein Bert hat *Chibi-Proportionen* (großer Kopf, kurzer Körper, kräftige Kontur). Er lässt sich auf unsere Pixeldichte (32 px) verkleinern und sieht dann aus wie aus einem Guss mit der Stadt. Hein, Fiete, Penelope, Scholle, Klementine & Co. haben *realistische Proportionen* (kleiner Kopf, langer Körper) und sehr feine Schattierung. Verkleinert werden sie matschig, und die Proportionen passen trotzdem nicht. Deshalb sind sie noch nicht im Spiel.
+
+**So bitte bei Gemini erzeugen:**
+
+> Pixel art game sprite sheet, chibi proportions exactly like the reference image (big head about 40 % of the body height, short body), side view facing right, thick dark outline, flat warm colors with 3–4 shade steps, transparent background (real alpha, no checkerboard), no text or labels, 4 frames in one row, each frame 48×48 px with the character fully inside the frame.
+
+Dazu immer **Berts Bild als Referenz** mitgeben (z. B. `bert_idle_0.png`).
+
+**Pro Figur:** Zeilen *stehen* (4), *reden* (4), *reagieren* (4); wer läuft, zusätzlich *laufen* (4, nur nach rechts, links spiegelt das Spiel).
+
+| Figur | Aussehen (muss zum Porträt passen) | Läuft? |
+| --- | --- | --- |
+| Hilde | Kapitänsmütze, Brille, dunkelblaue Uniform, Klemmbrett | nein |
+| Bruno | **Hai** im Trenchcoat mit Hut, Ringelshirt | nein |
+| Opa Knut | **rote Strickmütze**, weißer Vollbart, Pfeife | nein |
+| Möwe Gisela | Silbermöwe, Matrosenmütze, rotes Halstuch | fliegt |
+| Professor Blinker | Laborkittel, Brille, Glashelm mit kleiner Qualle | nein |
+| Professorin Qualle | Ohrenqualle mit Doktorhut und Brille (schwebt) | nein |
+| Herr Schulze | Tourist: Hawaiihemd, Strohhut, Kamera | ja |
+| Inspektorin Klementine | Trenchcoat, Hut, Lupe (Meeresbehörde) | ja |
+| Wachtmeister Scholle | Polizeiuniform, Taschenlampe (Meeresbehörde) | ja |
+| Hein | Netzflicker, sitzt auf Kiste | nein |
+| Fiete | Hafenarbeiter, trägt Kiste | ja |
+| Penelope | Journalistin mit Block | ja |
+
+**Und für Bert selbst:** *auswerfen* (4), *kurbeln* (4), *jubeln* (4). Stehen, zeigen, schwitzen und die abfallende Verkleidung sind schon drin.
+
+**Einspielen** (macht Claude): `npm run art:import -- sprites/npc_hilde.png rohbilder/hilde/ --cell 32x32 --outline --trim 5` verkleinert auf unsere Pixeldichte, zieht die Kontur und entfernt Reste der Nachbarzellen.
+
 ## Einheitlicher Grafiksatz (Stand 03.11.2026, gilt vor allen Maßen weiter unten)
 
 **Warum:** Im Spiel dürfen nicht mehr drei Quellen (Platzhalter, CraftPix, Gemini) und verschiedene Vergrößerungen nebeneinander stehen. Ab jetzt gilt:

@@ -285,7 +285,7 @@ export class FishingScene extends Phaser.Scene {
     this.rays = fx;
 
     this.boat = this.add.image(width / 2, surface + 18, 'boat_1').setOrigin(0.5, 1).setScale(3).setDepth(4);
-    this.bert = this.add.sprite(width / 2 - 54, surface - 36, player.sprite, 0).setOrigin(0.5, 1).setScale(2).setDepth(3);
+    this.bert = this.add.sprite(width / 2 - 54, surface - 26, player.sprite, 0).setOrigin(0.5, 1).setScale(player.scale).setDepth(3);
     this.bert.play(animKey(player.id, 'idle'));
     if (this.spot.harbor) this.harbor.build(width, surface);
     else islands.setVisible(false);
@@ -794,6 +794,9 @@ export class FishingScene extends Phaser.Scene {
     navigator.vibrate?.([60, 40, 60]);
     this.ui.shout(t('legend.snap'), '#ff6b6b');
     this.fishSprites.get(uid)?.clearTint();
+    // Vor Schreck fällt die Verkleidung ab … und wird schnell wieder angezogen
+    this.bert.play(animKey(player.id, 'busted'));
+    this.time.delayedCall(1600, () => this.bert.play(animKey(player.id, 'idle')));
   }
 
   /** Seltene Art am Haken: Blitz, Schriftzug, heller Ton. */

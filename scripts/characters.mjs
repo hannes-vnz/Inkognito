@@ -42,6 +42,22 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     boot: rampOf(hex('#3f7a4a')),
     stache: rampOf(hex('#6b4226')),
     nose: rampOf(hex('#ff8a8a')),
+    // Farben aus den gezeichneten Porträts (Gemini), damit Pixel-Figur und Porträt zusammenpassen
+    hildeCoat: rampOf(hex('#2b3f63')),
+    hildeCap: rampOf(hex('#1f2c45')),
+    hair: rampOf(hex('#b9bcc4')),
+    trench: rampOf(hex('#9c8a68')),
+    sailorCap: rampOf(hex('#e6e1d2')),
+    stripe: rampOf(hex('#3f6aa8')),
+    sweater: rampOf(hex('#2e4a6e')),
+    redBeanie: rampOf(hex('#b8343a')),
+    scarf: rampOf(hex('#d23a32')),
+    labCoat: rampOf(hex('#c8bf98')),
+    glove: rampOf(hex('#5a3a22')),
+    dome: rampOf(hex('#cdf4ff')),
+    jellyPink: rampOf(hex('#ff8ad0')),
+    profHair: rampOf(hex('#8a9cff')),
+    flask: rampOf(hex('#9a5ad8')),
   };
 
   // ------------------------------------------------------------ Porträts 64×64
@@ -337,34 +353,51 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
 
   /** f: Frame 0–3, row: 0 idle, 1 talk, 2 react. */
   const sprites = {
+    /** Hilde wie im Porträt: dunkle Kapitänsmütze mit Goldabzeichen, graue Locken, Brille, Uniform, Klemmbrett. */
     hilde(img, ox, oy, f, row) {
       const b = row === 2 ? (f % 2 ? -1 : 0) : f === 1 || f === 2 ? 1 : 0;
-      blob(img, ox, oy, 16, 29, 10, 6, P.navy);
-      poly(img, ox, oy, [[14, 23], [16, 27], [18, 23]], P.capWhite.base);
-      for (const y of [26, 29]) for (const x of [13, 19]) img.set(ox + x, oy + y, P.gold.base);
-      // Fernglas um den Hals
-      rect(img, ox, oy, 13, 24 + b, 6, 2, ink);
-      blob(img, ox, oy, 16, 13 + b, 9, 8, P.grey);
+      blob(img, ox, oy, 16, 28, 10, 6, P.hildeCoat);
+      for (const x of [8, 21]) rect(img, ox, oy, x, 23 + b, 3, 2, P.gold.base);
+      for (const y of [26, 29]) img.set(ox + 16, oy + y, P.gold.base);
+      rect(img, ox, oy, 13, 22 + b, 6, 2, ink);
+      // graue Locken an den Seiten
+      for (const [x, y] of [[9, 14], [9, 17], [23, 14], [23, 17]]) blob(img, ox, oy, x, y + b, 2.4, 2.4, P.hair);
       blob(img, ox, oy, 16, 15 + b, 7, 7, P.skin);
-      blob(img, ox, oy, 16, 6 + b, 8, 3.2, P.capWhite);
-      rect(img, ox, oy, 8, 8 + b, 17, 2, P.navy.base);
-      rect(img, ox, oy, 9, 10 + b, 13, 1, hex('#1b2a4a'));
-      img.set(ox + 16, oy + 8 + b, P.gold.base);
-      const squint = row === 2 ? 0.3 : f === 3 && row === 0 ? 0 : 0.6;
-      eye(img, ox, oy, 13, 15 + b, 1, hex('#5a7a4a'), squint);
-      eye(img, ox, oy, 19, 15 + b, 1, hex('#5a7a4a'), row === 2 ? 1 : squint + 0.3);
-      line(img, ox, oy, 17, 12 + b, 21, 11 + b - (row === 2 ? 1 : 0), P.grey.outline);
+      // Mütze dunkel mit Schirm und Goldabzeichen
+      blob(img, ox, oy, 16, 7 + b, 8, 3.4, P.hildeCap);
+      rect(img, ox, oy, 8, 9 + b, 17, 2, ink);
+      rect(img, ox, oy, 15, 6 + b, 3, 2, P.gold.base);
+      // Brille
+      const squint = row === 2 ? 1 : f === 3 && row === 0 ? 0 : 0.6;
+      eye(img, ox, oy, 13, 15 + b, 1, hex('#5a6a7a'), squint);
+      eye(img, ox, oy, 19, 15 + b, 1, hex('#5a6a7a'), row === 2 ? 1 : squint);
+      // feine graue Brillenfassung um die Augen
+      const frame = hex('#6a6f7a');
+      for (const cx of [13, 19]) {
+        rect(img, ox, oy, cx - 2, 13 + b, 4, 1, frame);
+        img.set(ox + cx - 2, oy + 14 + b, frame);
+        img.set(ox + cx + 1, oy + 14 + b, frame);
+      }
+      img.set(ox + 16, oy + 13 + b, frame);
       const open = row === 1 && f % 2 === 1;
       line(img, ox, oy, 14, 19 + b, 18, 19 + b, hex('#a8505a'));
       if (open) rect(img, ox, oy, 15, 20 + b, 3, 1, hex('#5a2030'));
-      blush(img, ox, oy, 10, 17 + b);
+      // Klemmbrett: beim Reagieren hebt sie es
+      const lift = row === 2 ? [0, -3, -5, -2][f] : 0;
+      rect(img, ox, oy, 21, 21 + lift, 7, 8, hex('#8a5a2b'));
+      rect(img, ox, oy, 22, 22 + lift, 5, 6, hex('#f4f1e8'));
+      for (const y of [24, 26]) rect(img, ox, oy, 23, y + lift, 3, 1, hex('#8a93a3'));
     },
+    /** Bruno wie im Porträt: Hai mit heller Schiffermütze, Khaki-Trenchcoat, Ringelshirt, schwarzer Handschuh. */
     bruno(img, ox, oy, f, row) {
       const b = f === 1 || f === 2 ? 1 : 0;
       poly(img, ox, oy, [[24, 22 + b], [30, 12 + b], [31, 24 + b]], P.shark.base);
-      blob(img, ox, oy, 16, 29, 12, 6, P.coat);
-      poly(img, ox, oy, [[8, 26], [12, 20], [14, 30]], P.coat.light);
-      poly(img, ox, oy, [[24, 26], [20, 20], [18, 30]], P.coat.shadow);
+      blob(img, ox, oy, 16, 29, 12, 6, P.trench);
+      // Ringelshirt im Ausschnitt
+      for (let y = 23; y < 32; y += 2) rect(img, ox, oy, 13, y, 6, 1, P.stripe.base);
+      for (let y = 24; y < 32; y += 2) rect(img, ox, oy, 13, y, 6, 1, white);
+      poly(img, ox, oy, [[7, 26], [12, 20], [13, 31]], P.trench.light);
+      poly(img, ox, oy, [[25, 26], [20, 20], [19, 31]], P.trench.shadow);
       blob(img, ox, oy, 16, 15 + b, 10, 7, P.shark);
       blob(img, ox, oy, 8, 16 + b, 5, 4, P.shark);
       blob(img, ox, oy, 13, 19 + b, 8, 3, P.belly);
@@ -373,11 +406,13 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       for (let x = 6; x < 20; x += 2) img.set(ox + x, oy + 19 + b, white);
       if (open) rect(img, ox, oy, 7, 20 + b, 12, 1, hex('#5a2030'));
       eye(img, ox, oy, 11, 13 + b, 1, ink, row === 2 ? 1 : f === 3 ? 0 : 1);
-      // Hut: bei react tippt er an die Krempe
+      // Handschuh am Revers; beim Reagieren tippt er an die Mütze
       const tip = row === 2 ? [0, -1, -2, -1][f] : 0;
-      blob(img, ox, oy, 16, 8 + b + tip, 11, 2, P.hat);
-      blob(img, ox, oy, 17, 5 + b + tip, 7, 3.5, P.hat);
-      rect(img, ox, oy, 11, 6 + b + tip, 12, 1, P.red.base);
+      blob(img, ox, oy, row === 2 ? 22 : 20, row === 2 ? 9 + tip : 25, 2.4, 2.4, rampOf(hex('#22262e')));
+      // helle Schiffermütze mit dunklem Schirm
+      blob(img, ox, oy, 16, 6 + b + tip, 8, 3.2, P.sailorCap);
+      rect(img, ox, oy, 9, 8 + b + tip, 14, 2, hex('#2a2e36'));
+      rect(img, ox, oy, 15, 5 + b + tip, 2, 2, P.gold.base);
     },
     qualle(img, ox, oy, f, row) {
       const b = row === 2 ? [0, -2, -3, -1][f] : f % 2;
@@ -397,12 +432,12 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       img.set(ox + 24, oy + 7 + b, P.gold.base);
       if (row === 2) for (const [x, y] of [[3, 6], [28, 4], [27, 14]]) img.set(ox + x, oy + y + (f % 2), white);
     },
+    /** Knut wie im Porträt: rote Strickmütze, weißer Vollbart, Pfeife, dunkelblauer Pullover; sitzt auf dem Fass. */
     knut(img, ox, oy, f, row) {
       const b = f === 1 || f === 2 ? 1 : 0;
-      // Fass
       blob(img, ox, oy, 16, 27, 9, 5, P.barrel);
       for (const y of [25, 29]) rect(img, ox, oy, 8, y, 17, 1, P.barrel.outline);
-      blob(img, ox, oy, 16, 19 + b, 9, 5, P.rain);
+      blob(img, ox, oy, 16, 19 + b, 9, 5, P.sweater);
       blob(img, ox, oy, 15, 12 + b, 6, 6, P.skinRed);
       blob(img, ox, oy, 15, 17 + b, 7, 5, P.beard);
       for (let i = 0; i < 8; i++) blob(img, ox, oy, 15 + Math.cos(i) * 6, 18 + b + Math.sin(i) * 3, 1.6, 1.6, P.beard);
@@ -410,28 +445,30 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       img.set(ox + 15, oy + 14 + b, hex('#e0605a'));
       const blink = row === 0 && f === 3;
       eye(img, ox, oy, 12, 11 + b, 1, hex('#3a6aa8'), blink ? 0 : 0.7);
-      eye(img, ox, oy, 18, 11 + b, 1, hex('#3a6aa8'), 0);
-      blob(img, ox, oy, 15, 6 + b, 7, 4, P.beanie);
-      rect(img, ox, oy, 8, 7 + b, 15, 2, P.beanie.light);
-      img.set(ox + 15, oy + 1 + b, P.red.base);
-      // Pfeife und Rauch (zieht hoch), beim Erzählen wippt sie
+      eye(img, ox, oy, 18, 11 + b, 1, hex('#3a6aa8'), row === 2 ? 0.2 : 0.5);
+      // rote Strickmütze mit Umschlag
+      blob(img, ox, oy, 15, 6 + b, 7, 4, P.redBeanie);
+      rect(img, ox, oy, 8, 7 + b, 15, 2, P.redBeanie.shadow);
+      for (let x = 9; x < 22; x += 2) img.set(ox + x, oy + 4 + b, P.redBeanie.light);
       const pb = row === 1 ? f % 2 : 0;
       line(img, ox, oy, 19, 16 + b + pb, 24, 17 + b + pb, P.pipe.base);
       rect(img, ox, oy, 23, 14 + b + pb, 3, 3, P.pipe.base);
       for (let i = 0; i < 3; i++) img.blend(ox + 25 + ((f + i) % 2), oy + 11 - i * 3 - (f % 2), P.grey.light, 0.7);
-      if (row === 2) for (let i = 0; i < 4; i++) img.set(ox + 3 + i, oy + 6 - (i % 2) - f % 2, P.gold.base);
+      if (row === 2) for (let i = 0; i < 4; i++) img.set(ox + 3 + i, oy + 6 - (i % 2) - (f % 2), P.gold.base);
     },
+    /** Gisela wie im Porträt: Möwe mit Matrosenmütze und rotem Halstuch. */
     gisela(img, ox, oy, f, row) {
       const flap = row === 2 ? [0, -3, -5, -2][f] : 0;
       const b = row === 0 && f === 2 ? 1 : 0;
       rect(img, ox, oy, 14, 26, 1, 4, P.beak.shadow);
       rect(img, ox, oy, 18, 26, 1, 4, P.beak.shadow);
       blob(img, ox, oy, 17, 21 + b, 8, 6, P.gullWhite);
-      // Flügel (bei react flattern)
       poly(img, ox, oy, [[16, 18 + b], [27, 18 + b + flap], [29, 24 + b + flap / 2], [18, 25 + b]], P.gullGrey.base);
       rect(img, ox, oy, 26, 21 + b + flap / 2, 3, 2, ink);
       blob(img, ox, oy, 13, 12 + b, 6, 5.5, P.gullWhite);
-      poly(img, ox, oy, [[9, 18 + b], [17, 18 + b], [13, 22 + b]], hex('#3a6ac8'));
+      // rotes Halstuch
+      poly(img, ox, oy, [[9, 17 + b], [18, 17 + b], [14, 22 + b]], P.scarf.base);
+      rect(img, ox, oy, 9, 17 + b, 9, 1, P.scarf.shadow);
       const open = (row === 1 && f % 2 === 1) || (row === 2 && f % 2 === 1);
       const turn = row === 0 && f === 3 ? 1 : 0;
       poly(img, ox, oy, [[8, 11 + b], [2 + turn * 2, 12 + b], [8, 13 + b]], P.beak.base);
@@ -439,6 +476,10 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
       img.set(ox + 4, oy + 13 + b, hex('#e0403a'));
       eye(img, ox, oy, 11, 10 + b, 1, hex('#f2e05a'), 1, -1);
       line(img, ox, oy, 9, 8 + b, 13, 9 + b, P.gullGrey.outline);
+      // Matrosenmütze, leicht schief
+      blob(img, ox, oy, 14, 6 + b, 5, 2.2, P.hildeCap);
+      rect(img, ox, oy, 9, 7 + b, 10, 1, ink);
+      img.set(ox + 14, oy + 5 + b, P.gold.base);
     },
   };
 
@@ -539,27 +580,33 @@ export function makeCharacters({ Image, hex, mix, rampOf, outlineRegion, white, 
     img.set(25, 8, white);
   };
   faces.prof = { skin: P.skin.base, eyes: [[26, 30, 2], [38, 30, 2]], mouth: [29, 35, 42] };
+  /** Professor wie im Porträt: Glaskuppel mit rosa Qualle, blaue Haarsträhnen, grüne Schutzbrille, Khaki-Kittel, braune Handschuhe. */
   sprites.prof = (img, ox, oy, f, row) => {
     const b = f === 1 || f === 2 ? 1 : 0;
     rect(img, ox, oy, 12, 28, 3, 3, rampOf(hex('#3a3a4a')).base);
     rect(img, ox, oy, 17, 28, 3, 3, rampOf(hex('#3a3a4a')).base);
-    blob(img, ox, oy, 16, 22 + b, 7, 7, coat);
-    line(img, ox, oy, 16, 17 + b, 16, 28, coat.shadow);
-    img.set(ox + 13, oy + 24 + b, hex('#7bd88f'));
+    blob(img, ox, oy, 16, 22 + b, 7, 7, P.labCoat);
+    line(img, ox, oy, 16, 17 + b, 16, 28, P.labCoat.shadow);
+    for (const [x, y] of [[13, 24], [19, 26]]) img.set(ox + x, oy + y + b, hex('#7a6a3a'));
     blob(img, ox, oy, 16, 12 + b, 5.5, 5.5, P.skin);
-    for (const [x, y] of [[10, 11], [22, 11], [11, 8], [21, 8]]) blob(img, ox, oy, x, y + b, 2, 1.6, hair);
-    rect(img, ox, oy, 12, 11 + b, 3, 2, dome.base);
-    rect(img, ox, oy, 17, 11 + b, 3, 2, dome.base);
-    img.set(ox + 13, oy + 11 + b, ink);
-    img.set(ox + 18, oy + 11 + b, ink);
+    // blaue Haarsträhnen wie Tentakel
+    for (const [x, y] of [[10, 12], [22, 12], [9, 16], [23, 16]]) blob(img, ox, oy, x, y + b, 1.8, 2.2, P.profHair);
+    // grüne Schutzbrille
+    for (const cx of [13, 19]) {
+      rect(img, ox, oy, cx - 2, 10 + b, 4, 3, ink);
+      rect(img, ox, oy, cx - 1, 11 + b, 2, 1, hex('#7be0a0'));
+    }
     line(img, ox, oy, 14, 15 + b, 18, 15 + b, ink);
     if (row === 1 && f % 2) rect(img, ox, oy, 15, 16 + b, 3, 1, hex('#5a2030'));
-    blob(img, ox, oy, 16, 5 + b, 7, 4.5, dome, 0.6);
-    blob(img, ox, oy, 16, 5 + b, 3, 2, P.jelly);
-    // Glaskolben; bei react blubbert er über
+    // Glaskuppel mit rosa Qualle
+    blob(img, ox, oy, 16, 5 + b, 7, 4.5, P.dome, 0.7);
+    blob(img, ox, oy, 16, 5 + b, 3, 2, P.jellyPink);
+    for (let k = 0; k < 3; k++) img.set(ox + 15 + k, oy + 7 + b, P.jellyPink.light);
+    // Handschuh mit lila Glaskolben; beim Reagieren blubbert er über
     const lift = row === 2 ? [0, -2, -3, -1][f] : 0;
-    rect(img, ox, oy, 23, 17 + b + lift, 2, 3, dome.light);
-    blob(img, ox, oy, 24, 22 + b + lift, 3, 2.5, rampOf(hex('#c78cff')));
+    blob(img, ox, oy, 23, 23 + b + lift, 2, 2, P.glove);
+    rect(img, ox, oy, 23, 17 + b + lift, 2, 3, P.dome.light);
+    blob(img, ox, oy, 24, 21 + b + lift, 3, 2.5, P.flask);
     if (row === 2) for (let i = 0; i < 3; i++) img.set(ox + 23 + (i % 2), oy + 14 + lift - i * 2 - (f % 2), white);
   };
 

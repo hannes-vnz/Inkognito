@@ -239,7 +239,7 @@ Tipp: Bei den Fischen reicht notfalls ein gutes Einzelbild pro Art, die vier Zei
 | `sprites/icon_fish.png` | 16 × 16 | Fisch-Symbol |
 | `sprites/icon_book.png` | 16 × 16 | Fischbuch |
 | `sprites/icon_map.png` | 16 × 16 | Seekarte |
-| `icons/icon-192.png`, `icons/icon-512.png` | 192², 512² | App-Icon: Berts Gesicht mit Südwester und Fake-Bart |
+| `icons/app-512.png`, `app-192.png`, `apple-180.png`, `maskable-512.png`, `favicon-32.png` | 512², 192², 180², 512², 32² | App-Icon: erschrockener Bert, Bart und Brille rutschen, Tentakel schauen raus. Erzeugt mit `python3 scripts/make-icon.py` |
 
 ### A7. Hintergründe (gemalt/weich, nicht Pixel)
 

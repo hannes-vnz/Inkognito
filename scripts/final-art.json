@@ -1,6 +1,4 @@
 [
-  "icons/icon-192.png",
-  "icons/icon-512.png",
   "sprites/anim_bert_busted.png",
   "sprites/anim_bert_happy.png",
   "sprites/anim_bert_shock.png",
@@ -32,5 +30,10 @@
   "sprites/portrait_prof_annoyed.png",
   "sprites/portrait_prof_happy.png",
   "sprites/portrait_prof_shock.png",
-  "sprites/portrait_scholle.png"
+  "sprites/portrait_scholle.png",
+  "icons/app-192.png",
+  "icons/app-512.png",
+  "icons/apple-180.png",
+  "icons/maskable-512.png",
+  "icons/favicon-32.png"
 ]

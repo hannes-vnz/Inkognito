@@ -114,14 +114,16 @@ Dialoge und Reaktions-Szenen wie bei Dave the Diver (siehe ARTSTIL.md).
 
 | Meer | Legende | Echtes Tier | Wo und wann |
 | --- | --- | --- | --- |
-| Nordsee | Der Uralt-Stör | Europäischer Stör | Helgoländer Felsen, tagsüber, 40–100 m, Haken ab 6 |
+| Nordsee | Der Uralt-Stör | Europäischer Stör | Helgoländer Felsen, tagsüber, 40–100 m, Haken ab 8 |
 | Südsee | Der Titan-Krake | Riesenkalmar | Offene See, nachts, 300–1000 m, Haken ab 8 |
 
 **Köder (Bruno):** gelten für einen Wurf, Preis wächst mit Leine und Haken. Leuchtköder (leuchtende Arten ×3), Krabbelköder (alles außer Fischen ×3), Legendenköder (Legende kommt sicher, wenn Platz, Zeit und Tiefe stimmen). Daten in data/baits.json.
 
 ## Prestige: Sechs Meere
 
-Weiter ins nächste Meer geht es erst, wenn Bert genug Arten des Meeres kennt (Nordsee: 10) **und** die Legende gefangen hat: In ihrem Bauch steckt ein Stück Seekarte der Meeresbehörde, das zum nächsten Meer führt. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde und Knut lassen sich „rein zufällig“ mitversetzen.
+Weiter ins nächste Meer geht es erst, wenn Bert genug Arten des Meeres kennt (Nordsee: 14) **und** die Legende gefangen hat: In ihrem Bauch steckt ein Stück Seekarte der Meeresbehörde, das zum nächsten Meer führt. Weiterziehen setzt Münzen und alle Upgrades zurück. Fischbuch, Sets, Story, Rekord und Tagesbonus bleiben, dazu dauerhaft +25 % Münzen pro verlassenem Meer. Jedes Meer hat eigene Zonen, Plätze und Arten (data/seas.json, spots.json, fish.json mit `sea`). Hilde und Knut lassen sich „rein zufällig“ mitversetzen.
+
+**Tempo:** Ein Meer dauert etwa **30 Minuten** (rund 55 Würfe). Geprüft von tests/progression.test.ts: ein simulierter Spieler muss in der Nordsee 25–35 Minuten bis zum nächsten Meer brauchen. Stellschrauben: Kostenwachstum der Upgrades, nötige Arten (`nextKnown`), Haken und Chance der Legende. Die Story verteilt sich über die ganze Zeit (data/story.json, nach Würfen).
 
 | Nr. | Meer | Besonderheit | Legende | Stand |
 | --- | --- | --- | --- | --- |

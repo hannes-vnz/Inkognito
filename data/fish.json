@@ -1079,8 +1079,8 @@
     "legend": {
       "spot": "helgoland",
       "night": false,
-      "minHook": 6,
-      "chance": 0.6,
+      "minHook": 8,
+      "chance": 0.3,
       "nameKey": "legend.northsea.name",
       "hintKeys": [
         "legend.northsea.hint.1",

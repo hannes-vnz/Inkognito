@@ -3,7 +3,7 @@
     "id": "northsea",
     "nameKey": "sea.northsea.name",
     "descKey": "sea.northsea.desc",
-    "nextKnown": 10,
+    "nextKnown": 14,
     "zones": [
       {
         "id": "coast",

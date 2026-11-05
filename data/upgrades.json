@@ -4,7 +4,7 @@
     "nameKey": "upgrade.line.name",
     "effectKey": "upgrade.line.effect",
     "costBase": 12,
-    "costGrowth": 1.55,
+    "costGrowth": 1.85,
     "values": [
       60,
       100,
@@ -32,7 +32,7 @@
     "nameKey": "upgrade.hook.name",
     "effectKey": "upgrade.hook.effect",
     "costBase": 15,
-    "costGrowth": 1.6,
+    "costGrowth": 1.9,
     "values": [
       2,
       3,
@@ -55,7 +55,7 @@
     "nameKey": "upgrade.crate.name",
     "effectKey": "upgrade.crate.effect",
     "costBase": 15,
-    "costGrowth": 1.6,
+    "costGrowth": 1.9,
     "values": [
       5,
       8,
@@ -78,7 +78,7 @@
     "nameKey": "upgrade.steer.name",
     "effectKey": "upgrade.steer.effect",
     "costBase": 20,
-    "costGrowth": 1.7,
+    "costGrowth": 2.0,
     "values": [
       100,
       115,
@@ -97,7 +97,7 @@
     "nameKey": "upgrade.lure.name",
     "effectKey": "upgrade.lure.effect",
     "costBase": 30,
-    "costGrowth": 1.8,
+    "costGrowth": 2.1,
     "values": [
       100,
       115,

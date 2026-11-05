@@ -334,6 +334,12 @@ body {
   transition: opacity 0.5s ease;
 }
 
+/* Während eines Wurfs stehen Meldungen unten, damit sie den Haken nie verdecken */
+.round-active .toast {
+  top: auto;
+  bottom: calc(var(--safe-bottom) + 24px);
+}
+
 .hint.hidden,
 .toast.hidden {
   opacity: 0;
@@ -2804,8 +2810,9 @@ body {
   gap: 3px;
 }
 .shop-pips span:not(.shop-lv) {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
+  flex: none;
   border: 2px solid var(--ink);
   border-radius: 3px;
   background: var(--panel);
@@ -2813,8 +2820,22 @@ body {
 .shop-pips span.on {
   background: var(--kelp);
 }
+.shop-bar {
+  flex: 1;
+  max-width: 120px;
+  height: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.shop-bar-fill {
+  height: 100%;
+  background: var(--kelp);
+}
 .shop-lv {
   margin-left: 6px;
+  white-space: nowrap;
   font-size: 12px;
   opacity: 0.85;
 }

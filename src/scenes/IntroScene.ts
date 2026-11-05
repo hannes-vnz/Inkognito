@@ -6,7 +6,13 @@ import { t } from '../i18n';
 import { el } from '../ui/dom';
 import { typeRichText } from '../ui/rich';
 import { play } from '../audio/sfx';
-import { anims } from '../data';
+import { anims, player } from '../data';
+
+/** Rumpf-Oberkante im Boot-Sprite boat_1 (64 × 32): hier stehen die Füße. */
+const BOAT_DECK_ROW = 17;
+/** Oktopus-Frames in Berts Spritesheet (Reihe „Verkleidung fällt ab“). */
+const OCTO_CALM = 17;
+const OCTO_SHOCK = 19;
 
 /** Story-Marke: Intro gesehen (in save.story.seen). */
 export const INTRO_ID = 'intro_backstory';
@@ -91,6 +97,8 @@ export class IntroScene extends Phaser.Scene {
 
   /** Berts Acting-Streifen fürs Intro: Frames aus dem Bild, Tempo aus data/anims.json (hier etwas ruhiger). */
   private makeAnims(): void {
+    // Dein Oktopus aus Berts Spritesheet (Verkleidung abgefallen): ruhig atmend und erschrocken
+    if (!this.anims.exists('in-octo-her')) this.anims.create({ key: 'in-octo-her', frames: this.anims.generateFrameNumbers(player.sprite, { frames: [OCTO_CALM, OCTO_SHOCK] }), frameRate: 2, repeat: -1 });
     const speed: Record<string, number> = { raw: 0.5, dressup: 0.4, busted: 0.6, happy: 0.85, shock: 0.75 };
     for (const [name, k] of Object.entries(speed)) {
       const a = anims[`bert_${name}`];
@@ -99,21 +107,18 @@ export class IntroScene extends Phaser.Scene {
     }
   }
 
-  /** Einzelbild `i` eines Streifens, begrenzt auf die vorhandenen Frames. */
-  private frameOf(texture: string, i: number): number {
-    return Math.min(i, this.textures.get(texture).frameTotal - 2);
-  }
-
   // ------------------------------------------------------------ Ablauf
 
   private readonly shots: ShotDef[] = [
-    { ms: 6500, build: () => this.shotFisher() },
+    { ms: 6000, build: () => this.shotFisher() },
+    { ms: 4200, build: () => this.closeUp('portrait_lars', t('intro.bubble.lars')) },
     { ms: 7000, build: () => this.shotDeep() },
     { ms: 6500, build: () => this.shotHaul() },
     { ms: 7000, build: () => this.shotSlip() },
     { ms: 7000, build: () => this.shotRetire() },
-    { ms: 6500, build: () => this.shotAlone() },
-    { ms: 7500, build: () => this.shotDress() },
+    { ms: 4500, build: () => this.shotAlone() },
+    { ms: 4800, build: () => this.closeUp('portrait_hilde', t('intro.bubble.radio'), true) },
+    { ms: 6500, build: () => this.shotDress() },
     { ms: 4500, build: () => this.shotNormal() },
     { ms: 5500, build: () => this.shotTitle() },
   ];
@@ -207,9 +212,45 @@ export class IntroScene extends Phaser.Scene {
 
   private boat(x: number, y: number, s: number): Phaser.GameObjects.Image {
     const b = this.add.image(x, y, 'boat_1').setOrigin(0.5, 1).setScale(s);
-    this.tweens.add({ targets: b, y: y - 3 * this.u, angle: 1.2, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    this.ride(b);
     this.stage.add(b);
     return b;
+  }
+
+  /** Oberkante des Decks: Rumpf-Oberkante im Boot-Sprite (Zeile 17 von 32). Füße gehören genau hierhin. */
+  private deckOf(b: Phaser.GameObjects.Image): number {
+    return b.y - (32 - BOAT_DECK_ROW) * b.scaleY;
+  }
+
+  /** Schaukelt wie das Boot (gleiche Bewegung, ohne Kippen), damit Figuren an Deck stehen bleiben. */
+  private ride(o: Phaser.GameObjects.Components.Transform & Phaser.GameObjects.GameObject): void {
+    this.tweens.add({ targets: o, y: o.y - 3 * this.u, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+  }
+
+  /** Dein Oktopus (aus Berts Spritesheet), Füße bei `y`, etwa `size` hoch. */
+  private octopus(x: number, y: number, size: number, shocked = false): Phaser.GameObjects.Sprite {
+    const o = this.add.sprite(x, y, player.sprite, shocked ? OCTO_SHOCK : OCTO_CALM).setOrigin(0.5, 1).setScale(size / 32);
+    if (!shocked) o.play('in-octo-her');
+    this.stage.add(o);
+    return o;
+  }
+
+  /** Großaufnahme eines Kopfes im Spotlicht mit Sprechblase (deine gezeichneten Porträts). */
+  private closeUp(texture: string, line: string, radio = false): void {
+    const { W, H, u } = this;
+    const g = this.add.graphics();
+    g.fillStyle(0x141418, 1).fillRect(0, 0, W, H);
+    for (let r = 10; r > 0; r--) g.fillStyle(0xfff6d0, 0.03).fillCircle(W / 2, H * 0.62, r * 22 * u);
+    const s = Math.min(W * 0.72, H * 0.66) / 96;
+    const head = this.add.image(W / 2, H, texture).setOrigin(0.5, 1).setScale(s * 0.92);
+    this.stage.add([g, head]);
+    this.tweens.add({ targets: head, scale: s, duration: 420, ease: 'Back.Out' });
+    // Funk: Rauschen und kurzes Wackeln
+    if (radio) {
+      for (let i = 0; i < 4; i++) this.time.delayedCall(i * 140, () => play('talk', 0.5));
+      this.tweens.add({ targets: head, x: head.x + 2, duration: 60, yoyo: true, repeat: 5 });
+    }
+    this.bubble(W / 2, H - 96 * s - 4, line, 500, 3200);
   }
 
   private fisher(x: number, y: number, s: number, anim: string): Phaser.GameObjects.Sprite {
@@ -261,8 +302,8 @@ export class IntroScene extends Phaser.Scene {
     const horizon = this.seaAndSky();
     this.waveG!.setData('horizon', horizon);
     const b = this.boat(this.W / 2, horizon + 18 * u, 3 * u);
-    const f = this.fisher(b.x - 30 * u, horizon - 34 * u, 2.2 * u, 'life-angler-fish');
-    this.tweens.add({ targets: f, y: f.y - 3 * u, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    const f = this.fisher(b.x - 30 * u, this.deckOf(b), 2.2 * u, 'life-angler-fish');
+    this.ride(f);
     const line = this.add.graphics();
     line.lineStyle(1.5, 0xf2fbff, 0.9).lineBetween(f.x + 40 * u, f.y - 60 * u, f.x + 70 * u, horizon + 60 * u);
     this.stage.addAt(line, 3);
@@ -289,9 +330,8 @@ export class IntroScene extends Phaser.Scene {
       return w;
     });
     const coral = this.add.image(W * 0.66, floorY + 22, 'decor_coral_pink').setOrigin(0.5, 1).setScale(2 * u);
-    const octo = this.add.sprite(W / 2, floorY + 18, 'anim_bert_raw', 0).setOrigin(0.5, 0.95).setScale(1.5 * u);
-    octo.play('in-octo-raw');
-    this.stage.add([g, rays, bed, ...weeds, coral, octo]);
+    this.stage.add([g, rays, bed, ...weeds, coral]);
+    const octo = this.octopus(W / 2, floorY + 16, 120 * u);
     for (let i = 0; i < 14; i++) {
       const bb = this.add.circle(this.rng.range(0, W), H + 10, this.rng.range(2, 4) * u).setStrokeStyle(1.5, 0xdffaff).setFillStyle();
       this.stage.add(bb);
@@ -313,7 +353,7 @@ export class IntroScene extends Phaser.Scene {
       this.cameras.main.shake(250, 0.006);
       play('bite');
       octo.stop();
-      octo.setFrame(this.frameOf('anim_bert_raw', 4));
+      octo.setFrame(OCTO_SHOCK);
     });
     this.subtitle(t('intro.s2'), 500);
   }
@@ -324,10 +364,11 @@ export class IntroScene extends Phaser.Scene {
     const horizon = this.seaAndSky(0.5);
     this.waveG!.setData('horizon', horizon);
     const b = this.boat(this.W * 0.42, horizon + 18 * u, 3.4 * u);
-    const f = this.fisher(b.x - 34 * u, horizon - 38 * u, 2.4 * u, 'life-angler-hook');
-    f.setFlipX(false);
+    const deck = this.deckOf(b);
+    const f = this.fisher(b.x - 34 * u, deck, 2.4 * u, 'life-angler-hook');
+    this.ride(f);
     const sx = this.W * 0.86;
-    const octo = this.add.sprite(sx, horizon + 30 * u, 'anim_bert_raw', this.frameOf('anim_bert_raw', 4)).setOrigin(0.5, 0.9).setScale(0.9 * u);
+    const octo = this.add.sprite(0, 0, player.sprite, OCTO_SHOCK).setOrigin(0.5, 0.9).setScale((70 * u) / 32);
     const net = this.add.graphics();
     net.lineStyle(1.5, 0x2a2a1a, 0.9);
     for (let k = -4; k <= 4; k++) {
@@ -341,7 +382,8 @@ export class IntroScene extends Phaser.Scene {
       play('reel');
       catchBox.setAlpha(1);
       this.splash(sx, horizon + 4 * u, 22);
-      const to = { x: b.x + 30 * u, y: horizon - 30 * u };
+      // Landet mit dem Netz auf dem Deck
+      const to = { x: b.x + 30 * u, y: deck - 6 * u };
       const from = { x: catchBox.x, y: catchBox.y };
       this.tweens.addCounter({
         from: 0,
@@ -371,21 +413,21 @@ export class IntroScene extends Phaser.Scene {
     const horizon = this.seaAndSky(0.62);
     this.waveG!.setData('horizon', horizon);
     const b = this.boat(this.W * 0.5, horizon + 18 * u, 4.2 * u);
-    const deckY = horizon - 40 * u;
-    const octo = this.add.sprite(b.x + 70 * u, deckY + 18 * u, 'anim_bert_raw', this.frameOf('anim_bert_raw', 4)).setOrigin(0.5, 1).setScale(1.1 * u);
-    const f = this.fisher(b.x - 70 * u, deckY + 6 * u, 3 * u, 'life-angler-walk');
-    this.stage.add(octo);
+    const deckY = this.deckOf(b);
+    const octo = this.octopus(b.x + 70 * u, deckY, 80 * u, true);
+    const f = this.fisher(b.x - 70 * u, deckY, 3 * u, 'life-angler-walk');
+    this.ride(octo);
     // Bert geht neugierig auf den Fang zu
     this.tweens.add({ targets: f, x: b.x + 10 * u, duration: 1800, ease: 'Linear' });
     this.time.delayedCall(1800, () => {
       f.play('life-angler-idle');
-      octo.play('in-octo-raw');
+      octo.play('in-octo-her');
       play('bite', 0.6);
       // Tintenwolke auf dem Deck
       for (let i = 0; i < 10; i++) {
-        const c = this.add.circle(octo.x - 20 * u, deckY + 10 * u, 6 * u, 0x2a1f3a, 0.95);
+        const c = this.add.circle(octo.x - 20 * u, deckY - 4 * u, 6 * u, 0x2a1f3a, 0.95);
         this.stage.add(c);
-        this.tweens.add({ targets: c, x: octo.x - this.rng.range(30, 110) * u, y: deckY + this.rng.range(-4, 14) * u, scale: this.rng.range(1.5, 3), duration: 600, delay: i * 40, ease: 'Quad.Out' });
+        this.tweens.add({ targets: c, x: octo.x - this.rng.range(30, 110) * u, y: deckY - this.rng.range(2, 8) * u, scale: this.rng.range(1.5, 3), duration: 600, delay: i * 40, ease: 'Quad.Out' });
       }
     });
     this.time.delayedCall(3000, () => {
@@ -439,24 +481,26 @@ export class IntroScene extends Phaser.Scene {
     const horizon = this.seaAndSky(0.68);
     this.waveG!.setData('horizon', horizon);
     const b = this.boat(this.W * 0.5, horizon + 18 * u, 4.6 * u);
-    const deckY = horizon - 44 * u;
-    const octo = this.add.sprite(b.x - 30 * u, deckY + 26 * u, 'anim_bert_raw', 0).setOrigin(0.5, 1).setScale(1 * u).play('in-octo-raw');
-    this.stage.add(octo);
-    this.tweens.add({ targets: octo, scaleX: { from: 1 * u, to: -1 * u }, duration: 900, yoyo: true, repeat: 2, hold: 500 });
-    const radio = this.add.rectangle(b.x + 60 * u, deckY - 20 * u, 22 * u, 16 * u, 0x2a3a4a).setStrokeStyle(2, 0x0e1a2b);
+    const deckY = this.deckOf(b);
+    const octo = this.octopus(b.x - 30 * u, deckY, 80 * u);
+    this.ride(octo);
+    const look = octo.scaleX;
+    this.tweens.add({ targets: octo, scaleX: { from: look, to: -look }, duration: 900, yoyo: true, repeat: 2, hold: 500 });
+    // Funkgerät steht auf dem Deck
+    const radio = this.add.rectangle(b.x + 60 * u, deckY - 8 * u, 22 * u, 16 * u, 0x2a3a4a).setStrokeStyle(2, 0x0e1a2b);
     const led = this.add.circle(radio.x + 6 * u, radio.y - 3 * u, 2.5 * u, 0xff6b6b);
     const antenna = this.add.rectangle(radio.x - 6 * u, radio.y - 16 * u, 2 * u, 16 * u, 0x0e1a2b);
     this.stage.add([radio, led, antenna]);
+    for (const o of [radio, led, antenna]) this.ride(o);
     this.tweens.add({ targets: led, alpha: 0.2, duration: 250, yoyo: true, repeat: -1, delay: 2000 });
     this.time.delayedCall(2000, () => {
       for (let i = 0; i < 3; i++) this.time.delayedCall(i * 160, () => play('talk', 0.5));
       this.tweens.add({ targets: radio, x: radio.x + 2, duration: 50, yoyo: true, repeat: 6 });
     });
-    this.bubble(radio.x, radio.y - 24 * u, t('intro.bubble.radio'), 2300, 3500);
     this.subtitle(t('intro.s6'), 300);
   }
 
-  /** 7: Großaufnahme: Mantel, Hut, Brille, Nase, Bart, Teil für Teil. */
+  /** 7: Großaufnahme: der Oktopus zittert, Puff! … und da steht Kapitän Bert in voller Verkleidung. */
   private shotDress(): void {
     const { W, H, u } = this;
     const g = this.add.graphics();
@@ -465,16 +509,31 @@ export class IntroScene extends Phaser.Scene {
       g.fillStyle(0xfff6d0, 0.025);
       g.fillCircle(W / 2, H * 0.55, r * 24 * u);
     }
-    const s = Math.min(W, H * 0.9) / 96 * 0.75;
-    const octo = this.add.sprite(W / 2, H * 0.86, 'anim_bert_dressup', 0).setOrigin(0.5, 1).setScale(s).play('in-octo-dressup');
-    this.stage.add([g, octo]);
+    this.stage.add(g);
+    const size = Math.min(W * 0.6, H * 0.62);
+    const octo = this.octopus(W / 2, H * 0.92, size * 0.75);
     play('chest');
-    // Bei jedem Teil ein kleiner Ruck und ein Ton
-    for (let k = 1; k <= 5; k++)
-      this.time.delayedCall(k * 1000, () => {
-        this.tweens.add({ targets: octo, scaleY: s * 1.05, duration: 90, yoyo: true });
-        play('tap', 1 + k * 0.1);
+    // Kleidungsstücke fliegen ins Bild: Hut, Mantel, Bart (Ruck und Ton bei jedem)
+    for (let k = 1; k <= 3; k++)
+      this.time.delayedCall(k * 650, () => {
+        this.tweens.add({ targets: octo, scaleY: octo.scaleY * 1.08, duration: 90, yoyo: true });
+        play('tap', 1 + k * 0.15);
       });
+    this.time.delayedCall(2600, () => {
+      // Puff: Wolke, dann der verkleidete Bert
+      for (let i = 0; i < 18; i++) {
+        const c = this.add.circle(W / 2, H * 0.6, this.rng.range(10, 22) * u, 0xfffaf0, 0.95);
+        this.stage.add(c);
+        const a = this.rng.range(0, Math.PI * 2);
+        this.tweens.add({ targets: c, x: W / 2 + Math.cos(a) * 90 * u, y: H * 0.6 + Math.sin(a) * 70 * u, alpha: 0, scale: 1.6, duration: 650, ease: 'Quad.Out', onComplete: () => c.destroy() });
+      }
+      play('fanfare', 1.3);
+      octo.destroy();
+      const s = size / 96;
+      const bert = this.add.image(W / 2, H * 0.98, 'anim_bert_talk').setOrigin(0.5, 1).setScale(s * 0.6);
+      this.stage.add(bert);
+      this.tweens.add({ targets: bert, scale: s, duration: 380, ease: 'Back.Out' });
+    });
     this.subtitle(t('intro.s7'), 300);
   }
 

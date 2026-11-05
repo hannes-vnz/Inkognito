@@ -32,6 +32,7 @@ import type { ActingAnim, Shot } from './ui/Cutscene';
 import animsJson from '../data/anims.json';
 import sheetsJson from '../data/sheets.json';
 import gadgetsJson from '../data/gadgets.json';
+import castJson from '../data/cast.json';
 import bigJson from '../data/big_upgrades.json';
 import type { BigUpgradeDef } from './systems/bigUpgrades';
 import type { GadgetDef } from './systems/gadgets';
@@ -95,6 +96,8 @@ export const quiz = quizJson as QuizQuestion[];
 export const perkParams = gameJson.perks as PerkParams;
 export const tutorialParams = gameJson.tutorial as { saleBonus: number };
 export const gadgets = gadgetsJson as GadgetDef[];
+/** Figuren, die nur als Porträt auftreten (Intro, Zwischensequenzen), z. B. die Meeresbehörde. */
+export const cast = castJson as string[];
 export const bigUpgrades = bigJson as BigUpgradeDef[];
 export const marketParams = gameJson.market as MarketParams;
 export const harbor = gameJson.harbor as QuizParams & HintParams & { requestReward: RewardParams; requestRequires: string };

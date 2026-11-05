@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { anims, npcs, player, sheets, species } from '../data';
+import { anims, cast, npcs, player, sheets, species } from '../data';
 import { loadSave } from '../storage';
 import { INTRO_ID } from './IntroScene';
 import { createSheetAnimations, FISH_ANIMATIONS } from '../entities/Octopus';
@@ -22,6 +22,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('life_rowboat', 'life/life_rowboat.png');
     for (const name of ['decor_arch', 'decor_coral_pink', 'decor_coral_yellow', 'decor_log', 'decor_ruins', 'decor_seaweed', 'decor_totem', 'seabed', 'harbor_hut', 'harbor_barrel', 'harbor_barrel_small'])
       this.load.image(name, `decor/${name}.png`);
+    for (const id of cast) this.load.image(`portrait_${id}`, `sprites/portrait_${id}.png`);
     for (const id of [...npcs.map((n) => n.id), 'bert']) {
       this.load.image(`portrait_${id}`, `sprites/portrait_${id}.png`);
       for (const face of ['happy', 'annoyed', 'shock']) this.load.image(`portrait_${id}_${face}`, `sprites/portrait_${id}_${face}.png`);

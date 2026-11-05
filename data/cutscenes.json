@@ -357,5 +357,63 @@
       ],
       "captionKey": "fight.start"
     }
+  ],
+  "agency_visit": [
+    {
+      "bg": "night",
+      "ms": 1600,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "klementine"
+        }
+      ],
+      "captionKey": "cut.agency.1"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1500,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "scholle"
+        }
+      ],
+      "captionKey": "cut.agency.2"
+    },
+    {
+      "bg": "split",
+      "ms": 1700,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "klementine"
+        },
+        {
+          "who": "scholle"
+        }
+      ],
+      "captionKey": "cut.agency.3"
+    },
+    {
+      "bg": "black",
+      "ms": 350,
+      "cam": "still"
+    },
+    {
+      "bg": "speedlines",
+      "ms": 1300,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock",
+          "anim": "shock"
+        }
+      ],
+      "particles": "shards",
+      "captionKey": "cut.agency.4"
+    }
   ]
 }

@@ -130,6 +130,30 @@
           }
         ],
         "face": "annoyed"
+      },
+      "agency": {
+        "textKey": "npc.hilde.agency",
+        "cutscene": "agency_visit",
+        "face": "annoyed",
+        "options": [
+          {
+            "textKey": "npc.hilde.agency.opt1",
+            "next": "agency2"
+          },
+          {
+            "textKey": "npc.hilde.agency.opt2",
+            "next": "agency2"
+          }
+        ]
+      },
+      "agency2": {
+        "textKey": "npc.hilde.agency2",
+        "options": [
+          {
+            "textKey": "npc.ok",
+            "next": null
+          }
+        ]
       }
     }
   },

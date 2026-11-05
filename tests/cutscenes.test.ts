@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import cutscenesJson from '../data/cutscenes.json';
 import npcsJson from '../data/npcs.json';
+import castJson from '../data/cast.json';
 import soundsJson from '../data/sounds.json';
 import texts from '../data/texts.de.json';
 import type { Shot } from '../src/ui/Cutscene';
 
 const scenes = cutscenesJson as unknown as Record<string, Shot[]>;
-const who = new Set([...npcsJson.map((n) => n.id), 'bert']);
+const who = new Set([...npcsJson.map((n) => n.id), ...castJson, 'bert']);
 const faces = ['normal', 'happy', 'annoyed', 'shock'];
 const bgs = ['spotlight', 'marquee', 'speedlines', 'burst', 'split', 'crayon', 'waves', 'sparkle', 'night', 'deep', 'table', 'black', 'white'];
 
@@ -45,6 +46,13 @@ describe('Acting-Animationen', () => {
     }
     for (const shots of Object.values(scenes))
       for (const s of shots) for (const f of s.figures ?? []) if (f.anim) expect(anims).toHaveProperty([`${f.who}_${f.anim}`]);
+  });
+});
+
+describe('Besetzung', () => {
+  it('jede Nebenfigur aus data/cast.json hat ein Porträt', async () => {
+    const { existsSync } = await import('node:fs');
+    for (const id of castJson) expect(existsSync(`assets/sprites/portrait_${id}.png`), id).toBe(true);
   });
 });
 

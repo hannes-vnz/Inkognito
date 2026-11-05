@@ -153,6 +153,7 @@ export class DeckUi {
   /** An Deck (Knöpfe sichtbar) oder im Wurf (nur Tiefe). */
   setMode(mode: 'deck' | 'round'): void {
     this.deck.classList.toggle('away', mode === 'round');
+    this.root.classList.toggle('round-active', mode === 'round');
   }
 
   setDepth(meters: number, zone: string, record: number, inRound: boolean): void {

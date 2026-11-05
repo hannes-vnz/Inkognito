@@ -130,12 +130,18 @@ export function shopCard(o: ShopCardOptions): HTMLElement {
   title.textContent = o.title;
   main.append(title);
   if (o.level) {
+    // Ein Kästchen pro Stufe (bis 10 Stufen), sonst ein durchgehender Balken: Anzeige und Zahl passen immer zusammen
     const pips = el('div', 'shop-pips');
-    const shown = Math.min(o.level.max, 10);
-    const filled = Math.round((o.level.now / o.level.max) * shown);
-    for (let i = 0; i < shown; i++) pips.append(el('span', i < filled ? 'on' : ''));
+    if (o.level.max <= 10) for (let i = 0; i < o.level.max; i++) pips.append(el('span', i < o.level.now ? 'on' : ''));
+    else {
+      const bar = el('div', 'shop-bar');
+      const fill = el('div', 'shop-bar-fill');
+      fill.style.width = `${(o.level.now / o.level.max) * 100}%`;
+      bar.append(fill);
+      pips.append(bar);
+    }
     const lv = el('span', 'shop-lv');
-    lv.textContent = t('shop.level', { now: o.level.now, max: o.level.max });
+    lv.textContent = o.level.now >= o.level.max ? t('shop.levelMax') : t('shop.level', { now: o.level.now, max: o.level.max });
     pips.append(lv);
     main.append(pips);
   }

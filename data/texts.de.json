@@ -787,5 +787,15 @@
   "map.future.3": "Arktis",
   "map.future.4": "Traum-Ozean",
   "map.future.5": "Fegefeuer-Abgrund",
-  "map.future.6": "Urzeit-Riss"
+  "map.future.6": "Urzeit-Riss",
+  "intro.bubble.lars": "Schönes Wetter. Kein Stress. Nur ich und das Meer. *Herrlich.*",
+  "cut.agency.1": "Inspektorin Klementine. Meeresbehörde.",
+  "cut.agency.2": "Wachtmeister Scholle! Zu Diensten!",
+  "cut.agency.3": "Wir suchen … einen verdächtigen Fischer.",
+  "cut.agency.4": "…",
+  "npc.hilde.agency": "Die *Meeresbehörde* war hier. Inspektorin *Klementine* und ihr Wachtmeister. Die haben nach einem Fischer mit *sehr großem Bart* gefragt.",
+  "npc.hilde.agency.opt1": "Großer Bart? Kenn ich nicht.",
+  "npc.hilde.agency.opt2": "Ich rasier mich morgen.",
+  "npc.hilde.agency2": "Ich hab nichts gesagt. Aber die kippen nachts *Fässer* ins Meer, das weiß hier jeder. Passen Sie auf sich auf, Kapitän.",
+  "shop.levelMax": "MAX"
 }

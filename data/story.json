@@ -80,6 +80,15 @@
     }
   },
   {
+    "id": "hilde_agency",
+    "npc": "hilde",
+    "node": "agency",
+    "trigger": {
+      "type": "casts",
+      "value": 10
+    }
+  },
+  {
     "id": "schulze_intro",
     "npc": "schulze",
     "node": "intro",

@@ -175,5 +175,93 @@
       "value": "sturgeon"
     },
     "requires": "knut_intro"
+  },
+  {
+    "id": "gisela_barrel",
+    "npc": "gisela",
+    "node": "barrel",
+    "trigger": {
+      "type": "casts",
+      "value": 12
+    },
+    "requires": "gisela_intro",
+    "sea": "northsea"
+  },
+  {
+    "id": "knut_barrels",
+    "npc": "knut",
+    "node": "barrels",
+    "trigger": {
+      "type": "casts",
+      "value": 17
+    },
+    "requires": "knut_intro",
+    "sea": "northsea"
+  },
+  {
+    "id": "schulze_evidence",
+    "npc": "schulze",
+    "node": "evidence",
+    "trigger": {
+      "type": "casts",
+      "value": 22
+    },
+    "requires": "schulze_intro",
+    "sea": "northsea"
+  },
+  {
+    "id": "hilde_inspection",
+    "npc": "hilde",
+    "node": "inspection",
+    "trigger": {
+      "type": "casts",
+      "value": 27
+    },
+    "requires": "hilde_agency",
+    "sea": "northsea"
+  },
+  {
+    "id": "prof_barrel",
+    "npc": "prof",
+    "node": "barrel",
+    "trigger": {
+      "type": "casts",
+      "value": 33
+    },
+    "requires": "prof_intro",
+    "sea": "northsea"
+  },
+  {
+    "id": "bruno_scholle",
+    "npc": "bruno",
+    "node": "scholle",
+    "trigger": {
+      "type": "casts",
+      "value": 39
+    },
+    "requires": "bruno_intro",
+    "sea": "northsea"
+  },
+  {
+    "id": "hilde_truth",
+    "npc": "hilde",
+    "node": "truth",
+    "trigger": {
+      "type": "casts",
+      "value": 45
+    },
+    "requires": "hilde_inspection",
+    "sea": "northsea"
+  },
+  {
+    "id": "knut_push",
+    "npc": "knut",
+    "node": "push",
+    "trigger": {
+      "type": "casts",
+      "value": 51
+    },
+    "requires": "knut_barrels",
+    "sea": "northsea"
   }
 ]

@@ -14,6 +14,8 @@ export interface StoryBeat {
   node: string;
   trigger: StoryTrigger;
   requires?: string;
+  /** Nur in diesem Meer (Story-Bogen eines Meeres). */
+  sea?: string;
 }
 
 export function triggerMet(t: StoryTrigger, save: Save): boolean {
@@ -36,7 +38,7 @@ export function triggerMet(t: StoryTrigger, save: Save): boolean {
 /** Nächster fälliger Story-Moment in Datenreihenfolge, oder null. */
 export function nextBeat(save: Save, beats: readonly StoryBeat[]): StoryBeat | null {
   const seen = save.story.seen;
-  return beats.find((b) => !seen.includes(b.id) && (b.requires === undefined || seen.includes(b.requires)) && triggerMet(b.trigger, save)) ?? null;
+  return beats.find((b) => !seen.includes(b.id) && (b.requires === undefined || seen.includes(b.requires)) && (b.sea === undefined || b.sea === save.sea.current) && triggerMet(b.trigger, save)) ?? null;
 }
 
 export const markSeen = (save: Save, id: string): Save =>

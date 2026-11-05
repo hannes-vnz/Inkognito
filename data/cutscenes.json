@@ -415,5 +415,317 @@
       "particles": "shards",
       "captionKey": "cut.agency.4"
     }
+  ],
+  "barrel_found": [
+    {
+      "bg": "waves",
+      "ms": 1700,
+      "cam": "panRight",
+      "prop": "harbor_barrel",
+      "propSize": 26,
+      "motion": "pass",
+      "captionKey": "cut.barrel.1"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1800,
+      "cam": "pushIn",
+      "prop": "harbor_barrel",
+      "propSize": 34,
+      "gleam": true,
+      "captionKey": "cut.barrel.2"
+    },
+    {
+      "bg": "black",
+      "ms": 500,
+      "cam": "still"
+    },
+    {
+      "bg": "speedlines",
+      "ms": 1500,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "gisela",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "sparkle"
+      ],
+      "captionKey": "cut.barrel.3"
+    },
+    {
+      "bg": "sparkle",
+      "ms": 1900,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "gisela",
+          "face": "shock"
+        }
+      ],
+      "fx": [
+        "question"
+      ],
+      "particles": "bubbles",
+      "captionKey": "cut.barrel.4"
+    }
+  ],
+  "schulze_evidence": [
+    {
+      "bg": "crayon",
+      "ms": 1500,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "schulze",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "sparkle"
+      ],
+      "captionKey": "cut.evidence.1"
+    },
+    {
+      "bg": "table",
+      "ms": 2600,
+      "cam": "pushIn",
+      "polaroid": true,
+      "figures": [
+        {
+          "who": "schulze",
+          "face": "happy"
+        },
+        {
+          "who": "klementine",
+          "face": "normal",
+          "dim": true
+        }
+      ],
+      "captionKey": "cut.evidence.2"
+    },
+    {
+      "bg": "black",
+      "ms": 450,
+      "cam": "still"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1500,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock",
+          "anim": "shock"
+        }
+      ],
+      "fx": [
+        "sweat"
+      ],
+      "captionKey": "cut.evidence.3"
+    }
+  ],
+  "agency_inspection": [
+    {
+      "bg": "night",
+      "ms": 1700,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "klementine",
+          "face": "normal"
+        }
+      ],
+      "lightsOn": true,
+      "captionKey": "cut.inspect.1"
+    },
+    {
+      "bg": "split",
+      "ms": 1800,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "klementine",
+          "face": "normal"
+        },
+        {
+          "who": "bert",
+          "face": "annoyed"
+        }
+      ],
+      "captionKey": "cut.inspect.2"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1500,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "scholle",
+          "face": "normal"
+        }
+      ],
+      "captionKey": "cut.inspect.3"
+    },
+    {
+      "bg": "black",
+      "ms": 700,
+      "cam": "still",
+      "captionKey": "cut.inspect.4"
+    },
+    {
+      "bg": "spotlight",
+      "ms": 1400,
+      "cam": "shake",
+      "figures": [
+        {
+          "who": "scholle",
+          "face": "shock"
+        }
+      ],
+      "fx": [
+        "sweat",
+        "question"
+      ],
+      "captionKey": "cut.inspect.5"
+    },
+    {
+      "bg": "speedlines",
+      "ms": 1800,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "happy",
+          "anim": "talk"
+        }
+      ],
+      "fx": [
+        "sweat"
+      ],
+      "captionKey": "cut.inspect.6"
+    },
+    {
+      "bg": "split",
+      "ms": 1500,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "klementine",
+          "face": "normal"
+        },
+        {
+          "who": "scholle",
+          "face": "normal",
+          "dim": true
+        }
+      ],
+      "fx": [
+        "question"
+      ],
+      "captionKey": "cut.inspect.7"
+    },
+    {
+      "bg": "burst",
+      "ms": 1900,
+      "cam": "pushIn",
+      "flash": true,
+      "figures": [
+        {
+          "who": "hilde",
+          "face": "annoyed"
+        }
+      ],
+      "captionKey": "cut.inspect.8"
+    },
+    {
+      "bg": "black",
+      "ms": 450,
+      "cam": "still"
+    },
+    {
+      "bg": "split",
+      "ms": 1500,
+      "cam": "still",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock"
+        },
+        {
+          "who": "scholle",
+          "face": "shock"
+        }
+      ],
+      "captionKey": "cut.inspect.9"
+    }
+  ],
+  "hilde_truth": [
+    {
+      "bg": "waves",
+      "ms": 1700,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "hilde",
+          "face": "normal"
+        }
+      ],
+      "captionKey": "cut.truth.1"
+    },
+    {
+      "bg": "crayon",
+      "ms": 2000,
+      "cam": "panLeft",
+      "figures": [
+        {
+          "who": "bert",
+          "face": "normal",
+          "anim": "raw"
+        }
+      ],
+      "captionKey": "cut.truth.2"
+    },
+    {
+      "bg": "black",
+      "ms": 600,
+      "cam": "still",
+      "captionKey": "cut.truth.3"
+    },
+    {
+      "bg": "speedlines",
+      "ms": 1400,
+      "cam": "shake",
+      "flash": true,
+      "figures": [
+        {
+          "who": "bert",
+          "face": "shock",
+          "anim": "shock"
+        }
+      ],
+      "particles": "shards",
+      "captionKey": "cut.truth.4"
+    },
+    {
+      "bg": "sparkle",
+      "ms": 2000,
+      "cam": "pushIn",
+      "figures": [
+        {
+          "who": "hilde",
+          "face": "happy"
+        }
+      ],
+      "fx": [
+        "hearts"
+      ],
+      "captionKey": "cut.truth.5"
+    }
   ]
 }

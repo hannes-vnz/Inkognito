@@ -154,6 +154,75 @@
             "next": null
           }
         ]
+      },
+      "inspection": {
+        "textKey": "npc.hilde.inspection",
+        "options": [
+          {
+            "textKey": "npc.hilde.inspection.opt1",
+            "next": "inspection2"
+          },
+          {
+            "textKey": "npc.hilde.inspection.opt2",
+            "next": "inspection2"
+          }
+        ],
+        "cutscene": "agency_inspection",
+        "face": "annoyed"
+      },
+      "inspection2": {
+        "textKey": "npc.hilde.inspection2",
+        "options": [
+          {
+            "textKey": "npc.hilde.inspection2.opt",
+            "next": null
+          }
+        ],
+        "face": "happy"
+      },
+      "truth": {
+        "textKey": "npc.hilde.truth",
+        "options": [
+          {
+            "textKey": "npc.hilde.truth.opt1",
+            "next": "truth2"
+          },
+          {
+            "textKey": "npc.hilde.truth.opt2",
+            "next": "truthDeny"
+          }
+        ],
+        "cutscene": "hilde_truth"
+      },
+      "truthDeny": {
+        "textKey": "npc.hilde.truthDeny",
+        "options": [
+          {
+            "textKey": "npc.hilde.truthDeny.opt",
+            "next": "truth2"
+          }
+        ],
+        "face": "annoyed"
+      },
+      "truth2": {
+        "textKey": "npc.hilde.truth2",
+        "options": [
+          {
+            "textKey": "npc.hilde.truth2.opt",
+            "next": "truth3"
+          }
+        ],
+        "face": "happy"
+      },
+      "truth3": {
+        "textKey": "npc.hilde.truth3",
+        "options": [
+          {
+            "textKey": "npc.hilde.truth3.opt",
+            "next": null
+          }
+        ],
+        "face": "happy"
       }
     }
   },
@@ -293,6 +362,33 @@
         "action": {
           "type": "sellFish"
         }
+      },
+      "scholle": {
+        "textKey": "npc.bruno.scholle",
+        "options": [
+          {
+            "textKey": "npc.bruno.scholle.opt1",
+            "next": "scholle2"
+          },
+          {
+            "textKey": "npc.bruno.scholle.opt2",
+            "next": "scholle2"
+          }
+        ],
+        "reaction": {
+          "background": "spotlight",
+          "mood": "smug"
+        },
+        "face": "annoyed"
+      },
+      "scholle2": {
+        "textKey": "npc.bruno.scholle2",
+        "options": [
+          {
+            "textKey": "npc.bruno.scholle2.opt",
+            "next": null
+          }
+        ]
       }
     }
   },
@@ -530,6 +626,42 @@
             "next": null
           }
         ]
+      },
+      "barrels": {
+        "textKey": "npc.knut.barrels",
+        "options": [
+          {
+            "textKey": "npc.knut.barrels.opt1",
+            "next": "barrels2"
+          },
+          {
+            "textKey": "npc.knut.barrels.opt2",
+            "next": "barrels2"
+          }
+        ],
+        "reaction": {
+          "background": "waves",
+          "mood": "shock"
+        }
+      },
+      "barrels2": {
+        "textKey": "npc.knut.barrels2",
+        "options": [
+          {
+            "textKey": "npc.knut.barrels2.opt",
+            "next": null
+          }
+        ]
+      },
+      "push": {
+        "textKey": "npc.knut.push",
+        "options": [
+          {
+            "textKey": "npc.knut.push.opt",
+            "next": null
+          }
+        ],
+        "face": "annoyed"
       }
     }
   },
@@ -619,6 +751,31 @@
         "action": {
           "type": "gag"
         }
+      },
+      "barrel": {
+        "textKey": "npc.gisela.barrel",
+        "options": [
+          {
+            "textKey": "npc.gisela.barrel.opt1",
+            "next": "barrel2"
+          },
+          {
+            "textKey": "npc.gisela.barrel.opt2",
+            "next": "barrel2"
+          }
+        ],
+        "cutscene": "barrel_found",
+        "face": "shock"
+      },
+      "barrel2": {
+        "textKey": "npc.gisela.barrel2",
+        "options": [
+          {
+            "textKey": "npc.gisela.barrel2.opt",
+            "next": null
+          }
+        ],
+        "face": "annoyed"
       }
     }
   },
@@ -713,6 +870,31 @@
         "action": {
           "type": "charter"
         }
+      },
+      "evidence": {
+        "textKey": "npc.schulze.evidence",
+        "options": [
+          {
+            "textKey": "npc.schulze.evidence.opt1",
+            "next": "evidence2"
+          },
+          {
+            "textKey": "npc.schulze.evidence.opt2",
+            "next": "evidence2"
+          }
+        ],
+        "cutscene": "schulze_evidence",
+        "face": "happy"
+      },
+      "evidence2": {
+        "textKey": "npc.schulze.evidence2",
+        "options": [
+          {
+            "textKey": "npc.schulze.evidence2.opt",
+            "next": null
+          }
+        ],
+        "face": "happy"
       }
     }
   },
@@ -792,6 +974,33 @@
         "action": {
           "type": "showGadgets"
         }
+      },
+      "barrel": {
+        "textKey": "npc.prof.barrel",
+        "options": [
+          {
+            "textKey": "npc.prof.barrel.opt1",
+            "next": "barrel2"
+          },
+          {
+            "textKey": "npc.prof.barrel.opt2",
+            "next": "barrel2"
+          }
+        ],
+        "reaction": {
+          "background": "burst",
+          "mood": "shock"
+        }
+      },
+      "barrel2": {
+        "textKey": "npc.prof.barrel2",
+        "options": [
+          {
+            "textKey": "npc.prof.barrel2.opt",
+            "next": null
+          }
+        ],
+        "face": "happy"
       }
     }
   }

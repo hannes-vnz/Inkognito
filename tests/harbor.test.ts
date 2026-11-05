@@ -182,3 +182,15 @@ describe('Porträts', () => {
     for (const n of people) for (const node of Object.values(n.dialog)) if (node.face) expect(['normal', 'happy', 'annoyed', 'shock']).toContain(node.face);
   });
 });
+
+describe('Story-Bogen pro Meer', () => {
+  it('Nordsee-Momente kommen nur in der Nordsee und verteilen sich über die ganze Zeit', () => {
+    const north = beats.filter((b) => b.sea === 'northsea' && b.trigger.type === 'casts');
+    expect(north.length).toBeGreaterThanOrEqual(6);
+    const casts = north.map((b) => (b.trigger as { value: number }).value);
+    expect(Math.max(...casts)).toBeGreaterThanOrEqual(45);
+    let s = { ...newSave(0), sea: { current: 'pacific', left: ['northsea'] } } as ReturnType<typeof newSave>;
+    s = { ...s, stats: { ...s.stats, casts: 100 }, story: { seen: beats.filter((b) => !b.sea).map((b) => b.id) } };
+    expect(nextBeat(s, beats)).toBeNull();
+  });
+});

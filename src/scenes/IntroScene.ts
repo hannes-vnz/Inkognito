@@ -119,6 +119,8 @@ export class IntroScene extends Phaser.Scene {
     { ms: 4500, build: () => this.shotAlone() },
     { ms: 4800, build: () => this.closeUp('portrait_hilde', t('intro.bubble.radio'), true) },
     { ms: 6500, build: () => this.shotDress() },
+    // Reaktion am Funk: kurze Pause, dann Hildes Zweifel (Pointe nach dem „Alles normal!“)
+    { ms: 3800, build: () => this.closeUp('portrait_hilde_annoyed', t('intro.bubble.radio2'), true) },
     { ms: 4500, build: () => this.shotNormal() },
     { ms: 5500, build: () => this.shotTitle() },
   ];

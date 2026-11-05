@@ -61,6 +61,6 @@ describe('Requisiten', () => {
     const { existsSync } = await import('node:fs');
     for (const shots of Object.values(scenes))
       for (const s of shots as (Shot & { prop?: string })[])
-        if (s.prop) expect(existsSync(`assets/sprites/${s.prop}.png`), s.prop).toBe(true);
+        if (s.prop) expect(existsSync(`assets/sprites/${s.prop}.png`) || existsSync(`assets/decor/${s.prop}.png`), s.prop).toBe(true);
   });
 });

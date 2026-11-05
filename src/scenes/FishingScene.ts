@@ -50,8 +50,6 @@ const townUpgrades = upgrades.filter((u) => u.id !== 'engine');
 /** Anteil der Bildschirmhöhe, an dem der Haken im Abstieg steht (darunter sieht man, was kommt). */
 /** Ab diesem Grundwert leuchtet eine Art mit dem Echolot. */
 const SONAR_MIN_VALUE = 25;
-/** Symbol je Upgrade auf den Shop-Karten. */
-const UPGRADE_ICON: Partial<Record<string, string>> = { line: 'hook', hook: 'hook', crate: 'fx_crate', steer: 'icon_map', lure: 'fx_bubble' };
 const HOOK_SCREEN_DESCENT = 0.32;
 const HOOK_SCREEN_ASCENT = 0.62;
 /** Story-Marke für das Backstory-Intro (in save.story.seen). */
@@ -910,7 +908,7 @@ export class FishingScene extends Phaser.Scene {
       const cost = upgradeCost(u, level);
       body.append(
         shopCard({
-          icon: UPGRADE_ICON[u.id] ?? 'icon_coin',
+          icon: u.icon,
           title: t(u.nameKey),
           level: { now: level + 1, max: u.values.length },
           lines: [maxed ? t(u.effectKey, { value: upgradeValue(u, level) }) : `${t(u.effectKey, { value: upgradeValue(u, level) })} → *${upgradeValue(u, level + 1)}*`],
@@ -960,7 +958,7 @@ export class FishingScene extends Phaser.Scene {
       const on = this.save.gadgets.equipped === g.id;
       body.append(
         shopCard({
-          icon: 'hook',
+          icon: g.icon,
           title: t(g.nameKey),
           lines: [t(g.descKey)],
           action: on ? { state: 'done', label: t('gadget.equipped') } : owned ? { state: 'plain', label: t('gadget.equip') } : { state: this.save.coins >= g.price ? 'buy' : 'poor', cost: g.price },

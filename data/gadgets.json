@@ -6,7 +6,8 @@
     "price": 150,
     "effect": {
       "fallSpeed": 0.7
-    }
+    },
+    "icon": "🪂"
   },
   {
     "id": "magnet",
@@ -15,7 +16,8 @@
     "price": 350,
     "effect": {
       "catchRadius": 1.6
-    }
+    },
+    "icon": "🧲"
   },
   {
     "id": "shield",
@@ -24,6 +26,7 @@
     "price": 700,
     "effect": {
       "shield": 1
-    }
+    },
+    "icon": "🛡️"
   }
 ]

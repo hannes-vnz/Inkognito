@@ -1015,6 +1015,11 @@ body {
 .nav-button[hidden] {
   display: none;
 }
+.nav-emoji {
+  font-size: 24px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 0 var(--ink));
+}
 .nav-button .icon {
   width: 26px;
   height: 26px;
@@ -2781,7 +2786,7 @@ body {
   height: 52px;
   display: grid;
   place-items: center;
-  background: var(--panel);
+  background: radial-gradient(circle at 50% 40%, #3a6a9a, var(--panel) 70%);
   border: 2px solid var(--ink);
   border-radius: 10px;
 }
@@ -2799,10 +2804,19 @@ body {
   min-width: 0;
 }
 .shop-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 17px;
   line-height: 1.1;
+}
+.shop-emoji {
+  font-size: 32px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 0 var(--ink));
 }
 .shop-pips {
   display: flex;
@@ -2834,7 +2848,8 @@ body {
   background: var(--kelp);
 }
 .shop-lv {
-  margin-left: 6px;
+  flex: none;
+  font-family: var(--font-body);
   white-space: nowrap;
   font-size: 12px;
   opacity: 0.85;

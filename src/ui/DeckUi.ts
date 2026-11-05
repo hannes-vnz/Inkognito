@@ -6,6 +6,13 @@ import { isMaxed, upgradeCost, type UpgradeDef } from '../systems/economy';
 import type { Save } from '../systems/save';
 import { play } from '../audio/sfx';
 
+/** Buntes Symbol für die Leiste (gleiche Symbolsprache wie Seekarte und Shop). */
+const emoji = (e: string): HTMLSpanElement => {
+  const s = el('span', 'nav-emoji');
+  s.textContent = e;
+  return s;
+};
+
 /**
  * Oberfläche des Angel-Spiels: Münzen oben rechts, Tiefe oben links, unten eine feste Leiste
  * (Karte, Kiste, Upgrades bei Hilde, Gadgets beim Professor, Fischbuch) und darunter Auswerfen.
@@ -70,20 +77,20 @@ export class DeckUi {
       b.type = 'button';
       const text = el('span', 'nav-label');
       text.textContent = label;
-      b.append(iconImg(icon), text);
+      b.append(emoji(icon), text);
       b.addEventListener('click', (e) => {
         e.stopPropagation();
         onClick();
       });
       return b;
     };
-    this.upgradesButton = navButton('icon_coin', t('deck.upgrades'), handlers.upgrades);
-    this.gadgetsButton = navButton('hook', t('deck.gadgets'), handlers.gadgets);
+    this.upgradesButton = navButton('🔧', t('deck.upgrades'), handlers.upgrades);
+    this.gadgetsButton = navButton('🧪', t('deck.gadgets'), handlers.gadgets);
 
     this.bookButton = el('button', 'button nav-button');
     this.bookButton.type = 'button';
     this.bookCount = el('span', '');
-    this.bookButton.append(iconImg('icon_book'), this.bookCount);
+    this.bookButton.append(emoji('📖'), this.bookCount);
     this.bookButton.setAttribute('aria-label', t('deck.fishbook'));
     this.bookButton.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -94,7 +101,7 @@ export class DeckUi {
     this.crateButton = el('button', 'button nav-button inventory-button');
     this.crateButton.type = 'button';
     this.crateCount = el('span', '');
-    this.crateButton.append(iconImg('fx_crate'), this.crateCount);
+    this.crateButton.append(emoji('📦'), this.crateCount);
     this.crateButton.setAttribute('aria-label', t('crate.title'));
     this.crateButton.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -105,7 +112,7 @@ export class DeckUi {
     this.mapButton.type = 'button';
     const mapLabel = el('span', '');
     mapLabel.textContent = t('map.open');
-    this.mapButton.append(iconImg('icon_map'), mapLabel);
+    this.mapButton.append(emoji('🗺️'), mapLabel);
     this.mapButton.addEventListener('click', (e) => {
       e.stopPropagation();
       handlers.map();

@@ -3,7 +3,7 @@
     "id": "coldroom",
     "nameKey": "big.coldroom.name",
     "descKey": "big.coldroom.desc",
-    "icon": "fx_crate",
+    "icon": "❄️",
     "price": 400,
     "effect": {
       "crateMul": 2
@@ -13,7 +13,7 @@
     "id": "contract",
     "nameKey": "big.contract.name",
     "descKey": "big.contract.desc",
-    "icon": "icon_coin",
+    "icon": "🤝",
     "price": 900,
     "effect": {
       "priceBonus": 0.2
@@ -23,7 +23,7 @@
     "id": "sonar",
     "nameKey": "big.sonar.name",
     "descKey": "big.sonar.desc",
-    "icon": "icon_map",
+    "icon": "📡",
     "price": 1500,
     "effect": {
       "sonar": true
@@ -33,7 +33,7 @@
     "id": "net",
     "nameKey": "big.net.name",
     "descKey": "big.net.desc",
-    "icon": "hook",
+    "icon": "🥅",
     "price": 2500,
     "effect": {
       "catchRadius": 1.4

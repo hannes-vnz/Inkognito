@@ -10,6 +10,8 @@ export interface GadgetDef {
   descKey: string;
   price: number;
   effect: Partial<GadgetEffect>;
+  /** Symbol im Shop. */
+  icon: string;
 }
 
 export interface GadgetEffect {

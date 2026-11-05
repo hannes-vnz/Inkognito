@@ -119,7 +119,12 @@ export interface ShopCardOptions {
 export function shopCard(o: ShopCardOptions): HTMLElement {
   const card = el('div', `shop-card${o.big ? ' big' : ''}`);
   const icon = el('div', 'shop-icon');
-  if (o.icon.startsWith('data:')) {
+  if (!/^[\w.-]+$/.test(o.icon) && !o.icon.startsWith('data:')) {
+    // Emoji als großes, buntes Symbol (wie die Stationen auf der Seekarte)
+    const e = el('span', 'shop-emoji');
+    e.textContent = o.icon;
+    icon.append(e);
+  } else if (o.icon.startsWith('data:')) {
     const img = el('img', 'icon');
     img.src = o.icon;
     img.alt = '';
@@ -127,7 +132,14 @@ export function shopCard(o: ShopCardOptions): HTMLElement {
   } else icon.append(iconImg(o.icon));
   const main = el('div', 'shop-main');
   const title = el('div', 'shop-title');
-  title.textContent = o.title;
+  const name = el('span', '');
+  name.textContent = o.title;
+  title.append(name);
+  if (o.level) {
+    const lv = el('span', 'shop-lv');
+    lv.textContent = o.level.now >= o.level.max ? t('shop.levelMax') : t('shop.level', { now: o.level.now, max: o.level.max });
+    title.append(lv);
+  }
   main.append(title);
   if (o.level) {
     // Ein Kästchen pro Stufe (bis 10 Stufen), sonst ein durchgehender Balken: Anzeige und Zahl passen immer zusammen
@@ -140,9 +152,6 @@ export function shopCard(o: ShopCardOptions): HTMLElement {
       bar.append(fill);
       pips.append(bar);
     }
-    const lv = el('span', 'shop-lv');
-    lv.textContent = o.level.now >= o.level.max ? t('shop.levelMax') : t('shop.level', { now: o.level.now, max: o.level.max });
-    pips.append(lv);
     main.append(pips);
   }
   for (const line of o.lines) {

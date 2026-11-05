@@ -10,6 +10,8 @@ export interface UpgradeDef {
   costBase: number;
   costGrowth: number;
   values: number[];
+  /** Symbol im Shop (Emoji, wie auf der Seekarte). */
+  icon: string;
 }
 
 export interface EconomyParams {
